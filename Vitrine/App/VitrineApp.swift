@@ -1,0 +1,25 @@
+import SwiftUI
+
+@main
+@MainActor
+struct VitrineApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @State private var store = CatalogStore()
+
+    var body: some Scene {
+        Window("Vitrine", id: "main") {
+            ContentView(store: store)
+                .frame(minWidth: 900, minHeight: 600)
+        }
+        .defaultSize(width: 1280, height: 820)
+        .defaultLaunchBehavior(.presented)
+        .restorationBehavior(.automatic)
+        .commands {
+            AppCommands(store: store)
+        }
+
+        Settings {
+            SettingsView()
+        }
+    }
+}

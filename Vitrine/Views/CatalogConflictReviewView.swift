@@ -1,0 +1,55 @@
+import SwiftUI
+
+struct CatalogConflictReviewView: View {
+    @Environment(\.dismiss) private var dismiss
+    let pending: PendingCatalogMerge
+    let onApply: (Set<UUID>) async -> Void
+    @State private var useExternal: Set<UUID> = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Review Catalog Changes").font(.title2).fontWeight(.semibold)
+            Text("The catalog changed outside Vitrine while local changes also existed. Choose a value for each field.")
+                .foregroundStyle(.secondary)
+            List(pending.conflicts) { conflict in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(conflictTitle(conflict))
+                        .font(.headline)
+                    Picker("Value", selection: choiceBinding(for: conflict.id)) {
+                        Text("Keep Vitrine: \(conflict.localValue)").tag(false)
+                        Text("Use External: \(conflict.externalValue)").tag(true)
+                    }
+                    .pickerStyle(.radioGroup)
+                }
+                .padding(.vertical, 6)
+            }
+            HStack {
+                Button("Use All from Vitrine") { useExternal.removeAll() }
+                Button("Use All External") { useExternal = Set(pending.conflicts.map(\.id)) }
+                Spacer()
+                Button("Review Later") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Apply Resolutions") {
+                    Task { await onApply(useExternal); dismiss() }
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(24)
+        .frame(width: 760, height: 680)
+    }
+
+    private func choiceBinding(for id: UUID) -> Binding<Bool> {
+        Binding(
+            get: { useExternal.contains(id) },
+            set: { value in
+                if value { useExternal.insert(id) }
+                else { useExternal.remove(id) }
+            }
+        )
+    }
+
+    private func conflictTitle(_ conflict: CatalogMergeConflict) -> String {
+        let field = String(localized: String.LocalizationValue(conflict.field.rawValue))
+        return [conflict.bookTitle, field].compactMap { $0 }.joined(separator: " — ")
+    }
+}
