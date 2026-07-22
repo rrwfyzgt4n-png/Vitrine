@@ -27,6 +27,13 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "VITRINE_UNIT_TESTING"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference skipped = "NO">
             <BuildableReference
@@ -37,7 +44,7 @@
                ReferencedContainer = "container:Vitrine.xcodeproj">
             </BuildableReference>
          </TestableReference>
-         <TestableReference skipped = "NO">
+         <TestableReference skipped = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000003"

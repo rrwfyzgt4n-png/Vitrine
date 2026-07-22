@@ -1,6 +1,144 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld readable books can be opened without replacing the damaged file." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld livres lisibles peuvent être ouverts sans remplacer le fichier endommagé." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "%lld livres lisibles peuvent être ouverts sans remplacer le fichier endommagé." } }
+      }
+    },
+    "Choose a Backup" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisir une sauvegarde" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Choisir une sauvegarde" } }
+      }
+    },
+    "Choose a dated local backup. Vitrine will preserve the current catalog before restoring it." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez une sauvegarde locale datée. Vitrine préservera le catalogue actuel avant de la restaurer." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Choisissez une sauvegarde locale datée. Vitrine préservera le catalogue actuel avant de la restaurer." } }
+      }
+    },
+    "Export Report" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport" } }
+      }
+    },
+    "Export Technical Report" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport technique" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport technique" } }
+      }
+    },
+    "Export Technical Report…" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport technique…" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Exporter le rapport technique…" } }
+      }
+    },
+    "More" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plus" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Plus" } }
+      }
+    },
+    "High confidence" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Confiance élevée" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Confiance élevée" } }
+      }
+    },
+    "Low confidence" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Confiance faible" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Confiance faible" } }
+      }
+    },
+    "Medium confidence" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Confiance moyenne" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Confiance moyenne" } }
+      }
+    },
+    "Open What Can Be Recovered" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir les éléments récupérables" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir les éléments récupérables" } }
+      }
+    },
+    "Privacy-safe technical report exported" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rapport technique respectueux de la confidentialité exporté" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Rapport technique respectueux de la confidentialité exporté" } }
+      }
+    },
+    "Recovered records opened read-only; the damaged catalog was not replaced." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les fiches récupérées sont ouvertes en lecture seule; le catalogue endommagé n’a pas été remplacé." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Les fiches récupérées sont ouvertes en lecture seule; le catalogue endommagé n’a pas été remplacé." } }
+      }
+    },
+    "Repair from Backup" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réparer à partir de la sauvegarde" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Réparer à partir de la sauvegarde" } }
+      }
+    },
+    "Restoring selected backup…" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Restauration de la sauvegarde sélectionnée…" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Restauration de la sauvegarde sélectionnée…" } }
+      }
+    },
+    "Restore Previous Catalog Version" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer une version précédente du catalogue" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer une version précédente du catalogue" } }
+      }
+    },
+    "Restore Selected Backup" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer la sauvegarde sélectionnée" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer la sauvegarde sélectionnée" } }
+      }
+    },
+    "Reveal Preserved Damaged File" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher le fichier endommagé préservé" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Afficher le fichier endommagé préservé" } }
+      }
+    },
+    "Selected catalog backup restored" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde sélectionnée du catalogue restaurée" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde sélectionnée du catalogue restaurée" } }
+      }
+    },
+    "Show Selected Backup in Finder" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher la sauvegarde sélectionnée dans le Finder" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Afficher la sauvegarde sélectionnée dans le Finder" } }
+      }
+    },
+    "The report excludes book titles, notes, file paths, and catalog contents." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le rapport exclut les titres, les notes, les chemins de fichiers et le contenu du catalogue." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Le rapport exclut les titres, les notes, les chemins de fichiers et le contenu du catalogue." } }
+      }
+    },
+    "Vitrine could not safely read this catalog. Choose the backup you want to restore, or open only the records that could be recovered." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue de façon sûre. Choisissez la sauvegarde à restaurer ou ouvrez uniquement les fiches récupérables." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue de façon sûre. Choisissez la sauvegarde à restaurer ou ouvrez uniquement les fiches récupérables." } }
+      }
+    },
+    "Vitrine could not safely read this catalog. The damaged source has been preserved; no valid local backup was found." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue de façon sûre. La source endommagée a été préservée; aucune sauvegarde locale valide n’a été trouvée." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue de façon sûre. La source endommagée a été préservée; aucune sauvegarde locale valide n’a été trouvée." } }
+      }
+    },
     "%@ confidence · %@" : {
       "localizations" : {
         "en" : {
@@ -10,10 +148,16 @@
           }
         },
         "fr" : {
-          "stringUnit" : { "state" : "translated", "value" : "Confiance %1$@ · %2$@" }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confiance %1$@ · %2$@"
+          }
         },
         "fr-CA" : {
-          "stringUnit" : { "state" : "translated", "value" : "Confiance %1$@ · %2$@" }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confiance %1$@ · %2$@"
+          }
         }
       }
     },
@@ -102,6 +246,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajout des couvertures…"
+          }
+        }
+      }
+    },
+    "Additional languages (comma separated)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langues supplémentaires (séparées par des virgules)"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langues supplémentaires (séparées par des virgules)"
           }
         }
       }
@@ -237,8 +397,18 @@
     },
     "Available Backup" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde disponible" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Sauvegarde disponible" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde disponible"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde disponible"
+          }
+        }
       }
     },
     "Book" : {
@@ -340,8 +510,18 @@
     },
     "Books" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Livres" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Livres" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livres"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livres"
+          }
+        }
       }
     },
     "Browse your physical library using the cover images already stored on your Mac." : {
@@ -459,8 +639,18 @@
     },
     "Catalog Repair" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réparation du catalogue" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Réparation du catalogue" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réparation du catalogue"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réparation du catalogue"
+          }
+        }
       }
     },
     "Catalog saved" : {
@@ -671,6 +861,38 @@
         }
       }
     },
+    "Collection" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collection"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collection"
+          }
+        }
+      }
+    },
+    "Collection number" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numéro dans la collection"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numéro dans la collection"
+          }
+        }
+      }
+    },
     "Compare Book Details" : {
       "localizations" : {
         "fr" : {
@@ -731,6 +953,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Titre confirmé"
+          }
+        }
+      }
+    },
+    "Contributors (name | roles; …)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contributeurs (nom | rôles; …)"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contributeurs (nom | rôles; …)"
           }
         }
       }
@@ -1061,8 +1299,18 @@
     },
     "Date" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Date" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Date" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
       }
     },
     "Date Added" : {
@@ -2254,6 +2502,22 @@
         }
       }
     },
+    "Original language" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue originale"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue originale"
+          }
+        }
+      }
+    },
     "Original publication date" : {
       "localizations" : {
         "fr" : {
@@ -2319,6 +2583,22 @@
         }
       }
     },
+    "Pagination" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagination"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pagination"
+          }
+        }
+      }
+    },
     "Part of the cover folder could not be read, so no missing books were removed." : {
       "localizations" : {
         "fr" : {
@@ -2368,6 +2648,22 @@
         }
       }
     },
+    "Physical attributes (comma separated)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques matérielles (séparées par des virgules)"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques matérielles (séparées par des virgules)"
+          }
+        }
+      }
+    },
     "Privacy" : {
       "localizations" : {
         "fr" : {
@@ -2396,6 +2692,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Date de publication"
+          }
+        }
+      }
+    },
+    "Publication place" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lieu de publication"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lieu de publication"
           }
         }
       }
@@ -2642,8 +2954,18 @@
     },
     "Restore Backup" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer la sauvegarde" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Restaurer la sauvegarde" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer la sauvegarde"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer la sauvegarde"
+          }
+        }
       }
     },
     "Restore Previous Catalog Version…" : {
@@ -2664,8 +2986,18 @@
     },
     "Restoring catalog backup…" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Restauration de la sauvegarde du catalogue…" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Restauration de la sauvegarde du catalogue…" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restauration de la sauvegarde du catalogue…"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restauration de la sauvegarde du catalogue…"
+          }
+        }
       }
     },
     "Restoring latest backup…" : {
@@ -3006,8 +3338,18 @@
     },
     "Show Backup in Finder" : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher la sauvegarde dans le Finder" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Afficher la sauvegarde dans le Finder" } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la sauvegarde dans le Finder"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la sauvegarde dans le Finder"
+          }
+        }
       }
     },
     "Show Books Needing Review" : {
@@ -3414,8 +3756,18 @@
     },
     "The damaged catalog was preserved and the selected backup was restored." : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le catalogue endommagé a été conservé et la sauvegarde sélectionnée a été restaurée." } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Le catalogue endommagé a été conservé et la sauvegarde sélectionnée a été restaurée." } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le catalogue endommagé a été conservé et la sauvegarde sélectionnée a été restaurée."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le catalogue endommagé a été conservé et la sauvegarde sélectionnée a été restaurée."
+          }
+        }
       }
     },
     "This catalog was created by a newer version of Vitrine and is open read-only." : {
@@ -3695,8 +4047,18 @@
     },
     "Vitrine could not read this catalog. The damaged file has been preserved, and a valid local backup is available. Nothing will be replaced until you choose Restore Backup." : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé a été conservé et une sauvegarde locale valide est disponible. Rien ne sera remplacé avant que vous choisissiez Restaurer la sauvegarde." } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé a été conservé et une sauvegarde locale valide est disponible. Rien ne sera remplacé avant que vous choisissiez Restaurer la sauvegarde." } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé a été conservé et une sauvegarde locale valide est disponible. Rien ne sera remplacé avant que vous choisissiez Restaurer la sauvegarde."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé a été conservé et une sauvegarde locale valide est disponible. Rien ne sera remplacé avant que vous choisissiez Restaurer la sauvegarde."
+          }
+        }
       }
     },
     "Vitrine Couldn't Complete That Action" : {
@@ -3795,6 +4157,132 @@
         }
       }
     },
+    "Volume or part" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume ou partie"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume ou partie"
+          }
+        }
+      }
+    },
+    "Book details saved" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails du livre enregistrés"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails du livre enregistrés"
+          }
+        }
+      }
+    },
+    "Catalog changes could not be read yet. Your current library remains open." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications du catalogue ne peuvent pas encore être lues. Votre bibliothèque actuelle reste ouverte."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications du catalogue ne peuvent pas encore être lues. Votre bibliothèque actuelle reste ouverte."
+          }
+        }
+      }
+    },
+    "Create New Catalog" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créer un catalogue" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Créer un catalogue" } }
+      }
+    },
+    "Keep All Mine" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout conserver de ma version" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Tout conserver de ma version" } }
+      }
+    },
+    "Keep Browsing" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Continuer à parcourir" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Continuer à parcourir" } }
+      }
+    },
+    "Keep Mine: %@" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver ma version : %@" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Conserver ma version : %@" } }
+      }
+    },
+    "Keep My Changes" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Conserver mes modifications" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Conserver mes modifications" } }
+      }
+    },
+    "Reveal Damaged File" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher le fichier endommagé dans le Finder" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Afficher le fichier endommagé dans le Finder" } }
+      }
+    },
+    "Review Changes" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Examiner les modifications" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Examiner les modifications" } }
+      }
+    },
+    "Some of the same information was changed in both places." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Certaines des mêmes informations ont été modifiées aux deux endroits." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Certaines des mêmes informations ont été modifiées aux deux endroits." } }
+      }
+    },
+    "Use All Other" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout utiliser de l’autre version" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Tout utiliser de l’autre version" } }
+      }
+    },
+    "Use Changes from Other Mac" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser les modifications de l’autre Mac" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser les modifications de l’autre Mac" } }
+      }
+    },
+    "Use Other: %@" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser l’autre version : %@" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Utiliser l’autre version : %@" } }
+      }
+    },
+    "Vitrine could not read this catalog. The damaged file has been left untouched, but no valid local backup is available." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé n’a pas été modifié, mais aucune sauvegarde locale valide n’est disponible." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vitrine n’a pas pu lire ce catalogue. Le fichier endommagé n’a pas été modifié, mais aucune sauvegarde locale valide n’est disponible." } }
+      }
+    },
+    "Your catalog was edited on another Mac." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre catalogue a été modifié sur un autre Mac." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Votre catalogue a été modifié sur un autre Mac." } }
+      }
+    },
     "Your catalog contains %lld books. %lld covers need attention." : {
       "localizations" : {
         "en" : {
@@ -3804,17 +4292,33 @@
           }
         },
         "fr" : {
-          "stringUnit" : { "state" : "translated", "value" : "Votre catalogue contient %1$lld livres. %2$lld couvertures nécessitent votre attention." }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre catalogue contient %1$lld livres. %2$lld couvertures nécessitent votre attention."
+          }
         },
         "fr-CA" : {
-          "stringUnit" : { "state" : "translated", "value" : "Votre catalogue contient %1$lld livres. %2$lld couvertures nécessitent votre attention." }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre catalogue contient %1$lld livres. %2$lld couvertures nécessitent votre attention."
+          }
         }
       }
     },
     "Your catalog is healthy. %lld books found." : {
       "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Votre catalogue est en bon état. %lld livres trouvés." } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Votre catalogue est en bon état. %lld livres trouvés." } }
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre catalogue est en bon état. %lld livres trouvés."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre catalogue est en bon état. %lld livres trouvés."
+          }
+        }
       }
     },
     "Your latest changes could not be saved." : {
@@ -3831,6 +4335,432 @@
             "value" : "Vos dernières modifications n’ont pas pu être enregistrées."
           }
         }
+      }
+    },
+    "Book removed from catalog; cover file unchanged" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livre supprimé du catalogue; le fichier de couverture est inchangé"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livre supprimé du catalogue; le fichier de couverture est inchangé"
+          }
+        }
+      }
+    },
+    "Remove Book from Catalog?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer ce livre du catalogue ?"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer ce livre du catalogue ?"
+          }
+        }
+      }
+    },
+    "The cover image will remain in its folder. Only this catalog record and its saved book details will be removed." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’image de couverture restera dans son dossier. Seule cette fiche du catalogue et les informations bibliographiques enregistrées seront supprimées."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’image de couverture restera dans son dossier. Seule cette fiche du catalogue et les informations bibliographiques enregistrées seront supprimées."
+          }
+        }
+      }
+    },
+    "Editor" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Éditeur scientifique" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Éditeur scientifique" } }
+      }
+    },
+    "Compiler" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Compilateur" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Compilateur" } }
+      }
+    },
+    "Annotator" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annotateur" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Annotateur" } }
+      }
+    },
+    "General editor" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Directeur général" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Directeur général" } }
+      }
+    },
+    "Editor/director" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Éditeur/directeur" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Éditeur/directeur" } }
+      }
+    },
+    "Preface" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Préfacier" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Préfacier" } }
+      }
+    },
+    "Foreword" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Auteur de l’avant-propos" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Auteur de l’avant-propos" } }
+      }
+    },
+    "Introduction" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Auteur de l’introduction" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Auteur de l’introduction" } }
+      }
+    },
+    "Illustrator" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Illustrateur" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Illustrateur" } }
+      }
+    },
+    "Iconographer" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Iconographe" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Iconographe" } }
+      }
+    },
+    "Cartographer" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cartographe" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Cartographe" } }
+      }
+    },
+    "Assistant" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Assistant" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Assistant" } }
+      }
+    },
+    "Collaborator" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Collaborateur" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Collaborateur" } }
+      }
+    },
+    "Non-paginated" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non paginé" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Non paginé" } }
+      }
+    },
+    "Illustrated" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Illustré" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Illustré" } }
+      }
+    },
+    "Maps" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cartes" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Cartes" } }
+      }
+    },
+    "Fold-out maps" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cartes dépliantes" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Cartes dépliantes" } }
+      }
+    },
+    "Battle plans" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Plans de bataille" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Plans de bataille" } }
+      }
+    },
+    "Genealogical trees" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arbres généalogiques" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Arbres généalogiques" } }
+      }
+    },
+    "Black and white" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Noir et blanc" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Noir et blanc" } }
+      }
+    },
+    "Dust jacket" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Jaquette" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Jaquette" } }
+      }
+    },
+    "Slipcase" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Étui" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Étui" } }
+      }
+    },
+    "Double pages" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pages doubles" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Pages doubles" } }
+      }
+    },
+    "Contributors" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contributeurs" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Contributeurs" } }
+      }
+    },
+    "Volume" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Volume" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Volume" } }
+      }
+    },
+    "Additional languages" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Langues supplémentaires" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Langues supplémentaires" } }
+      }
+    },
+    "Physical attributes" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Caractéristiques physiques" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Caractéristiques physiques" } }
+      }
+    },
+    "Available" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Disponible" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Disponible" } }
+      }
+    },
+    "Temporarily unavailable" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Temporairement indisponible" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Temporairement indisponible" } }
+      }
+    },
+    "Not found" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Introuvable" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Introuvable" } }
+      }
+    },
+    "Needs review" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À examiner" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "À examiner" } }
+      }
+    },
+    "Top level" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Premier niveau" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Premier niveau" } }
+      }
+    },
+    "Filename suggestion" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Suggestion du nom de fichier" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Suggestion du nom de fichier" } }
+      }
+    },
+    "Entered manually" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Saisi manuellement" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Saisi manuellement" } }
+      }
+    },
+    "Multiple sources" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sources multiples" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Sources multiples" } }
+      }
+    },
+    "ISBN" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ISBN" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "ISBN" } }
+      }
+    },
+    "Original Language" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Langue d’origine" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Langue d’origine" } }
+      }
+    },
+    "Originally Published" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Publication originale" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Publication originale" } }
+      }
+    },
+    "Physical Attributes" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Caractéristiques physiques" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Caractéristiques physiques" } }
+      }
+    },
+    "Publication Place" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lieu de publication" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Lieu de publication" } }
+      }
+    },
+    "Published" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Publication" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Publication" } }
+      }
+    },
+    "Source" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Source" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Source" } }
+      }
+    },
+    "About Vitrine" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À propos de Vitrine" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "À propos de Vitrine" } }
+      }
+    },
+    "Its %lld books represent %@ of Project Gutenberg's %lld eBooks." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ses %1$lld livres représentent %2$@ des %3$lld livres numériques du Projet Gutenberg." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Ses %1$lld livres représentent %2$@ des %3$lld livres numériques du Projet Gutenberg." } }
+      }
+    },
+    "Library Statistics" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Statistiques de la bibliothèque" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Statistiques de la bibliothèque" } }
+      }
+    },
+    "No Library Open" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune bibliothèque ouverte" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Aucune bibliothèque ouverte" } }
+      }
+    },
+    "Open a catalog to see its page total and Project Gutenberg comparison." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrez un catalogue pour afficher son nombre de pages et sa comparaison avec le Projet Gutenberg." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrez un catalogue pour afficher son nombre de pages et sa comparaison avec le Projet Gutenberg." } }
+      }
+    },
+    "Page counts are available for %lld of %lld books." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le nombre de pages est disponible pour %1$lld livres sur %2$lld." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Le nombre de pages est disponible pour %1$lld livres sur %2$lld." } }
+      }
+    },
+    "Project Gutenberg reports an eBook count, not a universal page count. Reference: July 2026." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Le Projet Gutenberg publie un nombre de livres numériques, et non un nombre universel de pages. Référence : juillet 2026." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Le Projet Gutenberg publie un nombre de livres numériques, et non un nombre universel de pages. Référence : juillet 2026." } }
+      }
+    },
+    "This library contains %lld catalogued pages." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Cette bibliothèque contient %lld pages cataloguées." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Cette bibliothèque contient %lld pages cataloguées." } }
+      }
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Version %1$@ (%2$@)" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Version %1$@ (%2$@)" } }
+      }
+    },
+    "View Project Gutenberg" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Consulter le Projet Gutenberg" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Consulter le Projet Gutenberg" } }
+      }
+    },
+    "Vitrine app icon" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Icône de l’app Vitrine" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Icône de l’app Vitrine" } }
+      }
+    },
+    "Book %lld of %lld" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Livre %1$lld sur %2$lld" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Livre %1$lld sur %2$lld" } }
+      }
+    },
+    "Book grid" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Grille de livres" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Grille de livres" } }
+      }
+    },
+    "Cover information is current for %lld books." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les informations de couverture sont à jour pour %lld livres." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Les informations de couverture sont à jour pour %lld livres." } }
+      }
+    },
+    "Cover information rebuilt for %lld books." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les informations de couverture ont été reconstruites pour %lld livres." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Les informations de couverture ont été reconstruites pour %lld livres." } }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Terminé" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Terminé" } }
+      }
+    },
+    "ISBN %@" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "ISBN %@" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "ISBN %@" } }
+      }
+    },
+    "Latest backup" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Dernière sauvegarde" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Dernière sauvegarde" } }
+      }
+    },
+    "Most of the catalog can still be used." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La majeure partie du catalogue reste utilisable." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "La majeure partie du catalogue reste utilisable." } }
+      }
+    },
+    "Technical details are available only through Export Diagnostic Report." : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Les détails techniques sont accessibles uniquement avec Exporter le rapport de diagnostic." } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Les détails techniques sont accessibles uniquement avec Exporter le rapport de diagnostic." } }
+      }
+    },
+    "·" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "·" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "·" } }
       }
     }
   },

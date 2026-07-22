@@ -36,6 +36,31 @@ final class ThumbnailServiceTests: XCTestCase {
         XCTAssertGreaterThan(thumbnail.cgImage.height, 0)
     }
 
+    func testRepeatedThumbnailRequestUsesBoundedCache() async throws {
+        let temporaryFolderURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: temporaryFolderURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temporaryFolderURL) }
+        let imageURL = temporaryFolderURL.appendingPathComponent("Cover.jpg")
+        try writeJPEG(to: imageURL, width: 1_200, height: 1_800)
+        let values = try imageURL.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+        let source = SourceFileMetadata(
+            relativePath: "Cover.jpg",
+            fileSize: Int64(values.fileSize ?? 0),
+            fileModificationDate: values.contentModificationDate
+        )
+        let service = ThumbnailService()
+
+        _ = try await service.thumbnail(sourceFolderURL: temporaryFolderURL, source: source, maximumPixelSize: 240)
+        _ = try await service.thumbnail(sourceFolderURL: temporaryFolderURL, source: source, maximumPixelSize: 240)
+        let statistics = await service.statistics()
+
+        XCTAssertEqual(statistics.misses, 1)
+        XCTAssertEqual(statistics.hits, 1)
+        XCTAssertEqual(statistics.countLimit, 500)
+        XCTAssertEqual(statistics.totalCostLimit, 256 * 1_024 * 1_024)
+    }
+
     private func writeJPEG(to url: URL, width: Int, height: Int) throws {
         let context = try XCTUnwrap(CGContext(
             data: nil,

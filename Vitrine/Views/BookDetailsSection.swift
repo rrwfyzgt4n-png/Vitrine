@@ -28,10 +28,11 @@ struct BookDetailsSection: View {
             detail("Source", metadataSource)
         }
         .padding(.top, 8)
+        .accessibilityIdentifier("inspector.bookDetails.content")
     }
 
     @ViewBuilder
-    private func detail(_ label: String, _ value: String?) -> some View {
+    private func detail(_ label: LocalizedStringKey, _ value: String?) -> some View {
         if let value, !value.isEmpty {
             GridRow {
                 Text(label).foregroundStyle(.secondary)
@@ -42,10 +43,10 @@ struct BookDetailsSection: View {
 
     private var metadataSource: String? {
         switch item.bibliography.metadataSource {
-        case .filename: "Filename suggestion"
-        case .manual: "Entered manually"
+        case .filename: L10n.text("Filename suggestion")
+        case .manual: L10n.text("Entered manually")
         case .openLibrary: "Open Library"
-        case .mixed: "Multiple sources"
+        case .mixed: L10n.text("Multiple sources")
         case nil: nil
         }
     }

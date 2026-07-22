@@ -4,6 +4,11 @@ import UniformTypeIdentifiers
 @MainActor
 enum CatalogPanelService {
     static func chooseCoverFolder() -> URL? {
+        let panel = makeCoverFolderPanel()
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    static func makeCoverFolderPanel() -> NSOpenPanel {
         let panel = NSOpenPanel()
         panel.title = L10n.text("Choose Cover Folder")
         panel.message = L10n.text("Select the folder that contains your book-cover images.")
@@ -12,7 +17,7 @@ enum CatalogPanelService {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        return panel.runModal() == .OK ? panel.url : nil
+        return panel
     }
 
     static func chooseCatalogDestination(for folderURL: URL) -> URL? {
@@ -27,6 +32,11 @@ enum CatalogPanelService {
     }
 
     static func chooseCatalogToOpen() -> URL? {
+        let panel = makeCatalogOpenPanel()
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    static func makeCatalogOpenPanel() -> NSOpenPanel {
         let panel = NSOpenPanel()
         panel.title = L10n.text("Open a Vitrine Catalog")
         panel.message = L10n.text("Select a Vitrine Markdown catalog.")
@@ -35,7 +45,7 @@ enum CatalogPanelService {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = markdownContentTypes
-        return panel.runModal() == .OK ? panel.url : nil
+        return panel
     }
 
     static func chooseCatalogCopyDestination(catalogName: String) -> URL? {
@@ -46,6 +56,17 @@ enum CatalogPanelService {
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = "\(catalogName) Copy.md"
         panel.allowedContentTypes = markdownContentTypes
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    static func chooseDiagnosticReportDestination() -> URL? {
+        let panel = NSSavePanel()
+        panel.title = L10n.text("Export Technical Report")
+        panel.message = L10n.text("The report excludes book titles, notes, file paths, and catalog contents.")
+        panel.prompt = L10n.text("Export Report")
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "Vitrine Diagnostic Report.txt"
+        panel.allowedContentTypes = [.plainText]
         return panel.runModal() == .OK ? panel.url : nil
     }
 

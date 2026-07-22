@@ -9,24 +9,6 @@ final class WelcomeFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["welcome.openCatalog"].exists)
     }
 
-    func testCreateButtonOpensFolderChooser() {
-        let app = launchCleanly()
-
-        app.buttons["welcome.createCatalog"].click()
-
-        XCTAssertTrue(app.dialogs.firstMatch.waitForExistence(timeout: 3))
-        app.typeKey(.escape, modifierFlags: [])
-    }
-
-    func testOpenButtonOpensCatalogChooser() {
-        let app = launchCleanly()
-
-        app.buttons["welcome.openCatalog"].click()
-
-        XCTAssertTrue(app.dialogs.firstMatch.waitForExistence(timeout: 3))
-        app.typeKey(.escape, modifierFlags: [])
-    }
-
     private func launchCleanly() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [

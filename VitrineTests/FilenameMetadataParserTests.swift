@@ -169,13 +169,14 @@ final class FilenameMetadataParserTests: XCTestCase {
     }
 
     func testConfirmedUnlabelledAndDualRoleAuthors() {
-        let guest = parser.suggestions(from: "Be My Guest, Conrad N. Hilton, A Fireside Book/Simon & Schuster, 1994 (1957) 288p. ill")
+        let guest = parser.suggestions(from: "Be My Guest, Conrad N. Hilton, A Fireside Book:Simon & Schuster, 1994 (1957) 288p. ill")
         let establishment = parser.suggestions(
             from: "Canadian Establishment, Debrett's Illustrated Guide to The, par Peter C. Newman, general editor, éd. Methuen 1983 408p. ill. dédicace de l'auteur, avec jaquette"
         )
 
         XCTAssertEqual(guest.title?.value, "Be My Guest")
         XCTAssertEqual(guest.authors?.value, ["Conrad N. Hilton"])
+        XCTAssertEqual(guest.publisher?.value, "A Fireside Book: Simon & Schuster")
         XCTAssertEqual(establishment.title?.value, "Debrett's Illustrated Guide to the Canadian Establishment")
         XCTAssertEqual(establishment.authors?.value, ["Peter C. Newman"])
         XCTAssertEqual(establishment.contributors?.value, [
@@ -232,5 +233,89 @@ final class FilenameMetadataParserTests: XCTestCase {
         XCTAssertEqual(twilight.translators?.value, ["Della Couling"])
         XCTAssertEqual(bescherelle.title?.value, "Bescherelle")
         XCTAssertEqual(bescherelle.subtitle?.value, "El arte de conjugar en español, Diccionario de 12 000 verbos")
+    }
+
+    func testFrenchInstitutionalCollaborationBecomesContributor() {
+        let suggestion = parser.suggestions(
+            from: "1789, par Guy Chaussinand-Nogaret, Avec la col laboration du Cabinet des Estampes de la BibliothèqueNationale, Collection Banque Nationale de Paris, Éditions Hervas, 1988 175p. ill"
+        )
+
+        XCTAssertEqual(suggestion.title?.value, "1789")
+        XCTAssertEqual(suggestion.authors?.value, ["Guy Chaussinand-Nogaret"])
+        XCTAssertEqual(suggestion.contributors?.value, [
+            .init(name: "Cabinet des Estampes de la Bibliothèque Nationale", roles: [.collaborator])
+        ])
+        XCTAssertEqual(suggestion.collectionName?.value, "Banque Nationale de Paris")
+        XCTAssertEqual(suggestion.publisher?.value, "Éditions Hervas")
+    }
+
+    func testRepairsSplitWordInPublisherName() {
+        let suggestion = parser.suggestions(
+            from: "Acadie des origines 1603-1771, L', de Léopold Lanctôt o.m.i. Éditions du libre-éc hange, 1994 234p. cartes"
+        )
+
+        XCTAssertEqual(suggestion.publisher?.value, "Éditions du libre-échange")
+    }
+
+    func testExplicitAuthorMarkerWinsOverSubtitleResponsibilityPhrase() {
+        let suggestion = parser.suggestions(
+            from: "Portraits de Patriotes 1837-1838, -Oeuvres de Jean-Joseph Girouard, par Jonathan Lamire, VLB éditeur, 2019 (2012) 261p. ill"
+        )
+
+        XCTAssertEqual(suggestion.title?.value, "Portraits de Patriotes 1837-1838")
+        XCTAssertEqual(suggestion.subtitle?.value, "Oeuvres de Jean-Joseph Girouard")
+        XCTAssertEqual(suggestion.authors?.value, ["Jonathan Lamire"])
+        XCTAssertEqual(suggestion.publisher?.value, "VLB éditeur")
+        XCTAssertEqual(suggestion.publicationDate?.value, "2019")
+        XCTAssertEqual(suggestion.originalPublicationDate?.value, "2012")
+        XCTAssertEqual(suggestion.pageCount?.value, 261)
+    }
+
+    func testVolumeStopsBeforeUnpunctuatedAuthorAndPublisher() {
+        let suggestion = parser.suggestions(
+            from: "Lieux et monuments historiques des Cantons de l'Est et des Bois-Francs, vol 7 par Rodolphe Fournier Éditions Paulines 1978 277p. ill. plus une carte"
+        )
+
+        XCTAssertEqual(suggestion.title?.value, "Lieux et monuments historiques des Cantons de l'Est et des Bois-Francs")
+        XCTAssertEqual(suggestion.authors?.value, ["Rodolphe Fournier"])
+        XCTAssertEqual(suggestion.publisher?.value, "Éditions Paulines")
+        XCTAssertEqual(suggestion.volumeDescription?.value, "vol 7")
+        XCTAssertEqual(suggestion.publicationDate?.value, "1978")
+        XCTAssertEqual(suggestion.pageCount?.value, 277)
+        XCTAssertEqual(suggestion.physicalAttributes?.value, [.illustrated, .maps])
+    }
+
+    func testDescriptiveVolumeTitleStaysWithVolumeField() {
+        let suggestion = parser.suggestions(
+            from: "Picture Gallery of Canadian History, The, Illustrations drawn & collected by C.W. Jefferys, assisted by T.W. McLean, Vol, 1 Discovery to 1763, The Ryerson Press, Toronto 1949 (1942) 268p. ill"
+        )
+
+        XCTAssertEqual(suggestion.title?.value, "The Picture Gallery of Canadian History")
+        XCTAssertEqual(suggestion.volumeDescription?.value, "Vol, 1 Discovery to 1763")
+        XCTAssertEqual(suggestion.publisher?.value, "The Ryerson Press")
+        XCTAssertEqual(suggestion.publicationPlace?.value, "Toronto")
+        XCTAssertEqual(suggestion.publicationDate?.value, "1949")
+        XCTAssertEqual(suggestion.originalPublicationDate?.value, "1942")
+        XCTAssertEqual(suggestion.pageCount?.value, 268)
+    }
+
+    func testSpanishTranslationIntroductionAndMasperoPublisher() {
+        let suggestion = parser.suggestions(
+            from: "Commentaires royaux sur le Pérou des Incas I, par Inca Garcilaso de la Vega, Traduction de l'espagnol et notes par René L.F. Durand, Introduction de Marcel Bataillon, François Maspero:La Découverte, Paris 1982 333p"
+        )
+
+        XCTAssertEqual(suggestion.title?.value, "Commentaires royaux sur le Pérou des Incas I")
+        XCTAssertEqual(suggestion.authors?.value, ["Inca Garcilaso de la Vega"])
+        XCTAssertEqual(suggestion.translators?.value, ["René L.F. Durand"])
+        XCTAssertEqual(suggestion.contributors?.value, [
+            .init(name: "Marcel Bataillon", roles: [.introduction]),
+            .init(name: "René L.F. Durand", roles: [.annotator])
+        ])
+        XCTAssertEqual(suggestion.publisher?.value, "François Maspero: La Découverte")
+        XCTAssertEqual(suggestion.publicationPlace?.value, "Paris")
+        XCTAssertEqual(suggestion.languageCodes?.value, ["fr"])
+        XCTAssertEqual(suggestion.originalLanguageCode?.value, "es")
+        XCTAssertEqual(suggestion.publicationDate?.value, "1982")
+        XCTAssertEqual(suggestion.pageCount?.value, 333)
     }
 }

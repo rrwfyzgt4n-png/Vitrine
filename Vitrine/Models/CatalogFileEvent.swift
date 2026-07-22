@@ -1,6 +1,6 @@
 import Foundation
 
-enum CatalogFileEvent: Sendable {
+enum CatalogFileEvent: Equatable, Sendable {
     case changed
     case moved(URL)
     case deleted

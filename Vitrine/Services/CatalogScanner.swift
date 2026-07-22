@@ -40,22 +40,25 @@ actor CatalogScanner {
         var warnings = enumerationErrors.warnings
         for fileURL in enumeratedURLs {
             try Task.checkCancellation()
-            let values = try fileURL.resourceValues(forKeys: keys)
-            guard values.isRegularFile == true,
-                  values.isHidden != true,
-                  values.isSymbolicLink != true,
-                  (values.fileSize ?? 0) > 0 else {
-                continue
-            }
-
             let fileExtension = fileURL.pathExtension.lowercased()
             guard supportedExtensions.contains(fileExtension) else { continue }
-            let canonicalFileURL = fileURL.resolvingSymlinksInPath().standardizedFileURL
-            let relativeComponents = canonicalFileURL.pathComponents.dropFirst(canonicalFolderURL.pathComponents.count)
+            let standardizedFileURL = fileURL.standardizedFileURL
+            let relativeComponents = standardizedFileURL.pathComponents.dropFirst(canonicalFolderURL.pathComponents.count)
             guard !relativeComponents.isEmpty else { continue }
             let relativePath = relativeComponents.joined(separator: "/")
 
             do {
+                let values = try fileURL.resourceValues(forKeys: keys)
+                guard values.isRegularFile == true,
+                      values.isHidden != true,
+                      values.isSymbolicLink != true,
+                      (values.fileSize ?? 0) > 0 else {
+                    continue
+                }
+                let canonicalFileURL = fileURL.resolvingSymlinksInPath().standardizedFileURL
+                guard canonicalFileURL.pathComponents.starts(with: canonicalFolderURL.pathComponents) else {
+                    continue
+                }
                 let dimensions = try await imageReader.dimensions(for: canonicalFileURL)
                 let size = Int64(values.fileSize ?? 0)
                 let fingerprint = try await fingerprintService.fingerprint(
@@ -67,16 +70,16 @@ actor CatalogScanner {
                 let comment = await commentReader.comment(for: canonicalFileURL)
                 files.append(SourceFileMetadata(
                     relativePath: relativePath,
-                    filename: fileURL.lastPathComponent,
-                    sourceTitle: fileURL.deletingPathExtension().lastPathComponent,
+                    filename: standardizedFileURL.lastPathComponent,
+                    sourceTitle: standardizedFileURL.deletingPathExtension().lastPathComponent,
                     finderComment: comment,
                     portableFingerprint: fingerprint,
                     fileResourceIdentifier: values.fileResourceIdentifier.map { String(describing: $0) },
                     fileSize: size,
                     pixelWidth: dimensions.width,
                     pixelHeight: dimensions.height,
-                    fileCreationDate: values.creationDate,
-                    fileModificationDate: values.contentModificationDate
+                    fileCreationDate: CatalogDateFormatter.normalizedForPersistence(values.creationDate),
+                    fileModificationDate: CatalogDateFormatter.normalizedForPersistence(values.contentModificationDate)
                 ))
             } catch {
                 warnings.append(CatalogScanWarning(

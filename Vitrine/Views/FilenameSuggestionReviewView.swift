@@ -38,10 +38,11 @@ struct FilenameSuggestionReviewView: View {
     @State private var originalLanguageText: String
     @State private var pagesText: String
     @State private var notesText: String
+    @State private var isApplying = false
     let filenameTitle: String
-    let onApply: (FilenameMetadataSuggestion) async -> Void
+    let onApply: (FilenameMetadataSuggestion) async -> Bool
 
-    init(filenameTitle: String, suggestion: FilenameMetadataSuggestion, onApply: @escaping (FilenameMetadataSuggestion) async -> Void) {
+    init(filenameTitle: String, suggestion: FilenameMetadataSuggestion, onApply: @escaping (FilenameMetadataSuggestion) async -> Bool) {
         self.filenameTitle = filenameTitle
         _suggestion = State(initialValue: suggestion)
         _titleText = State(initialValue: suggestion.title?.value ?? "")
@@ -64,34 +65,48 @@ struct FilenameSuggestionReviewView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Suggestions from Filename").font(.title2).fontWeight(.semibold)
-            Text(filenameTitle).font(.callout).foregroundStyle(.secondary).lineLimit(3)
-            Form {
-                suggestionRow("Book Title", enabled: $includeTitle, value: $titleText, suggestion: suggestion.title)
-                suggestionRow("Subtitle", enabled: $includeSubtitle, value: $subtitleText, suggestion: suggestion.subtitle)
-                suggestionRow("Authors", enabled: $includeAuthors, value: $authorsText, suggestion: suggestion.authors)
-                suggestionRow("Translators", enabled: $includeTranslators, value: $translatorsText, suggestion: suggestion.translators)
-                suggestionSummaryRow("Contributors", enabled: $includeContributors, suggestion: suggestion.contributors)
-                suggestionRow("Publisher", enabled: $includePublisher, value: $publisherText, suggestion: suggestion.publisher)
-                suggestionRow("Collection", enabled: $includeCollection, value: $collectionText, suggestion: suggestion.collectionName)
-                suggestionRow("Collection Number", enabled: $includeCollectionNumber, value: $collectionNumberText, suggestion: suggestion.collectionNumber)
-                suggestionRow("Publication Place", enabled: $includePublicationPlace, value: $publicationPlaceText, suggestion: suggestion.publicationPlace)
-                suggestionRow("Published", enabled: $includePublication, value: $publicationText, suggestion: suggestion.publicationDate)
-                suggestionRow("Originally Published", enabled: $includeOriginalPublication, value: $originalPublicationText, suggestion: suggestion.originalPublicationDate)
-                suggestionRow("Edition", enabled: $includeEdition, value: $editionText, suggestion: suggestion.editionDescription)
-                suggestionRow("Volume or Part", enabled: $includeVolume, value: $volumeText, suggestion: suggestion.volumeDescription)
-                suggestionRow("Languages", enabled: $includeLanguages, value: $languagesText, suggestion: suggestion.languageCodes)
-                suggestionRow("Original Language", enabled: $includeOriginalLanguage, value: $originalLanguageText, suggestion: suggestion.originalLanguageCode)
-                suggestionRow("Pages", enabled: $includePages, value: $pagesText, suggestion: suggestion.pageCount)
-                suggestionSummaryRow("Pagination", enabled: $includePagination, suggestion: suggestion.paginationStatus)
-                suggestionSummaryRow("Physical Attributes", enabled: $includePhysicalAttributes, suggestion: suggestion.physicalAttributes)
-                suggestionRow("Description", enabled: $includeNotes, value: $notesText, suggestion: suggestion.descriptiveNotes)
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Suggestions from Filename", systemImage: "text.magnifyingglass")
+                    .font(.title2.bold())
+                Text(filenameTitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
             }
-            .formStyle(.grouped)
+
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    suggestionRow("Book Title", enabled: $includeTitle, value: $titleText, suggestion: suggestion.title)
+                    suggestionRow("Subtitle", enabled: $includeSubtitle, value: $subtitleText, suggestion: suggestion.subtitle)
+                    suggestionRow("Authors", enabled: $includeAuthors, value: $authorsText, suggestion: suggestion.authors)
+                    suggestionRow("Translators", enabled: $includeTranslators, value: $translatorsText, suggestion: suggestion.translators)
+                    suggestionSummaryRow("Contributors", enabled: $includeContributors, suggestion: suggestion.contributors)
+                    suggestionRow("Publisher", enabled: $includePublisher, value: $publisherText, suggestion: suggestion.publisher)
+                    suggestionRow("Collection", enabled: $includeCollection, value: $collectionText, suggestion: suggestion.collectionName)
+                    suggestionRow("Collection Number", enabled: $includeCollectionNumber, value: $collectionNumberText, suggestion: suggestion.collectionNumber)
+                    suggestionRow("Publication Place", enabled: $includePublicationPlace, value: $publicationPlaceText, suggestion: suggestion.publicationPlace)
+                    suggestionRow("Published", enabled: $includePublication, value: $publicationText, suggestion: suggestion.publicationDate)
+                    suggestionRow("Originally Published", enabled: $includeOriginalPublication, value: $originalPublicationText, suggestion: suggestion.originalPublicationDate)
+                    suggestionRow("Edition", enabled: $includeEdition, value: $editionText, suggestion: suggestion.editionDescription)
+                    suggestionRow("Volume or Part", enabled: $includeVolume, value: $volumeText, suggestion: suggestion.volumeDescription)
+                    suggestionRow("Languages", enabled: $includeLanguages, value: $languagesText, suggestion: suggestion.languageCodes)
+                    suggestionRow("Original Language", enabled: $includeOriginalLanguage, value: $originalLanguageText, suggestion: suggestion.originalLanguageCode)
+                    suggestionRow("Pages", enabled: $includePages, value: $pagesText, suggestion: suggestion.pageCount)
+                    suggestionSummaryRow("Pagination", enabled: $includePagination, suggestion: suggestion.paginationStatus)
+                    suggestionSummaryRow("Physical Attributes", enabled: $includePhysicalAttributes, suggestion: suggestion.physicalAttributes)
+                    suggestionRow("Description", enabled: $includeNotes, value: $notesText, suggestion: suggestion.descriptiveNotes)
+                }
+                .padding(.horizontal, 16)
+            }
+            .background(.quinary, in: .rect(cornerRadius: 12))
+            .clipShape(.rect(cornerRadius: 12))
+
             HStack {
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                    .disabled(isApplying)
                 Button("Apply Selected") {
                     suggestion.title = includeTitle ? updated(suggestion.title, value: titleText) : nil
                     suggestion.subtitle = includeSubtitle ? updated(suggestion.subtitle, value: subtitleText) : nil
@@ -113,27 +128,40 @@ struct FilenameSuggestionReviewView: View {
                     suggestion.physicalAttributes = includePhysicalAttributes ? suggestion.physicalAttributes : nil
                     suggestion.descriptiveNotes = includeNotes ? updated(suggestion.descriptiveNotes, value: notesText) : nil
                     let acceptedSuggestion = suggestion
-                    dismiss()
-                    Task { await onApply(acceptedSuggestion) }
+                    isApplying = true
+                    Task {
+                        if await onApply(acceptedSuggestion) {
+                            dismiss()
+                        } else {
+                            isApplying = false
+                        }
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
+                .disabled(isApplying)
             }
         }
         .padding(24)
-        .frame(width: 700, height: 760)
+        .frame(width: 760, height: 720)
     }
 
     @ViewBuilder
-    private func suggestionRow<Value: Equatable & Sendable>(_ label: String, enabled: Binding<Bool>, value: Binding<String>, suggestion: SuggestedValue<Value>?) -> some View {
+    private func suggestionRow<Value: Equatable & Sendable>(_ label: LocalizedStringKey, enabled: Binding<Bool>, value: Binding<String>, suggestion: SuggestedValue<Value>?) -> some View {
         if let suggestion {
-            Toggle(isOn: enabled) {
-                LabeledContent(label) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        TextField(label, text: value).multilineTextAlignment(.trailing)
-                        Text("\(suggestion.confidence.rawValue.capitalized) confidence · \(suggestion.evidence)")
-                            .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
+                    Toggle(label, isOn: enabled)
+                        .toggleStyle(.checkbox)
+                        .frame(width: 180, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField(label, text: value)
+                            .labelsHidden()
+                            .disabled(!enabled.wrappedValue)
+                        confidenceLine(for: suggestion)
                     }
                 }
+                .padding(.vertical, 11)
+                Divider()
             }
         }
     }
@@ -147,18 +175,59 @@ struct FilenameSuggestionReviewView: View {
 
     @ViewBuilder
     private func suggestionSummaryRow<Value: Equatable & Sendable>(
-        _ label: String,
+        _ label: LocalizedStringKey,
         enabled: Binding<Bool>,
         suggestion: SuggestedValue<Value>?
     ) -> some View {
         if let suggestion {
-            Toggle(isOn: enabled) {
-                LabeledContent(label) {
-                    Text(suggestion.evidence)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.trailing)
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
+                    Toggle(label, isOn: enabled)
+                        .toggleStyle(.checkbox)
+                        .frame(width: 180, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(suggestion.evidence)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                        confidenceLine(for: suggestion, includeEvidence: false)
+                    }
                 }
+                .padding(.vertical, 11)
+                Divider()
             }
+        }
+    }
+
+    private func confidenceLine<Value: Equatable & Sendable>(
+        for suggestion: SuggestedValue<Value>,
+        includeEvidence: Bool = true
+    ) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: confidenceSymbol(for: suggestion.confidence))
+            Text(confidenceLabel(for: suggestion.confidence))
+            if includeEvidence {
+                Text("·")
+                Text(suggestion.evidence)
+                    .lineLimit(2)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    private func confidenceSymbol(for confidence: SuggestionConfidence) -> String {
+        switch confidence {
+        case .high: "checkmark.circle"
+        case .medium: "circle.lefthalf.filled"
+        case .low: "questionmark.circle"
+        }
+    }
+
+    private func confidenceLabel(for confidence: SuggestionConfidence) -> String {
+        switch confidence {
+        case .high: L10n.text("High confidence")
+        case .medium: L10n.text("Medium confidence")
+        case .low: L10n.text("Low confidence")
         }
     }
 

@@ -37,23 +37,19 @@ actor CatalogReconciler {
                 fileModificationDate: item.source.fileModificationDate
             )
             if let resourceID = item.source.fileResourceIdentifier,
-               let candidates = sourcesByResourceID[resourceID], candidates.count == 1,
-               let source = candidates.first {
-                operations.append(.updateSource(id: item.id, expected: expected, newValue: source))
-                unmatchedSources.removeValue(forKey: source.relativePath)
-                if let fingerprint = source.portableFingerprint {
-                    sourcesByFingerprint[fingerprint]?.removeAll { $0.relativePath == source.relativePath }
-                }
-                sourcesByResourceID[resourceID] = []
-            } else if let fingerprint = item.source.portableFingerprint,
-               let candidates = sourcesByFingerprint[fingerprint],
+               let candidates = sourcesByResourceID[resourceID]?.filter({ unmatchedSources[$0.relativePath] != nil }),
                candidates.count == 1,
                let source = candidates.first {
                 operations.append(.updateSource(id: item.id, expected: expected, newValue: source))
                 unmatchedSources.removeValue(forKey: source.relativePath)
-                sourcesByFingerprint[fingerprint] = []
             } else if let fingerprint = item.source.portableFingerprint,
-                      let candidates = sourcesByFingerprint[fingerprint],
+               let candidates = sourcesByFingerprint[fingerprint]?.filter({ unmatchedSources[$0.relativePath] != nil }),
+               candidates.count == 1,
+               let source = candidates.first {
+                operations.append(.updateSource(id: item.id, expected: expected, newValue: source))
+                unmatchedSources.removeValue(forKey: source.relativePath)
+            } else if let fingerprint = item.source.portableFingerprint,
+                      let candidates = sourcesByFingerprint[fingerprint]?.filter({ unmatchedSources[$0.relativePath] != nil }),
                       candidates.count > 1 {
                 let fullMatches = item.source.fullContentHash.map { expectedHash in
                     candidates.filter { $0.fullContentHash == expectedHash }
@@ -70,6 +66,8 @@ actor CatalogReconciler {
                         unmatchedSources.removeValue(forKey: candidate.relativePath)
                     }
                 }
+            } else if scan.warnings.contains(where: { $0.relativePath == item.source.relativePath }) {
+                continue
             } else if scan.completedEnumeration {
                 operations.append(.removeRecord(id: item.id, expected: expected))
             } else {

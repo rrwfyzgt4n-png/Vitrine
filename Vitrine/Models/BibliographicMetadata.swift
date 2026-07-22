@@ -8,24 +8,28 @@ enum ContributorRole: String, CaseIterable, Equatable, Sendable {
     case editorDirector = "editor-director"
     case preface
     case foreword
+    case introduction
     case illustrator
     case iconographer
     case cartographer
     case assistant
+    case collaborator
 
     var label: String {
         switch self {
-        case .editor: "Editor"
-        case .compiler: "Compiler"
-        case .annotator: "Annotator"
-        case .generalEditor: "General editor"
-        case .editorDirector: "Editor/director"
-        case .preface: "Preface"
-        case .foreword: "Foreword"
-        case .illustrator: "Illustrator"
-        case .iconographer: "Iconographer"
-        case .cartographer: "Cartographer"
-        case .assistant: "Assistant"
+        case .editor: L10n.text("Editor")
+        case .compiler: L10n.text("Compiler")
+        case .annotator: L10n.text("Annotator")
+        case .generalEditor: L10n.text("General editor")
+        case .editorDirector: L10n.text("Editor/director")
+        case .preface: L10n.text("Preface")
+        case .foreword: L10n.text("Foreword")
+        case .introduction: L10n.text("Introduction")
+        case .illustrator: L10n.text("Illustrator")
+        case .iconographer: L10n.text("Iconographer")
+        case .cartographer: L10n.text("Cartographer")
+        case .assistant: L10n.text("Assistant")
+        case .collaborator: L10n.text("Collaborator")
         }
     }
 }
@@ -40,7 +44,7 @@ enum PaginationStatus: String, CaseIterable, Equatable, Sendable {
 
     var label: String {
         switch self {
-        case .nonPaginated: "Non-paginated"
+        case .nonPaginated: L10n.text("Non-paginated")
         }
     }
 }
@@ -58,15 +62,15 @@ enum PhysicalAttribute: String, CaseIterable, Equatable, Sendable {
 
     var label: String {
         switch self {
-        case .illustrated: "Illustrated"
-        case .maps: "Maps"
-        case .foldoutMaps: "Fold-out maps"
-        case .battlePlans: "Battle plans"
-        case .genealogicalTrees: "Genealogical trees"
-        case .blackAndWhite: "Black and white"
-        case .dustJacket: "Dust jacket"
-        case .slipcase: "Slipcase"
-        case .doublePages: "Double pages"
+        case .illustrated: L10n.text("Illustrated")
+        case .maps: L10n.text("Maps")
+        case .foldoutMaps: L10n.text("Fold-out maps")
+        case .battlePlans: L10n.text("Battle plans")
+        case .genealogicalTrees: L10n.text("Genealogical trees")
+        case .blackAndWhite: L10n.text("Black and white")
+        case .dustJacket: L10n.text("Dust jacket")
+        case .slipcase: L10n.text("Slipcase")
+        case .doublePages: L10n.text("Double pages")
         }
     }
 }

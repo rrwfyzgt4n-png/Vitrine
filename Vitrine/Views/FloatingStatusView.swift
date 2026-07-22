@@ -29,11 +29,14 @@ struct FloatingStatusView: View {
         HStack(spacing: 10) {
             if locate == nil { ProgressView().controlSize(.small) }
             Text(message).lineLimit(1)
-            if let locate { Button("Locate…", action: locate) }
+            if let locate {
+                Button("Locate…", action: locate)
+                    .accessibilityIdentifier("status.locate")
+            }
             if let cancel { Button("Cancel", action: cancel) }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
     }
 }

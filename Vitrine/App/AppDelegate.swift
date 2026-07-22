@@ -15,7 +15,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func presentMainWindow() {
-        NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
+        let mainWindow = NSApp.windows.first(where: { $0.title == "Vitrine" })
+            ?? NSApp.windows.first(where: { $0.canBecomeMain })
+        mainWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         NSRunningApplication.current.activate(options: [.activateAllWindows])
     }

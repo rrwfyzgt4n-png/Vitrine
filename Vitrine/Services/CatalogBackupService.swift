@@ -1,7 +1,7 @@
 import Foundation
 
 actor CatalogBackupService {
-    struct Backup: Identifiable, Sendable {
+    struct Backup: Identifiable, Equatable, Sendable {
         var id: URL { url }
         var url: URL
         var date: Date
@@ -13,11 +13,26 @@ actor CatalogBackupService {
     func preserveCurrentCatalog(at catalogURL: URL, catalogID: UUID) throws {
         guard fileManager.fileExists(atPath: catalogURL.path) else { return }
         let data = try Data(contentsOf: catalogURL, options: [.mappedIfSafe])
+        try preserve(data, catalogID: catalogID)
+    }
+
+    func preserve(_ data: Data, catalogID: UUID) throws {
         guard !data.isEmpty else { return }
         let folder = try backupFolder(catalogID: catalogID)
         let stamp = String(Int(Date.now.timeIntervalSince1970 * 1_000))
         try data.write(to: folder.appending(path: "Catalog-\(stamp)-\(UUID().uuidString).md"), options: .atomic)
         try rotate(folder: folder)
+    }
+
+    func preserveDamaged(_ data: Data, catalogID: UUID?) throws -> URL {
+        let identifier = catalogID?.uuidString ?? "Unidentified"
+        let folder = try applicationSupportFolder(
+            path: "Vitrine/Damaged Catalogs/\(identifier)"
+        )
+        let stamp = String(Int(Date.now.timeIntervalSince1970 * 1_000))
+        let destination = folder.appending(path: "Damaged-Catalog-\(stamp)-\(UUID().uuidString).md")
+        try data.write(to: destination, options: .atomic)
+        return destination
     }
 
     func backups(catalogID: UUID) throws -> [Backup] {
@@ -29,11 +44,6 @@ actor CatalogBackupService {
         ).filter { $0.pathExtension.lowercased() == "md" }.map {
             Backup(url: $0, date: (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast)
         }.sorted { $0.date > $1.date }
-    }
-
-    func restore(_ backup: Backup, to catalogURL: URL) throws {
-        let data = try Data(contentsOf: backup.url)
-        try data.write(to: catalogURL, options: .atomic)
     }
 
     private func rotate(folder: URL) throws {
@@ -52,12 +62,16 @@ actor CatalogBackupService {
     }
 
     private func backupFolder(catalogID: UUID) throws -> URL {
+        try applicationSupportFolder(path: "Vitrine/Backups/\(catalogID.uuidString)")
+    }
+
+    private func applicationSupportFolder(path: String) throws -> URL {
         let base = try fileManager.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
             create: true
-        ).appending(path: "Vitrine/Backups/\(catalogID.uuidString)", directoryHint: .isDirectory)
+        ).appending(path: path, directoryHint: .isDirectory)
         try fileManager.createDirectory(at: base, withIntermediateDirectories: true)
         return base
     }

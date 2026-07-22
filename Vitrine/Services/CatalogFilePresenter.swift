@@ -37,6 +37,28 @@ final class CatalogFilePresenter: NSObject, NSFilePresenter, @unchecked Sendable
         completionHandler(nil)
     }
 
+    func presentedItemDidResolveConflict(_ version: NSFileVersion) {
+        continuation.yield(.conflictResolved)
+    }
+
+    func relinquishPresentedItem(
+        toReader reader: @escaping @Sendable ((@Sendable () -> Void)?) -> Void
+    ) {
+        continuation.yield(.relinquished)
+        reader { [continuation] in
+            continuation.yield(.reacquired)
+        }
+    }
+
+    func relinquishPresentedItem(
+        toWriter writer: @escaping @Sendable ((@Sendable () -> Void)?) -> Void
+    ) {
+        continuation.yield(.relinquished)
+        writer { [continuation] in
+            continuation.yield(.reacquired)
+        }
+    }
+
     deinit {
         NSFileCoordinator.removeFilePresenter(self)
         continuation.finish()

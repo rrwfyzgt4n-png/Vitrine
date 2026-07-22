@@ -53,7 +53,7 @@ struct MetadataCandidateReviewView: View {
     }
 
     @ViewBuilder
-    private func comparison(_ label: String, field: MetadataCandidateField, existing: String?, proposed: String?) -> some View {
+    private func comparison(_ label: LocalizedStringKey, field: MetadataCandidateField, existing: String?, proposed: String?) -> some View {
         if let proposed, !proposed.isEmpty {
             Toggle(isOn: binding(for: field)) {
                 VStack(alignment: .leading, spacing: 4) {

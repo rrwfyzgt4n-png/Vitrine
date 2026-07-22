@@ -17,49 +17,42 @@ actor SecurityScopedBookmarkStore {
         storageURLOverride = storageURL
     }
 
-    func save(catalogURL: URL, coverFolderURL: URL?, snapshot: CatalogSnapshot) throws {
+    func save(
+        catalogURL: URL,
+        coverFolderURL: URL?,
+        snapshot: CatalogSnapshot,
+        preserveExistingCoverAccess: Bool = false
+    ) throws {
         var accessFile = try loadFile()
+        let existing = accessFile.records[snapshot.catalogID]
         let catalogBookmark = try catalogURL.bookmarkData(
             options: [.withSecurityScope],
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
-        let folderBookmark = try coverFolderURL?.bookmarkData(
-            options: [.withSecurityScope],
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil
-        )
-        let volumeValues = try? coverFolderURL?.resourceValues(forKeys: [
-            .volumeUUIDStringKey,
-            .volumeNameKey,
-            .volumeURLKey,
-        ])
-        let volumeURL = volumeValues?.volume
-        let volumeResourceIdentifier = try? volumeURL?.resourceValues(forKeys: [.fileResourceIdentifierKey])
-        let relativeFolderPath: String?
-        if let folderURL = coverFolderURL,
-           let volumeURL = volumeValues?.volume {
-            relativeFolderPath = folderURL.pathComponents
-                .dropFirst(volumeURL.pathComponents.count)
-                .joined(separator: "/")
+        let coverAccess: CoverAccessDetails
+        if let coverFolderURL {
+            coverAccess = try makeCoverAccessDetails(for: coverFolderURL)
+        } else if preserveExistingCoverAccess, let existing {
+            coverAccess = CoverAccessDetails(
+                bookmark: existing.coverFolderBookmark,
+                volumeUUID: existing.volumeUUID,
+                volumeName: existing.volumeName,
+                relativeFolderPath: existing.relativeFolderPath,
+                volumeIdentity: existing.volumeIdentity
+            )
         } else {
-            relativeFolderPath = nil
+            coverAccess = .empty
         }
         accessFile.records[snapshot.catalogID] = CatalogAccessRecord(
             catalogID: snapshot.catalogID,
             catalogBookmark: catalogBookmark,
-            coverFolderBookmark: folderBookmark,
-            volumeUUID: volumeValues?.volumeUUIDString,
-            volumeName: volumeValues?.volumeName,
-            relativeFolderPath: relativeFolderPath,
+            coverFolderBookmark: coverAccess.bookmark,
+            volumeUUID: coverAccess.volumeUUID,
+            volumeName: coverAccess.volumeName,
+            relativeFolderPath: coverAccess.relativeFolderPath,
             sourceFolderSignature: snapshot.sourceFolderSignature,
-            volumeIdentity: VolumeIdentity(
-                uuid: volumeValues?.volumeUUIDString,
-                resourceIdentifier: volumeResourceIdentifier?.fileResourceIdentifier.map { String(describing: $0) },
-                displayName: volumeValues?.volumeName,
-                lastKnownURL: volumeURL,
-                relativeFolderPath: relativeFolderPath
-            ),
+            volumeIdentity: coverAccess.volumeIdentity,
             updatedAt: .now
         )
         accessFile.lastCatalogID = snapshot.catalogID
@@ -88,9 +81,27 @@ actor SecurityScopedBookmarkStore {
         return resolution.access
     }
 
+    func catalogID(matching catalogURL: URL) throws -> UUID? {
+        let accessFile = try loadFile()
+        let target = catalogURL.resolvingSymlinksInPath().standardizedFileURL
+        for record in accessFile.records.values {
+            var isStale = false
+            guard let rememberedURL = try? URL(
+                resolvingBookmarkData: record.catalogBookmark,
+                options: [.withSecurityScope],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) else { continue }
+            if rememberedURL.resolvingSymlinksInPath().standardizedFileURL == target {
+                return record.catalogID
+            }
+        }
+        return nil
+    }
+
     func reconnectMountedVolume(catalogID: UUID) throws -> URL? {
-        var accessFile = try loadFile()
-        guard var record = accessFile.records[catalogID] else { return nil }
+        let accessFile = try loadFile()
+        guard let record = accessFile.records[catalogID] else { return nil }
         let identity = record.volumeIdentity ?? VolumeIdentity(
             uuid: record.volumeUUID,
             resourceIdentifier: nil,
@@ -103,33 +114,20 @@ actor SecurityScopedBookmarkStore {
             includingResourceValuesForKeys: [.volumeUUIDStringKey],
             options: [.skipHiddenVolumes]
         ) ?? []
-        guard let volumeURL = volumes.first(where: { candidate in
+        let candidates = volumes.map { candidate -> MountedVolumeCandidate in
             let values = try? candidate.resourceValues(forKeys: [.volumeUUIDStringKey, .fileResourceIdentifierKey])
-            if let expectedUUID = identity.uuid, values?.volumeUUIDString == expectedUUID { return true }
-            if let expectedResourceID = identity.resourceIdentifier {
-                return values?.fileResourceIdentifier.map { String(describing: $0) } == expectedResourceID
-            }
-            return false
-        }) else { return nil }
+            return MountedVolumeCandidate(
+                url: candidate,
+                uuid: values?.volumeUUIDString,
+                resourceIdentifier: values?.fileResourceIdentifier.map { String(describing: $0) }
+            )
+        }
+        guard let volumeURL = VolumeReconnectMatcher().matchingVolume(
+            for: identity,
+            candidates: candidates
+        ) else { return nil }
         let candidate = volumeURL.appending(path: relativePath, directoryHint: .isDirectory)
-        guard fileManager.fileExists(atPath: candidate.path) else { return nil }
-        record.coverFolderBookmark = try candidate.bookmarkData(
-            options: [.withSecurityScope],
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil
-        )
-        let volumeValues = try? volumeURL.resourceValues(forKeys: [.volumeUUIDStringKey, .volumeNameKey, .fileResourceIdentifierKey])
-        record.volumeIdentity = VolumeIdentity(
-            uuid: volumeValues?.volumeUUIDString,
-            resourceIdentifier: volumeValues?.fileResourceIdentifier.map { String(describing: $0) },
-            displayName: volumeValues?.volumeName,
-            lastKnownURL: volumeURL,
-            relativeFolderPath: relativePath
-        )
-        record.updatedAt = .now
-        accessFile.records[catalogID] = record
-        try write(accessFile)
-        return candidate
+        return isReachableDirectory(candidate) ? candidate : nil
     }
 
     private func resolve(_ original: CatalogAccessRecord) throws -> (access: ResolvedAccess, record: CatalogAccessRecord) {
@@ -154,21 +152,23 @@ actor SecurityScopedBookmarkStore {
         var folderURL: URL?
         if let data = record.coverFolderBookmark {
             var folderStale = false
-            folderURL = try? URL(
-                resolvingBookmarkData: data,
-                options: [.withSecurityScope],
-                relativeTo: nil,
-                bookmarkDataIsStale: &folderStale
-            )
-            if folderStale, let folderURL {
-                let lease = SecurityScopeLease(url: folderURL)
-                defer { lease.stop() }
-                record.coverFolderBookmark = try folderURL.bookmarkData(
+            if let candidate = try? URL(
+                    resolvingBookmarkData: data,
                     options: [.withSecurityScope],
-                    includingResourceValuesForKeys: nil,
-                    relativeTo: nil
-                )
-                record.updatedAt = .now
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &folderStale
+                ), isReachableDirectory(candidate) {
+                folderURL = candidate
+                if folderStale {
+                    let lease = SecurityScopeLease(url: candidate)
+                    defer { lease.stop() }
+                    record.coverFolderBookmark = try candidate.bookmarkData(
+                        options: [.withSecurityScope],
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+                    record.updatedAt = .now
+                }
             }
         }
         let access = ResolvedAccess(
@@ -178,6 +178,50 @@ actor SecurityScopedBookmarkStore {
             sourceFolderSignature: record.sourceFolderSignature
         )
         return (access, record)
+    }
+
+    private func makeCoverAccessDetails(for folderURL: URL) throws -> CoverAccessDetails {
+        let bookmark = try folderURL.bookmarkData(
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let volumeValues = try? folderURL.resourceValues(forKeys: [
+            .volumeUUIDStringKey,
+            .volumeNameKey,
+            .volumeURLKey,
+        ])
+        let volumeURL = volumeValues?.volume
+        let volumeResourceIdentifier = try? volumeURL?.resourceValues(forKeys: [.fileResourceIdentifierKey])
+        let relativeFolderPath: String?
+        if let volumeURL,
+           folderURL.pathComponents.starts(with: volumeURL.pathComponents) {
+            relativeFolderPath = folderURL.pathComponents
+                .dropFirst(volumeURL.pathComponents.count)
+                .joined(separator: "/")
+        } else {
+            relativeFolderPath = nil
+        }
+        return CoverAccessDetails(
+            bookmark: bookmark,
+            volumeUUID: volumeValues?.volumeUUIDString,
+            volumeName: volumeValues?.volumeName,
+            relativeFolderPath: relativeFolderPath,
+            volumeIdentity: VolumeIdentity(
+                uuid: volumeValues?.volumeUUIDString,
+                resourceIdentifier: volumeResourceIdentifier?.fileResourceIdentifier.map { String(describing: $0) },
+                displayName: volumeValues?.volumeName,
+                lastKnownURL: volumeURL,
+                relativeFolderPath: relativeFolderPath
+            )
+        )
+    }
+
+    private func isReachableDirectory(_ url: URL) -> Bool {
+        let lease = SecurityScopeLease(url: url)
+        defer { lease.stop() }
+        guard (try? url.checkResourceIsReachable()) == true else { return false }
+        return (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
     }
 
     private func loadFile() throws -> CatalogAccessFile {
@@ -209,4 +253,20 @@ actor SecurityScopedBookmarkStore {
         try fileManager.createDirectory(at: base, withIntermediateDirectories: true)
         return base.appending(path: "CatalogAccess.plist")
     }
+}
+
+private struct CoverAccessDetails {
+    var bookmark: Data?
+    var volumeUUID: String?
+    var volumeName: String?
+    var relativeFolderPath: String?
+    var volumeIdentity: VolumeIdentity?
+
+    static let empty = CoverAccessDetails(
+        bookmark: nil,
+        volumeUUID: nil,
+        volumeName: nil,
+        relativeFolderPath: nil,
+        volumeIdentity: nil
+    )
 }

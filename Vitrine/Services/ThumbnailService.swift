@@ -6,6 +6,13 @@ struct ThumbnailImage: @unchecked Sendable {
     let cgImage: CGImage
 }
 
+struct ThumbnailCacheStatistics: Equatable, Sendable {
+    var hits: Int
+    var misses: Int
+    var countLimit: Int
+    var totalCostLimit: Int
+}
+
 actor ThumbnailService {
     static let shared = ThumbnailService()
 
@@ -18,11 +25,15 @@ actor ThumbnailService {
     }
 
     private let cache: NSCache<NSString, CachedThumbnail>
+    private var cacheHits = 0
+    private var cacheMisses = 0
+    private let countLimit = 500
+    private let totalCostLimit = 256 * 1_024 * 1_024
 
     init() {
         cache = NSCache<NSString, CachedThumbnail>()
-        cache.countLimit = 500
-        cache.totalCostLimit = 256 * 1_024 * 1_024
+        cache.countLimit = countLimit
+        cache.totalCostLimit = totalCostLimit
     }
 
     func thumbnail(
@@ -40,8 +51,10 @@ actor ThumbnailService {
         ].joined(separator: "|"))
 
         if let cached = cache.object(forKey: cacheKey) {
+            cacheHits += 1
             return ThumbnailImage(cgImage: cached.image)
         }
+        cacheMisses += 1
 
         let isAccessing = sourceFolderURL.startAccessingSecurityScopedResource()
         defer {
@@ -73,6 +86,17 @@ actor ThumbnailService {
 
     func removeAll() {
         cache.removeAllObjects()
+        cacheHits = 0
+        cacheMisses = 0
+    }
+
+    func statistics() -> ThumbnailCacheStatistics {
+        ThumbnailCacheStatistics(
+            hits: cacheHits,
+            misses: cacheMisses,
+            countLimit: countLimit,
+            totalCostLimit: totalCostLimit
+        )
     }
 
     private func coverURL(sourceFolderURL: URL, relativePath: String) throws -> URL {

@@ -18,6 +18,14 @@ struct VitrineApp: App {
             AppCommands(store: store)
         }
 
+        Window("About Vitrine", id: "about") {
+            AboutVitrineView(store: store)
+        }
+        .defaultSize(width: 620, height: 690)
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
+        .restorationBehavior(.disabled)
+
         Settings {
             SettingsView()
         }

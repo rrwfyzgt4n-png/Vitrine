@@ -1,6 +1,6 @@
 import Foundation
 
-enum CatalogMergeField: String, Sendable {
+enum CatalogMergeField: String, CaseIterable, Sendable {
     case catalogName = "Catalog name"
     case sourceFolderName = "Cover folder name"
     case sourceFolderSignature = "Cover folder identity"

@@ -1,6 +1,19 @@
 import Foundation
 
 struct FilenameMetadataParser: Sendable {
+    private static let sourceCorrections: [(mistake: String, correction: String)] = [
+        ("Classiquea canadien", "Classiques canadiens"),
+        ("Forword", "Foreword"),
+        ("Illustrationss", "Illustrations"),
+        ("ont aterri", "ont atterri"),
+        ("Michel Lessard Gillas Vilandré", "Michel Lessard et Gilles Vilandré"),
+        ("Les de lUniversité Laval", "Les Presses de l'Université Laval"),
+        ("dans un boitier", "dans un boîtier"),
+        ("col laboration", "collaboration"),
+        ("BibliothèqueNationale", "Bibliothèque Nationale"),
+        ("libre-éc hange", "libre-échange")
+    ]
+
     func suggestions(from sourceTitle: String) -> FilenameMetadataSuggestion {
         let original = sourceTitle.precomposedStringWithCanonicalMapping
         let source = normalizedSource(original)
@@ -75,28 +88,26 @@ struct FilenameMetadataParser: Sendable {
             with: "",
             options: .regularExpression
         )
-        let corrections = [
-            "Classiquea canadien": "Classiques canadiens",
-            "Forword": "Foreword",
-            "Illustrationss": "Illustrations",
-            "ont aterri": "ont atterri",
-            "Michel Lessard Gillas Vilandré": "Michel Lessard et Gilles Vilandré",
-            "Les de lUniversité Laval": "Les Presses de l'Université Laval",
-            "dans un boitier": "dans un boîtier"
-        ]
-        for (mistake, correction) in corrections {
+        for (mistake, correction) in Self.sourceCorrections {
             result = result.replacingOccurrences(of: mistake, with: correction, options: [.caseInsensitive, .diacriticInsensitive])
         }
+        result = result.replacingOccurrences(of: #":\s*"#, with: ": ", options: .regularExpression)
         return result.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func extractTranslators(from value: String) -> [String] {
+        if let match = firstMatch(
+            #"(?i)traduction\s+de\s+l['’][^,]+?\s+(?:et\s+notes\s+)?par\s+([^,]+)"#,
+            in: value
+        ) {
+            return splitPeople(match.groups[0])
+        }
         let patterns = [
             #"(?i)traduit(?:e)?\s+de\s+l['’]anglais\s+par\s*([^,]+)"#,
             #"(?i)translated\s+by\s+([^,]+)"#,
             #"(?i)english\s+translation\s+by\s+([^,]+)"#,
-            #"(?i)traduction\s+de\s+([^,]+)"#
+            #"(?i)traduction\s+(?:de|par)\s+(?!l['’])([^,]+)"#
         ]
         guard let match = patterns.compactMap({ firstMatch($0, in: value) }).min(by: { $0.range.lowerBound < $1.range.lowerBound }) else {
             return []
@@ -109,11 +120,24 @@ struct FilenameMetadataParser: Sendable {
         addCredits(pattern: #"(?i)avant[- ]propos\s+de\s+([^,]+)"#, roles: [.foreword], from: value, to: &result)
         addCredits(pattern: #"(?i)pr[eé]face\s+de\s+([^,]+)"#, roles: [.preface], from: value, to: &result)
         addCredits(pattern: #"(?i)foreword\s+by\s+([^,]+)"#, roles: [.foreword], from: value, to: &result)
+        addCredits(pattern: #"(?i)introduction\s+de\s+([^,]+)"#, roles: [.introduction], from: value, to: &result)
+        addCredits(
+            pattern: #"(?i)traduction\s+de\s+l['’][^,]+?\s+et\s+notes\s+par\s+([^,]+)"#,
+            roles: [.annotator],
+            from: value,
+            to: &result
+        )
         addCredits(pattern: #"(?i)iconographie\s+r[eé]unie\s+par\s+([^,]+)"#, roles: [.iconographer], from: value, to: &result)
         addCredits(pattern: #"(?i)illustrations?\s+(?:drawn\s*&\s*collected|drawn)\s+by\s+([^,]+)"#, roles: [.illustrator, .iconographer], from: value, to: &result)
         addCredits(pattern: #"(?i)assisted\s+by\s+([^,]+)"#, roles: [.assistant], from: value, to: &result)
         addCredits(pattern: #"(?i)maps\s+by\s+([^,]+)"#, roles: [.cartographer], from: value, to: &result)
         addCredits(pattern: #"(?i)dessins\s+de\s+([^,]+)"#, roles: [.illustrator], from: value, to: &result)
+        addCredits(
+            pattern: #"(?i)avec\s+la\s+col\s*laboration\s+(?:du|de\s+la|de\s+l['’]|des|de)\s+([^,]+)"#,
+            roles: [.collaborator],
+            from: value,
+            to: &result
+        )
         addCredits(pattern: #"(?i)textes?\.?\s+choisis,?\s+pr[eé]sent[eé]s\s+et\s+annot[eé]s\s+par\s+([^,]+)"#, roles: [.compiler, .editor, .annotator], from: value, to: &result)
         addCredits(pattern: #"(?i)edited\s+by\s+([^,]+)"#, roles: [.editor], from: value, to: &result)
         addCredits(pattern: #"(?i)publi[eé]\s+par\s+([^,]+)"#, roles: [.editorDirector], from: value, to: &result)
@@ -161,10 +185,16 @@ struct FilenameMetadataParser: Sendable {
         }
 
         let rolePrefixes = [
-            "traduit", "translated", "translation", "edited", "préface", "preface", "foreword",
+            "traduit", "translated", "translation", "edited", "préface", "preface", "foreword", "introduction",
             "iconographie", "illustration", "assisted", "maps", "dessins", "annotés", "annotes", "publié", "publie"
         ]
-        for match in matches(#"(?i)\b(par|by|de)\s+"#, in: value) {
+        let responsibilityMatches = matches(#"(?i)\b(par|by|de)\s+"#, in: value).sorted { lhs, rhs in
+            let lhsPriority = SearchNormalizer.normalize(lhs.groups[0]) == "de" ? 1 : 0
+            let rhsPriority = SearchNormalizer.normalize(rhs.groups[0]) == "de" ? 1 : 0
+            if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+            return lhs.range.lowerBound < rhs.range.lowerBound
+        }
+        for match in responsibilityMatches {
             let prefixStart = value.index(match.range.lowerBound, offsetBy: -min(32, value.distance(from: value.startIndex, to: match.range.lowerBound)))
             let rawPrefix = String(value[prefixStart..<match.range.lowerBound])
             let prefix = SearchNormalizer.normalize(rawPrefix)
@@ -232,7 +262,8 @@ struct FilenameMetadataParser: Sendable {
         let keywords = [
             "edition", "editions", "edizioni", "ed.", "librairie", "press", "presses", "books", "company", "editeur",
             "imprimerie", "hachette", "boreal", "dargaud", "paperjacks", "farcountry", "mame", "methuen",
-            "larousse", "balland", "fayard", "collection berko", "national geographic society", "simon & schuster"
+            "larousse", "balland", "fayard", "maspero", "la decouverte", "collection berko",
+            "national geographic society", "simon & schuster"
         ]
         var candidate = chunks.reversed().first { chunk in
             let normalized = SearchNormalizer.normalize(chunk)
@@ -287,7 +318,7 @@ struct FilenameMetadataParser: Sendable {
         let patterns = [
             #"(?i)\b(tome\s*\d+)\b"#,
             #"(?i)\b(\d+\s+vols?)\b"#,
-            #"(?i)\b(vol(?:ume)?[.,]?\s*(?:[A-ZÀ-ÖØ-Þ]+|\d+)(?:\s+[^,]+)?)"#,
+            #"(?i)\b(vol(?:ume)?[.,]?\s*(?:[A-ZÀ-ÖØ-Þ]+|\d+)(?:\s+(?!(?:par|by|de|[eé]ditions?|[eé]d\.|librairie|presses?)\b)[^,]+?)?)(?=\s*,|\s+(?:par|by|de|[eé]ditions?|[eé]d\.|librairie|presses?)\b|$)"#,
             #"(?i)(?<!\d)(6\.1)(?!\d)"#
         ]
         return patterns.compactMap { firstMatch($0, in: value) }.min(by: { $0.range.lowerBound < $1.range.lowerBound })?.groups.first
@@ -297,6 +328,16 @@ struct FilenameMetadataParser: Sendable {
         if contains(#"(?i)en fran[cç]ais et en italien"#, in: value) { return (["fr", "it"], nil) }
         if contains(#"(?i)en fran[cç]ais"#, in: value) { return (["fr"], nil) }
         if contains(#"(?i)english translation by"#, in: value) { return (["en"], nil) }
+        let translatedSourceLanguages = [
+            (#"(?i)(?:traduction|traduit(?:e)?)\s+de\s+l['’]espagnol"#, "es"),
+            (#"(?i)(?:traduction|traduit(?:e)?)\s+de\s+l['’]anglais"#, "en"),
+            (#"(?i)(?:traduction|traduit(?:e)?)\s+de\s+l['’]italien"#, "it"),
+            (#"(?i)(?:traduction|traduit(?:e)?)\s+de\s+l['’]allemand"#, "de")
+        ]
+        if hasTranslators,
+           let original = translatedSourceLanguages.first(where: { contains($0.0, in: value) })?.1 {
+            return (["fr"], original)
+        }
         if contains(#"(?i)(?:traduit(?:e)? de l['’]anglais|translated by)"#, in: value), hasTranslators {
             return (["fr"], "en")
         }
@@ -338,7 +379,8 @@ struct FilenameMetadataParser: Sendable {
         var boundaries: [String.Index] = []
         let boundaryPatterns = [
             #"(?i),?\s*avant[- ]propos\s+de\b"#, #"(?i),?\s*pr[eé]face\s+de\b"#,
-            #"(?i),?\s*foreword\s+by\b"#, #"(?i),?\s*iconographie\s+r[eé]unie\s+par\b"#,
+            #"(?i),?\s*foreword\s+by\b"#, #"(?i),?\s*introduction\s+de\b"#,
+            #"(?i),?\s*iconographie\s+r[eé]unie\s+par\b"#,
             #"(?i),?\s*illustrations?\s+(?:drawn|collected)"#, #"(?i),?\s*textes?\.?\s+choisis"#,
             #"(?i),?\s*texte\s+de\b"#, #"(?i),?\s*publi[eé]\s+par\b"#,
             #"(?i),?\s*edited\s+by\b"#, #"(?i),?\s*en fran[cç]ais(?:\s+et\s+en\s+italien)?\b"#

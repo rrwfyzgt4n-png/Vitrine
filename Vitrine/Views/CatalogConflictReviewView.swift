@@ -3,8 +3,9 @@ import SwiftUI
 struct CatalogConflictReviewView: View {
     @Environment(\.dismiss) private var dismiss
     let pending: PendingCatalogMerge
-    let onApply: (Set<UUID>) async -> Void
+    let onApply: (Set<UUID>) async -> Bool
     @State private var useExternal: Set<UUID> = []
+    @State private var isApplying = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -16,26 +17,34 @@ struct CatalogConflictReviewView: View {
                     Text(conflictTitle(conflict))
                         .font(.headline)
                     Picker("Value", selection: choiceBinding(for: conflict.id)) {
-                        Text("Keep Vitrine: \(conflict.localValue)").tag(false)
-                        Text("Use External: \(conflict.externalValue)").tag(true)
+                        Text("Keep Mine: \(conflict.localValue)").tag(false)
+                        Text("Use Other: \(conflict.externalValue)").tag(true)
                     }
                     .pickerStyle(.radioGroup)
                 }
                 .padding(.vertical, 6)
             }
             HStack {
-                Button("Use All from Vitrine") { useExternal.removeAll() }
-                Button("Use All External") { useExternal = Set(pending.conflicts.map(\.id)) }
+                Button("Keep All Mine") { useExternal.removeAll() }
+                Button("Use All Other") { useExternal = Set(pending.conflicts.map(\.id)) }
                 Spacer()
-                Button("Review Later") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Keep Browsing") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                    .disabled(isApplying)
                 Button("Apply Resolutions") {
-                    Task { await onApply(useExternal); dismiss() }
+                    isApplying = true
+                    Task {
+                        if await onApply(useExternal) { dismiss() }
+                        else { isApplying = false }
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
+                .disabled(isApplying)
             }
         }
         .padding(24)
         .frame(width: 760, height: 680)
+        .accessibilityIdentifier("conflict.review")
     }
 
     private func choiceBinding(for id: UUID) -> Binding<Bool> {

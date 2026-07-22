@@ -15,8 +15,10 @@ struct BookInspectorView: View {
                     if !item.personalNotes.isEmpty { Text(item.personalNotes) }
                     HStack {
                         Button("Edit") { store.isMetadataEditorPresented = true }
+                            .accessibilityIdentifier("inspector.edit")
                         Button("Suggest from Filename") { store.suggestDetailsFromFilename() }
                     }
+                    .disabled(store.catalog?.isReadOnly != false)
                     DisclosureGroup("Book Details", isExpanded: $bookDetailsExpanded) {
                         BookDetailsSection(item: item)
                         HStack {
@@ -29,10 +31,13 @@ struct BookInspectorView: View {
                             }
                         }
                         .padding(.top, 8)
+                        .disabled(store.catalog?.isReadOnly == true)
                     }
+                    .accessibilityIdentifier("inspector.bookDetails")
                     DisclosureGroup("File Information", isExpanded: $fileInformationExpanded) {
                         FileInformationSection(item: item)
                     }
+                    .accessibilityIdentifier("inspector.fileInformation")
                     if item.availability != .available {
                         HStack {
                             if item.availability == .ambiguousMatch,
@@ -44,11 +49,16 @@ struct BookInspectorView: View {
                                 Button("Choose Replacement Cover…") { Task { await store.chooseReplacementCover() } }
                             }
                             Button("Keep Without Cover") { Task { await store.keepSelectedWithoutCover() } }
-                            Button("Remove from Catalog", role: .destructive) { Task { await store.removeSelectedBook() } }
+                            Button("Remove from Catalog…", role: .destructive) {
+                                store.requestBookRemoval(itemID: item.id)
+                            }
                         }
                     }
                 }
                 .padding()
+            }
+            .onChange(of: store.bookDetailsExpansionRequest) { _, _ in
+                bookDetailsExpanded = true
             }
         } else {
             ContentUnavailableView("No Book Selected", systemImage: "book.closed")

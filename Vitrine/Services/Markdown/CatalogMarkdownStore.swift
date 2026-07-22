@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 actor CatalogMarkdownStore {
@@ -16,7 +17,13 @@ actor CatalogMarkdownStore {
                     guard let source = String(data: data, encoding: .utf8) else {
                         throw CatalogError.catalogMalformed
                     }
-                    result = Result { try parser.parse(source) }
+                    result = Result {
+                        var parsed = try parser.parse(source)
+                        parsed.contentDigest = SHA256.hash(data: data)
+                            .map { String(format: "%02x", $0) }
+                            .joined()
+                        return parsed
+                    }
                 } catch {
                     result = .failure(error)
                 }

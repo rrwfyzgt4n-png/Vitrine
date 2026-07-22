@@ -70,29 +70,39 @@ actor CatalogSaveCoordinator {
         defer {
             if isAccessing { url.stopAccessingSecurityScopedResource() }
         }
-        try await backupService.preserveCurrentCatalog(at: url, catalogID: snapshot.catalogID)
-
-        try await Task.detached(priority: .userInitiated) {
-            var coordinationError: NSError?
-            var writeError: Error?
-            let coordinator = NSFileCoordinator(filePresenter: nil)
-            coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &coordinationError) { coordinatedURL in
-                do {
-                    try data.write(to: coordinatedURL, options: .atomic)
-                } catch {
-                    writeError = error
-                }
-            }
-
-            if coordinationError != nil || writeError != nil {
-                throw writeError ?? coordinationError ?? CatalogError.coordinatedWriteFailed
-            }
+        let expectedDiskDigest = baselines[url.standardizedFileURL]?.contentDigest
+        let diskState = try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedDiskState(at: url)
         }.value
+        guard diskState.unresolvedConflictVersions == 0 else {
+            throw CatalogError.externalConflict
+        }
+        if let expectedDiskDigest {
+            guard diskState.contentDigest == expectedDiskDigest else {
+                throw CatalogError.externalConflict
+            }
+        }
+        if let previousData = diskState.data {
+            try await backupService.preserve(previousData, catalogID: snapshot.catalogID)
+        }
+        try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedReplace(
+                data,
+                at: url,
+                expectedContentDigest: diskState.contentDigest
+            )
+        }.value
+        let writtenData = try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedReadData(from: url)
+        }.value
+        guard Self.digest(writtenData) == Self.digest(data) else {
+            throw CatalogError.coordinatedWriteFailed
+        }
         let values = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey, .contentModificationDateKey])
         baselines[url.standardizedFileURL] = CatalogDiskBaseline(
             fileResourceIdentifier: values?.fileResourceIdentifier as? Data,
             modificationDate: values?.contentModificationDate,
-            contentDigest: SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined(),
+            contentDigest: Self.digest(writtenData),
             parsedCatalog: snapshot
         )
     }
@@ -101,25 +111,149 @@ actor CatalogSaveCoordinator {
         baselines[url.standardizedFileURL]
     }
 
-    func establishBaseline(_ snapshot: CatalogSnapshot, at url: URL) throws {
-        let data = try Data(contentsOf: url, options: [.mappedIfSafe])
+    func establishBaseline(
+        _ snapshot: CatalogSnapshot,
+        at url: URL,
+        expectedContentDigest: String? = nil
+    ) async throws {
+        let isAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if isAccessing { url.stopAccessingSecurityScopedResource() }
+        }
+        let data = try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedReadData(from: url)
+        }.value
+        let contentDigest = Self.digest(data)
+        if let expectedContentDigest, contentDigest != expectedContentDigest {
+            throw CatalogError.externalConflict
+        }
         let values = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey, .contentModificationDateKey])
         baselines[url.standardizedFileURL] = CatalogDiskBaseline(
             fileResourceIdentifier: values?.fileResourceIdentifier as? Data,
             modificationDate: values?.contentModificationDate,
-            contentDigest: SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined(),
+            contentDigest: contentDigest,
             parsedCatalog: snapshot
         )
+    }
+
+    private nonisolated static func coordinatedReadData(from url: URL) throws -> Data {
+        var coordinationError: NSError?
+        var result: Result<Data, Error>?
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { coordinatedURL in
+            result = Result { try Data(contentsOf: coordinatedURL, options: [.mappedIfSafe]) }
+        }
+        if let coordinationError { throw coordinationError }
+        guard let result else { throw CatalogError.coordinatedReadFailed }
+        return try result.get()
+    }
+
+    private nonisolated static func coordinatedDiskState(at url: URL) throws -> CoordinatedDiskState {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return CoordinatedDiskState(data: nil, contentDigest: nil, unresolvedConflictVersions: 0)
+        }
+        let data = try coordinatedReadData(from: url)
+        return CoordinatedDiskState(
+            data: data,
+            contentDigest: digest(data),
+            unresolvedConflictVersions: NSFileVersion.unresolvedConflictVersionsOfItem(at: url)?.count ?? 0
+        )
+    }
+
+    private nonisolated static func coordinatedReplace(
+        _ data: Data,
+        at url: URL,
+        expectedContentDigest: String?
+    ) throws {
+        var coordinationError: NSError?
+        var writeError: Error?
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        let options: NSFileCoordinator.WritingOptions = expectedContentDigest == nil ? [] : .forReplacing
+        coordinator.coordinate(writingItemAt: url, options: options, error: &coordinationError) { coordinatedURL in
+            do {
+                let exists = FileManager.default.fileExists(atPath: coordinatedURL.path)
+                guard NSFileVersion.unresolvedConflictVersionsOfItem(at: coordinatedURL)?.isEmpty != false else {
+                    throw CatalogError.externalConflict
+                }
+                if let expectedContentDigest {
+                    guard exists else { throw CatalogError.externalConflict }
+                    let currentData = try Data(contentsOf: coordinatedURL, options: [.mappedIfSafe])
+                    guard digest(currentData) == expectedContentDigest else {
+                        throw CatalogError.externalConflict
+                    }
+                } else if exists {
+                    throw CatalogError.externalConflict
+                }
+
+                // Foundation performs the sibling temporary-file replacement here. Calling
+                // FileManager.replaceItemAt directly makes NSFilePresenter report the catalog
+                // as deleted to other Vitrine processes during an otherwise normal save.
+                try data.write(to: coordinatedURL, options: .atomic)
+            } catch {
+                writeError = error
+            }
+        }
+        if let writeError { throw writeError }
+        if let coordinationError { throw coordinationError }
+    }
+
+    private nonisolated static func digest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     func backups(catalogID: UUID) async throws -> [CatalogBackupService.Backup] {
         try await backupService.backups(catalogID: catalogID)
     }
 
-    func restore(_ backup: CatalogBackupService.Backup, to url: URL, catalogID: UUID) async throws {
-        try await backupService.preserveCurrentCatalog(at: url, catalogID: catalogID)
-        try await backupService.restore(backup, to: url)
+    @discardableResult
+    func restore(
+        _ backup: CatalogBackupService.Backup,
+        to url: URL,
+        catalogID: UUID,
+        preservingDamagedCurrentCatalog: Bool = false
+    ) async throws -> CatalogSnapshot {
+        let backupData = try Data(contentsOf: backup.url, options: [.mappedIfSafe])
+        guard let source = String(data: backupData, encoding: .utf8) else {
+            throw CatalogError.catalogMalformed
+        }
+        let snapshot = try CatalogMarkdownParser().parse(source).snapshot
+        guard snapshot.catalogID == catalogID, !snapshot.isReadOnly else {
+            throw CatalogError.catalogMalformed
+        }
+
+        let isAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if isAccessing { url.stopAccessingSecurityScopedResource() }
+        }
+        let diskState = try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedDiskState(at: url)
+        }.value
+        guard diskState.unresolvedConflictVersions == 0 else {
+            throw CatalogError.externalConflict
+        }
+        if let damagedOrCurrentData = diskState.data {
+            if preservingDamagedCurrentCatalog {
+                _ = try await backupService.preserveDamaged(damagedOrCurrentData, catalogID: catalogID)
+            } else {
+                try await backupService.preserve(damagedOrCurrentData, catalogID: catalogID)
+            }
+        }
+        try await Task.detached(priority: .userInitiated) {
+            try Self.coordinatedReplace(
+                backupData,
+                at: url,
+                expectedContentDigest: diskState.contentDigest
+            )
+        }.value
+        try await establishBaseline(snapshot, at: url)
+        return snapshot
     }
+}
+
+private struct CoordinatedDiskState: Sendable {
+    var data: Data?
+    var contentDigest: String?
+    var unresolvedConflictVersions: Int
 }
 
 private struct SaveRequest {

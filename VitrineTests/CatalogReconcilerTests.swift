@@ -57,4 +57,40 @@ final class CatalogReconcilerTests: XCTestCase {
             )
         ])
     }
+
+    func testUnstableKnownPathIsDeferredWithoutChangingAvailability() async {
+        let item = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Changing.jpg", portableFingerprint: "old")
+        )
+        let scan = CatalogScanResult(
+            sources: [],
+            completedEnumeration: false,
+            warnings: [CatalogScanWarning(relativePath: "Changing.jpg", message: "Retry later")]
+        )
+
+        let diff = await CatalogReconciler().diff(
+            catalog: CatalogSnapshot(name: "Test", items: [item]),
+            scan: scan
+        )
+
+        XCTAssertTrue(diff.operations.isEmpty)
+    }
+
+    func testOneScannedSourceCannotBeAssignedToTwoRecords() async {
+        let first = CatalogItem(
+            source: SourceFileMetadata(relativePath: "First.jpg", fileResourceIdentifier: "resource")
+        )
+        let second = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Second.jpg", fileResourceIdentifier: "resource")
+        )
+        let moved = SourceFileMetadata(relativePath: "Moved.jpg", fileResourceIdentifier: "resource")
+
+        let diff = await CatalogReconciler().diff(
+            catalog: CatalogSnapshot(name: "Test", items: [first, second]),
+            scan: CatalogScanResult(sources: [moved], completedEnumeration: true, warnings: [])
+        )
+
+        XCTAssertEqual(diff.operations.filter { if case .updateSource = $0 { true } else { false } }.count, 1)
+        XCTAssertEqual(diff.operations.filter { if case .removeRecord = $0 { true } else { false } }.count, 1)
+    }
 }

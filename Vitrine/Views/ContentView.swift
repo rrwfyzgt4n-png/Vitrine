@@ -12,17 +12,24 @@ struct ContentView: View {
                 WelcomeView(
                     isWorking: store.isPerformingCatalogOperation,
                     operationMessage: store.operationMessage,
-                    createCatalog: { Task { await store.createCatalog() } },
+                    createCatalog: { Task { _ = await store.createCatalog() } },
                     openCatalog: { Task { await store.openCatalog() } }
                 )
             } else if store.visibleItems.isEmpty && store.searchText.isEmpty && store.filter == .all {
                 EmptyLibraryView()
+            } else if store.visibleItems.isEmpty && store.filter != .all {
+                ContentUnavailableView {
+                    Label(store.filter.label, systemImage: "line.3.horizontal.decrease.circle")
+                } actions: {
+                    Button(CatalogFilter.all.label) { store.filter = .all }
+                }
             } else if store.visibleItems.isEmpty {
                 ContentUnavailableView.search(text: store.searchText)
             } else {
                 LibraryGridView(store: store)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .searchable(text: $store.searchText, prompt: "Search your library")
         .searchFocused($searchFocused)
         .overlay(alignment: .bottom) {
@@ -62,6 +69,14 @@ struct ContentView: View {
         } message: {
             Text("Vitrine found few or no matching covers. Using it may add a different collection to this catalog.")
         }
+        .alert("Your catalog was edited on another Mac.", isPresented: $store.isConflictChoicePresented) {
+            Button("Keep My Changes") { Task { await store.keepMyCatalogChanges() } }
+            Button("Use Changes from Other Mac") { Task { await store.useChangesFromOtherMac() } }
+            Button("Review Changes") { store.reviewCatalogChanges() }
+            Button("Keep Browsing", role: .cancel) { store.keepBrowsingWithCatalogConflict() }
+        } message: {
+            Text("Some of the same information was changed in both places.")
+        }
         .inspector(isPresented: $store.isInspectorPresented) {
             BookInspectorView(store: store)
                 .inspectorColumnWidth(min: 320, ideal: 360, max: 420)
@@ -76,7 +91,7 @@ struct ContentView: View {
                 FilenameSuggestionReviewView(
                     filenameTitle: item.source.sourceTitle,
                     suggestion: suggestion,
-                    onApply: { await store.applyFilenameSuggestion($0) }
+                    onApply: { await store.applyFilenameSuggestion($0, to: item.id) }
                 )
             }
         }
@@ -102,9 +117,33 @@ struct ContentView: View {
             if let recovery = store.pendingRecovery {
                 CatalogRecoveryView(
                     recovery: recovery,
-                    restore: { Task { await store.restorePendingRecovery() } },
+                    restore: { backupID in Task { await store.restorePendingRecovery(backupID: backupID) } },
+                    openRecovered: store.openRecoveredCatalog,
                     revealBackup: store.revealPendingRecoveryBackup,
+                    revealDamaged: store.revealDamagedCatalog,
+                    exportDiagnostics: store.exportRecoveryDiagnostics,
+                    createNewCatalog: { Task { await store.createNewCatalogAfterRecovery() } },
                     cancel: store.cancelPendingRecovery
+                )
+            }
+        }
+        .sheet(isPresented: $store.isBackupRestorePresented) {
+            CatalogBackupRestoreView(options: store.backupRestoreOptions) {
+                await store.restoreBackup($0)
+            }
+        }
+        .sheet(isPresented: $store.isCatalogHealthReportPresented) {
+            if let report = store.catalogHealthReport {
+                CatalogHealthReportView(report: report)
+            }
+        }
+        .sheet(isPresented: $store.isRemovalConfirmationPresented) {
+            if let item = store.pendingRemovalItem {
+                BookRemovalConfirmationView(
+                    item: item,
+                    sourceFolderURL: store.sourceFolderURL,
+                    cancel: store.cancelBookRemoval,
+                    remove: store.confirmBookRemoval
                 )
             }
         }
@@ -129,7 +168,7 @@ struct ContentView: View {
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Menu("Sort and Filter", systemImage: "line.3.horizontal.decrease.circle") {
+                Menu {
                     Section("Sort") {
                         Picker("Sort", selection: $store.sortOption) {
                             ForEach(CatalogSortOption.allCases) { Text($0.label).tag($0) }
@@ -140,6 +179,11 @@ struct ContentView: View {
                             ForEach(CatalogFilter.allCases) { Text($0.label).tag($0) }
                         }
                     }
+                } label: {
+                    Label(
+                        store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label,
+                        systemImage: "line.3.horizontal.decrease.circle"
+                    )
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "textformat.size.smaller")
@@ -150,8 +194,10 @@ struct ContentView: View {
                 Button("Refresh Covers", systemImage: "arrow.clockwise") { Task { await store.refreshCovers() } }
                     .help("Refresh Covers")
                     .disabled(!store.canRefreshCovers)
+                    .accessibilityIdentifier("toolbar.refresh")
                 Button("Inspector", systemImage: "sidebar.trailing") { store.showInspector() }
                     .help(store.isInspectorPresented ? "Hide Inspector" : "Show Inspector")
+                    .accessibilityIdentifier("toolbar.inspector")
             }
         }
     }

@@ -7,7 +7,7 @@ struct FileInformationSection: View {
         VStack(alignment: .leading, spacing: 8) {
             LabeledContent("Filename Title", value: item.source.sourceTitle)
             LabeledContent("Filename", value: item.source.filename)
-            LabeledContent("Relative Folder", value: (item.source.relativePath as NSString).deletingLastPathComponent.isEmpty ? "Top level" : (item.source.relativePath as NSString).deletingLastPathComponent)
+            LabeledContent("Relative Folder", value: relativeFolder)
             if let notes = item.source.finderComment, !notes.isEmpty {
                 LabeledContent("File Notes", value: notes)
             }
@@ -30,10 +30,15 @@ struct FileInformationSection: View {
 
     private var availabilityLabel: String {
         switch item.availability {
-        case .available: "Available"
-        case .temporarilyUnavailable, .metadataOnly: "Temporarily unavailable"
-        case .missing: "Not found"
-        case .ambiguousMatch: "Needs review"
+        case .available: L10n.text("Available")
+        case .temporarilyUnavailable, .metadataOnly: L10n.text("Temporarily unavailable")
+        case .missing: L10n.text("Not found")
+        case .ambiguousMatch: L10n.text("Needs review")
         }
+    }
+
+    private var relativeFolder: String {
+        let folder = (item.source.relativePath as NSString).deletingLastPathComponent
+        return folder.isEmpty ? L10n.text("Top level") : folder
     }
 }

@@ -32,6 +32,7 @@ struct MarkdownDiagnostic: Equatable, Sendable {
 struct CatalogParseResult: Equatable, Sendable {
     var snapshot: CatalogSnapshot
     var diagnostics: [MarkdownDiagnostic]
+    var contentDigest: String? = nil
 
     var hasUnrecoverableErrors: Bool {
         diagnostics.contains { diagnostic in
