@@ -39,4 +39,60 @@ final class MarkdownWriterTests: XCTestCase {
 
         XCTAssertThrowsError(try CatalogMarkdownWriter().render(snapshot))
     }
+
+    func testFinderAndPersonalNotesNormalizeEveryLineEndingWithoutChangingStyles() throws {
+        let lineEndingVariants = ["First\r\n\r\nSecond", "First\r\rSecond", "First\n\nSecond"]
+        for notes in lineEndingVariants {
+            let item = CatalogItem(
+                source: SourceFileMetadata(relativePath: "Cover.jpg", finderComment: notes),
+                personalNotes: notes
+            )
+            let rendered = try CatalogMarkdownWriter().render(CatalogSnapshot(name: "Notes", items: [item]))
+
+            XCTAssertTrue(rendered.contains("### Finder notes\n> First\n> \n> Second"))
+            XCTAssertTrue(rendered.contains("### Personal notes\nFirst\n\nSecond"))
+            XCTAssertFalse(rendered.contains("\r"))
+            XCTAssertTrue(rendered.hasSuffix("\n"))
+            let reparsed = try CatalogMarkdownParser().parse(rendered).snapshot.items[0]
+            XCTAssertEqual(reparsed.source.finderComment, "First\n\nSecond")
+            XCTAssertEqual(reparsed.personalNotes, "First\n\nSecond")
+        }
+    }
+
+    func testEmptyNotesProduceNoHeadings() throws {
+        let item = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Cover.jpg", finderComment: ""),
+            personalNotes: ""
+        )
+        let rendered = try CatalogMarkdownWriter().render(CatalogSnapshot(name: "Notes", items: [item]))
+
+        XCTAssertFalse(rendered.contains("### Finder notes"))
+        XCTAssertFalse(rendered.contains("### Personal notes"))
+    }
+
+    func testSourceLessConfirmedTitleRetainsMetadataConfirmationCompatibility() throws {
+        let item = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Cover.jpg"),
+            bibliography: BibliographicMetadata(title: "Legacy Title", metadataConfirmedByUser: true)
+        )
+        let rendered = try CatalogMarkdownWriter().render(CatalogSnapshot(name: "Legacy", items: [item]))
+        let reparsed = try CatalogMarkdownParser().parse(rendered).snapshot
+
+        XCTAssertTrue(rendered.contains("- metadata-confirmed: `true`"))
+        XCTAssertEqual(reparsed.items.first?.bibliography.metadataSource, nil)
+        XCTAssertEqual(reparsed.items.first?.bibliography.metadataConfirmedByUser, true)
+    }
+
+    func testProvenanceWithoutTitlePersistsFalseConfirmation() throws {
+        let item = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Cover.jpg"),
+            bibliography: BibliographicMetadata(metadataSource: .manual, metadataConfirmedByUser: false)
+        )
+        let rendered = try CatalogMarkdownWriter().render(CatalogSnapshot(name: "Provenance", items: [item]))
+        let reparsed = try CatalogMarkdownParser().parse(rendered).snapshot
+
+        XCTAssertTrue(rendered.contains("- metadata-confirmed: `false`"))
+        XCTAssertEqual(reparsed.items.first?.bibliography.metadataSource, .manual)
+        XCTAssertEqual(reparsed.items.first?.bibliography.metadataConfirmedByUser, false)
+    }
 }

@@ -22,7 +22,7 @@ struct BookDetailsSection: View {
             detail("Original Language", item.bibliography.originalLanguageCode)
             detail("Pages", item.bibliography.pageCount.map(String.init))
             detail("Pagination", item.bibliography.paginationStatus?.label)
-            detail("Physical Attributes", item.bibliography.physicalAttributes.isEmpty ? nil : item.bibliography.physicalAttributes.map(\.label).joined(separator: ", "))
+            detail("Physical Attributes", BibliographicDisplayFormatter.physicalAttributes(item.bibliography.physicalAttributes))
             detail("Subjects", item.bibliography.subjects.isEmpty ? nil : item.bibliography.subjects.joined(separator: ", "))
             detail("Description", item.bibliography.description)
             detail("Source", metadataSource)
@@ -42,20 +42,11 @@ struct BookDetailsSection: View {
     }
 
     private var metadataSource: String? {
-        switch item.bibliography.metadataSource {
-        case .filename: L10n.text("Filename suggestion")
-        case .manual: L10n.text("Entered manually")
-        case .openLibrary: "Open Library"
-        case .mixed: L10n.text("Multiple sources")
-        case nil: nil
-        }
+        item.bibliography.metadataSource?.label
     }
 
     private var contributors: String? {
-        guard !item.bibliography.contributors.isEmpty else { return nil }
-        return item.bibliography.contributors.map {
-            "\($0.name) (\($0.roles.map(\.label).joined(separator: ", ")))"
-        }.joined(separator: "; ")
+        BibliographicDisplayFormatter.contributors(item.bibliography.contributors)
     }
 
     private var collection: String? {

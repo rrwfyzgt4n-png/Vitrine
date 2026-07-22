@@ -107,6 +107,8 @@ struct CatalogMarkdownWriter: Sendable {
         appendField("open-library-work-id", bibliography.openLibraryWorkID, to: &lines)
         appendField("metadata-source", bibliography.metadataSource?.rawValue, to: &lines)
         appendField("metadata-retrieved", bibliography.metadataRetrievedAt, to: &lines)
+        // Title-only schema-1 records can predate provenance. Keep that reachable
+        // compatibility branch so their explicit confirmation state round-trips.
         if bibliography.metadataSource != nil || bibliography.title != nil {
             appendField("metadata-confirmed", bibliography.metadataConfirmedByUser ? "true" : "false", to: &lines)
         }
@@ -114,18 +116,10 @@ struct CatalogMarkdownWriter: Sendable {
         lines.append(contentsOf: item.unrecognizedLines)
 
         if let finderComment = item.source.finderComment, !finderComment.isEmpty {
-            lines.append("### Finder notes")
-            lines.append(contentsOf: finderComment
-                .replacingOccurrences(of: "\r\n", with: "\n")
-                .replacingOccurrences(of: "\r", with: "\n")
-                .components(separatedBy: "\n")
-                .map { "> \($0)" })
+            lines.append(contentsOf: renderFinderNotes(finderComment))
         }
         if !item.personalNotes.isEmpty {
-            lines.append("### Personal notes")
-            lines.append(item.personalNotes
-                .replacingOccurrences(of: "\r\n", with: "\n")
-                .replacingOccurrences(of: "\r", with: "\n"))
+            lines.append(contentsOf: renderPersonalNotes(item.personalNotes))
         }
         lines.append(MarkdownTokenizer.itemEnd)
         return lines
@@ -138,6 +132,22 @@ struct CatalogMarkdownWriter: Sendable {
 
     private func serialize(_ contributor: BibliographicContributor) -> String {
         "\(contributor.roles.map(\.rawValue).joined(separator: ",")) | \(contributor.name)"
+    }
+
+    private func renderFinderNotes(_ notes: String) -> [String] {
+        ["### Finder notes"] + normalizedNote(notes)
+            .components(separatedBy: "\n")
+            .map { "> \($0)" }
+    }
+
+    private func renderPersonalNotes(_ notes: String) -> [String] {
+        ["### Personal notes", normalizedNote(notes)]
+    }
+
+    private func normalizedNote(_ notes: String) -> String {
+        notes
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
     }
 
     private func appendField(_ key: String, _ value: String?, to lines: inout [String]) {

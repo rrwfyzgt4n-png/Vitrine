@@ -1,6 +1,7 @@
 import Foundation
 
 actor CatalogMergeService {
+    private let valueFormatter = CatalogMergeValueFormatter()
     func merge(base: CatalogSnapshot, local: CatalogSnapshot, external: CatalogSnapshot) -> PendingCatalogMerge {
         var conflicts: [CatalogMergeConflict] = []
         var merged = local
@@ -66,11 +67,11 @@ actor CatalogMergeService {
             return local
         case (let base?, nil, let external?):
             if external == base { return nil }
-            addConflict(recordID: id, title: external.displayTitle, field: .record, local: "Removed", external: external, to: &conflicts)
+            addConflict(recordID: id, title: external.displayTitle, field: .record, local: L10n.text("Removed"), external: external, to: &conflicts)
             return nil
         case (let base?, let local?, nil):
             if local == base { return nil }
-            addConflict(recordID: id, title: local.displayTitle, field: .record, local: local, external: "Removed", to: &conflicts)
+            addConflict(recordID: id, title: local.displayTitle, field: .record, local: local, external: L10n.text("Removed"), to: &conflicts)
             return local
         case (_, nil, nil): return nil
         case (let base?, let local?, let external?):
@@ -137,21 +138,9 @@ actor CatalogMergeService {
             recordID: recordID,
             bookTitle: title,
             field: field,
-            localValue: describe(local),
-            externalValue: describe(external)
+            localValue: valueFormatter.string(for: local),
+            externalValue: valueFormatter.string(for: external)
         ))
-    }
-
-    private func describe<Value>(_ value: Value) -> String {
-        if let value = value as? String { return value.isEmpty ? "Empty" : value }
-        if let value = value as? [String] { return value.isEmpty ? "Empty" : value.joined(separator: ", ") }
-        if let value = value as? Date { return CatalogDateFormatter.string(from: value) }
-        if let value = value as? MetadataSource { return value.rawValue }
-        if let value = value as? ItemAvailability { return value.rawValue }
-        if let value = value as? SourceFileMetadata { return value.relativePath }
-        if let value = value as? CatalogItem { return value.displayTitle }
-        let text = String(describing: value)
-        return text == "nil" ? "Empty" : text
     }
 
     private func applyExternal(_ conflict: CatalogMergeConflict, from external: CatalogSnapshot, to result: inout CatalogSnapshot) {

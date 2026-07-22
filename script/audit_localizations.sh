@@ -40,6 +40,8 @@ EXTRACTED_PATH="$AUDIT_DIR/Localizable.xcstrings"
 EXTRACTED_KEYS="$AUDIT_DIR/extracted-keys.txt"
 CATALOG_KEYS="$AUDIT_DIR/catalog-keys.txt"
 MISSING_KEYS="$AUDIT_DIR/missing-keys.txt"
+MISSING_LOCALES="$AUDIT_DIR/missing-locales.txt"
+DYNAMIC_KEYS="$AUDIT_DIR/dynamic-keys.txt"
 
 normalize_placeholders() {
   sed -E 's/%([0-9]+\$)?(arg|@|lld|llu|ld|lu|d|u|f|s)/%#/g'
@@ -55,4 +57,32 @@ if [[ -s "$MISSING_KEYS" ]]; then
   exit 1
 fi
 
-echo "Localization audit passed: every extracted SwiftUI key is catalogued."
+jq -r '
+  .strings
+  | to_entries[]
+  | select(.value.localizations.fr == null or .value.localizations["fr-CA"] == null)
+  | .key
+' "$CATALOG_PATH" | sort -u > "$MISSING_LOCALES"
+
+if [[ -s "$MISSING_LOCALES" ]]; then
+  echo "Localization catalog entries missing French or Canadian French:" >&2
+  sed 's/^/  - /' "$MISSING_LOCALES" >&2
+  exit 1
+fi
+
+# Runtime-computed keys evade xcstringstool. Vitrine uses exhaustive static
+# label mappings instead, so a new enum case remains a compiler error until its
+# localized label is deliberately added.
+rg -n \
+  -e 'String\(localized:[[:space:]]*String\.LocalizationValue\(' \
+  -e 'String\(localized:[[:space:]]*[A-Za-z_]' \
+  -e 'L10n\.text\([[:space:]]*[A-Za-z_]' \
+  "$ROOT_DIR/Vitrine" -g '*.swift' -g '!L10n.swift' > "$DYNAMIC_KEYS" || true
+
+if [[ -s "$DYNAMIC_KEYS" ]]; then
+  echo "Runtime-computed localization keys are not permitted; use an exhaustive static label mapping:" >&2
+  cat "$DYNAMIC_KEYS" >&2
+  exit 1
+fi
+
+echo "Localization audit passed: static keys are catalogued and French locales are complete."

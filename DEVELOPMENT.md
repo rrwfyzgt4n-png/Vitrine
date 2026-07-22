@@ -140,9 +140,16 @@ Run the extraction audit directly with:
 ```
 
 The script extracts SwiftUI keys from production sources, normalizes generated
-placeholder forms and fails if a key is absent from the string catalog. It does
-not prove translation quality; new or changed copy still requires human review
-in all three locales.
+placeholder forms, fails if a key is absent from the string catalog, and requires
+both `fr` and `fr-CA` for every entry. It does not prove translation quality; new
+or changed copy still requires human review in all three locales.
+
+Production localization keys must be statically extractable. Enum-backed UI
+labels use exhaustive `switch` mappings whose branches call `L10n.text` with
+string literals; runtime construction through `String.LocalizationValue` is not
+permitted. This makes a new enum case a compiler error until its label is mapped,
+and the audit rejects code that could bypass extraction. `LocalizationTests`
+independently checks locale coverage and all registered enum labels.
 
 Do not assemble sentences from translated fragments when grammar or number can
 change. Prefer complete localized strings and existing `L10n` helpers.

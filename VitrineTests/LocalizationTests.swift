@@ -24,6 +24,16 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
+    func testAllRegisteredEnumLabelsAreNonempty() {
+        XCTAssertTrue(CatalogMergeField.allCases.allSatisfy { !$0.label.isEmpty })
+        XCTAssertTrue(ContributorRole.allCases.allSatisfy { !$0.label.isEmpty })
+        XCTAssertTrue(PaginationStatus.allCases.allSatisfy { !$0.label.isEmpty })
+        XCTAssertTrue(PhysicalAttribute.allCases.allSatisfy { !$0.label.isEmpty })
+        XCTAssertTrue(ItemAvailability.allCases.allSatisfy { !$0.inspectorLabel.isEmpty })
+        XCTAssertTrue(CatalogSortOption.allCases.allSatisfy { !$0.label.isEmpty })
+        XCTAssertTrue(CatalogFilter.allCases.allSatisfy { !$0.label.isEmpty })
+    }
+
     private func localizationEntries() throws -> [String: Any] {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

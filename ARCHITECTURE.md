@@ -240,6 +240,14 @@ change:
 7. accessibility text;
 8. old/new catalog compatibility tests.
 
+`BibliographicMetadataField` is the executable schema inventory behind this
+checklist. Tests compare it with stored model properties, Markdown keys, and the
+merge surface, then round-trip a fully populated value. Merge choices use
+`CatalogMergeValueFormatter`, which shares bibliographic display conventions
+with the inspector and distinguishes nil from empty values without debug output.
+Enum-backed localized labels use exhaustive static mappings; runtime-computed
+localization keys are rejected by the localization audit.
+
 ## 9. UI architecture
 
 `VitrineApp` owns one `CatalogStore` and one main `Window` scene. `ContentView`

@@ -165,3 +165,82 @@ struct BibliographicMetadata: Equatable, Sendable {
         self.metadataConfirmedByUser = metadataConfirmedByUser
     }
 }
+
+/// Executable inventory of the durable bibliographic schema. Tests compare this
+/// registry with the model, Markdown round trip, and merge surface so adding a
+/// stored field cannot silently omit an integration boundary.
+enum BibliographicMetadataField: String, CaseIterable, Sendable {
+    case isbn10, isbn13, title, subtitle, authors, translators, contributors
+    case publisher, collectionName, collectionNumber, publicationPlace
+    case publicationDate, originalPublicationDate, editionDescription, volumeDescription
+    case languageCode, additionalLanguageCodes, originalLanguageCode
+    case pageCount, paginationStatus, physicalAttributes, subjects, description
+    case openLibraryEditionID, openLibraryWorkID, metadataSource, metadataRetrievedAt
+    case metadataConfirmedByUser
+
+    var markdownKeys: [String] {
+        switch self {
+        case .isbn10: ["isbn-10"]
+        case .isbn13: ["isbn-13"]
+        case .title: ["bibliographic-title"]
+        case .subtitle: ["subtitle"]
+        case .authors: ["author"]
+        case .translators: ["translator"]
+        case .contributors: ["contributor"]
+        case .publisher: ["publisher"]
+        case .collectionName: ["collection"]
+        case .collectionNumber: ["collection-number"]
+        case .publicationPlace: ["publication-place"]
+        case .publicationDate: ["published"]
+        case .originalPublicationDate: ["original-published"]
+        case .editionDescription: ["edition"]
+        case .volumeDescription: ["volume"]
+        case .languageCode: ["language"]
+        case .additionalLanguageCodes: ["additional-language"]
+        case .originalLanguageCode: ["original-language"]
+        case .pageCount: ["pages"]
+        case .paginationStatus: ["pagination"]
+        case .physicalAttributes: ["physical-attribute"]
+        case .subjects: ["subject"]
+        case .description: ["description"]
+        case .openLibraryEditionID: ["open-library-edition-id"]
+        case .openLibraryWorkID: ["open-library-work-id"]
+        case .metadataSource: ["metadata-source"]
+        case .metadataRetrievedAt: ["metadata-retrieved"]
+        case .metadataConfirmedByUser: ["metadata-confirmed"]
+        }
+    }
+
+    var mergeField: CatalogMergeField {
+        switch self {
+        case .isbn10: .isbn10
+        case .isbn13: .isbn13
+        case .title: .title
+        case .subtitle: .subtitle
+        case .authors: .authors
+        case .translators: .translators
+        case .contributors: .contributors
+        case .publisher: .publisher
+        case .collectionName: .collectionName
+        case .collectionNumber: .collectionNumber
+        case .publicationPlace: .publicationPlace
+        case .publicationDate: .publicationDate
+        case .originalPublicationDate: .originalPublicationDate
+        case .editionDescription: .editionDescription
+        case .volumeDescription: .volumeDescription
+        case .languageCode: .languageCode
+        case .additionalLanguageCodes: .additionalLanguageCodes
+        case .originalLanguageCode: .originalLanguageCode
+        case .pageCount: .pageCount
+        case .paginationStatus: .paginationStatus
+        case .physicalAttributes: .physicalAttributes
+        case .subjects: .subjects
+        case .description: .description
+        case .openLibraryEditionID: .openLibraryEditionID
+        case .openLibraryWorkID: .openLibraryWorkID
+        case .metadataSource: .metadataSource
+        case .metadataRetrievedAt: .metadataRetrievedAt
+        case .metadataConfirmedByUser: .metadataConfirmedByUser
+        }
+    }
+}

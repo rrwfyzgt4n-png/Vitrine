@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Empty" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vide" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vide" } }
+      }
+    },
+    "No" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Non" } }
+      }
+    },
+    "Not set" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non défini" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Non défini" } }
+      }
+    },
+    "Removed" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimé" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Supprimé" } }
+      }
+    },
+    "Unavailable" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Indisponible" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Indisponible" } }
+      }
+    },
+    "Yes" : {
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Oui" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Oui" } }
+      }
+    },
     "·" : {
       "localizations" : {
         "fr" : {

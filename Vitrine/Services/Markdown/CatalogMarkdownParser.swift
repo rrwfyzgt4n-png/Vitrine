@@ -130,14 +130,13 @@ struct CatalogMarkdownParser: Sendable {
         enum Section { case fields, finderNotes, personalNotes }
         var section = Section.fields
 
-        let knownKeys: Set<String> = [
+        let sourceKeys: Set<String> = [
             "source-file", "source-title", "portable-fingerprint", "full-content-hash", "file-resource-id", "file-size", "pixel-width", "pixel-height",
-            "file-created", "file-modified", "availability", "date-added", "record-modified", "isbn-10", "isbn-13",
-            "bibliographic-title", "subtitle", "author", "translator", "publisher", "published", "original-published", "edition", "language",
-            "contributor", "collection", "collection-number", "publication-place", "volume", "additional-language", "original-language",
-            "pages", "pagination", "physical-attribute", "subject", "description", "open-library-edition-id", "open-library-work-id", "metadata-source",
-            "metadata-retrieved", "metadata-confirmed"
+            "file-created", "file-modified", "availability", "date-added", "record-modified"
         ]
+        let knownKeys = sourceKeys.union(
+            BibliographicMetadataField.allCases.flatMap(\.markdownKeys)
+        )
 
         for line in lines {
             if line == "### Finder notes" {

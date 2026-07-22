@@ -54,4 +54,38 @@ final class MarkdownParserTests: XCTestCase {
         XCTAssertTrue(result.snapshot.isReadOnly)
         XCTAssertTrue(result.diagnostics.contains { $0.code == .unsupportedSchema })
     }
+
+    func testDuplicateRecordIDCannotReplaceFirstAcceptedRecord() throws {
+        let duplicateID = "86CC391A-4662-4553-902D-E8B80D2641DD"
+        let source = """
+        ---
+        library-catalog-schema: 1
+        catalog-id: 9A50D16E-51E8-4867-B81E-2525F910AD51
+        catalog-name: Duplicate Test
+        created-at: 2026-07-18T20:00:00Z
+        updated-at: 2026-07-18T20:00:00Z
+        record-count: 2
+        ---
+        # Duplicate Test
+
+        <!-- library-catalog:item:begin id="\(duplicateID)" -->
+        ## First
+        - source-file: `First.jpg`
+        - source-title: `First`
+        <!-- library-catalog:item:end -->
+
+        <!-- library-catalog:item:begin id="\(duplicateID)" -->
+        ## Second
+        - source-file: `Second.jpg`
+        - source-title: `Second`
+        <!-- library-catalog:item:end -->
+        """
+
+        let result = try CatalogMarkdownParser().parse(source)
+
+        XCTAssertEqual(result.snapshot.items.count, 1)
+        XCTAssertEqual(result.snapshot.items[0].source.relativePath, "First.jpg")
+        XCTAssertTrue(result.diagnostics.contains { $0.code == .duplicateRecordID })
+        XCTAssertTrue(result.diagnostics.contains { $0.code == .recordCountMismatch })
+    }
 }

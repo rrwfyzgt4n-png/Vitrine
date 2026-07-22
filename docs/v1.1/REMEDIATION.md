@@ -34,7 +34,7 @@ mandatory safety gate is open or lacks focused regression coverage.
 | 1 — Transactional saves | V11-001, V11-002, V11-017 | Verified 2026-07-22 | No silent loss on quit or save failure; one ordered file-event buffer |
 | 2 — Reconciliation safety | V11-003, V11-004, V11-011, V11-015 | Verified 2026-07-22 | No ambiguous or explicitly retained record is automatically deleted |
 | 3 — Filesystem and overwrite recovery | V11-005, V11-006, V11-026 | Verified 2026-07-22 | All cover access is contained and overwritten catalogs remain recoverable |
-| 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Planned | Every metadata surface round-trips and is localized |
+| 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Verified 2026-07-22 | Every metadata surface round-trips and is localized |
 | 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Planned | Exact behavior with measured improvement at 5,000 records |
 | 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Planned | Stable behavior without a high-risk speculative rewrite |
 | 7 — Release verification | V11-021, V11-022 and all 24 remediation vectors | Planned | Complete automated and manual acceptance evidence |
@@ -109,3 +109,34 @@ refresh, and stable-volume remount rules. Focused containment, symlink,
 same/different identity, malformed destination, raw preservation, cancellation,
 and bookmark tests pass. The complete non-interactive `script/test.sh` suite
 passed on 2026-07-22. This closes V11-005, V11-006, and V11-026.
+
+## Phase 4 verification
+
+Merge-conflict values now pass through `CatalogMergeValueFormatter`. Optional
+nil, empty values, contributors and localized roles, physical attributes,
+pagination, provenance, availability, booleans, dates, source records, and book
+records have explicit display rules; supported fields no longer fall through to
+Swift debug descriptions. The formatter shares contributor and physical-detail
+conventions with the inspector. `CatalogMergeField.label` is an exhaustive static
+mapping, so adding a case requires a localized label before the project compiles.
+
+Runtime-computed localization keys are prohibited. The localization audit now
+rejects those constructions and requires both French and Canadian French for
+every catalog entry. The convention and its compiler/audit boundary are recorded
+in `DEVELOPMENT.md`.
+
+`BibliographicMetadataField` inventories every stored bibliographic property and
+maps it exhaustively to one Markdown key and one merge field. The parser consumes
+that key registry. Tests compare it with the reflected model, the complete merge
+surface, a fully populated Markdown round trip, search integration, and legacy
+schema-1 compatibility. Duplicate record IDs cannot replace the first accepted
+record, and deletion conflict choices preserve independent edits and unrelated
+additions.
+
+The `metadata-confirmed` title branch is retained deliberately: provenance-free
+schema-1 title records make it reachable. Both that compatibility path and the
+provenance-only path now have invariant tests. Finder and personal-note line
+endings use one normalization helper while retaining distinct block-quote and
+multiline rendering and byte-equivalent schema output. Focused tests and the
+complete non-interactive suite passed on 2026-07-22. This closes V11-007,
+V11-008, V11-018, V11-020, and V11-024.

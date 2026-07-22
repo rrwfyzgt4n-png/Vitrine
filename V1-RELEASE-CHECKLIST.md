@@ -4,7 +4,7 @@ Last updated: 2026-07-22
 
 ## Release status
 
-**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. All mandatory V11-001 through V11-005 safety gates are fixed and verified. Conflict/localization, measured-scale, maintainability, and final release-verification phases remain open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
+**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. All mandatory V11-001 through V11-005 safety gates and the conflict/schema/localization gate are fixed and verified. Measured-scale, maintainability, and final release-verification phases remain open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
 
 Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
 
@@ -41,6 +41,10 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Cover-path containment | Pass | One resolver protects thumbnails, Open, Quick Look, and Finder reveal; traversal, absolute, malformed, root-equal, Unicode, and symlink cases are covered. |
 | Cross-catalog replacement | Pass | Different catalog IDs back up under the old identity; malformed/unrelated bytes require authorization and are preserved verbatim; cancellation is non-mutating. |
 | Cover-access bookmark intent | Pass | Catalog relocation preserves remembered cover access only when requested; explicit replacement and stable-volume remount semantics are documented and tested. |
+| Conflict value presentation | Pass | Every merge field has a readable sample; contributors, roles, physical attributes, pagination, nil and empty values use localized display rules. |
+| Dynamic localization safety | Pass | Runtime-built keys fail the audit; all catalog entries require `fr` and `fr-CA`; enum labels are exhaustive static mappings. |
+| Bibliographic schema surface | Pass | Stored properties, Markdown keys and merge fields are registry-checked; fully populated and legacy schema-1 catalogs round-trip. |
+| Markdown note compatibility | Pass | CRLF, CR and LF normalize identically while Finder block quotes and personal-note multiline output remain distinct. |
 | Legacy catalog compatibility | Pass | A pre-parser schema-1 catalog rewrites without losing unknown fields. |
 | Localization | Pass | Every catalogued string has `fr` and `fr-CA`; extracted SwiftUI keys are audited. |
 | Unit, concurrency and integrity suite | Pass | `script/test.sh` completed successfully. |

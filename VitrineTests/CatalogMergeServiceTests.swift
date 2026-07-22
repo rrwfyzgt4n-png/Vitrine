@@ -91,4 +91,42 @@ final class CatalogMergeServiceTests: XCTestCase {
         XCTAssertEqual(keepLocal.items.first?.bibliography.title, "Locally Edited")
         XCTAssertTrue(useDeletion.items.isEmpty)
     }
+
+    func testDeletionConflictResolutionPreservesIndependentEditsAndUnrelatedAdditions() async throws {
+        let conflictedID = UUID()
+        let independentID = UUID()
+        let base = CatalogSnapshot(name: "Library", items: [
+            CatalogItem(
+                id: conflictedID,
+                source: SourceFileMetadata(relativePath: "Conflicted.jpg"),
+                bibliography: BibliographicMetadata(title: "Base Conflict")
+            ),
+            CatalogItem(
+                id: independentID,
+                source: SourceFileMetadata(relativePath: "Independent.jpg"),
+                bibliography: BibliographicMetadata(title: "Base Independent", publisher: "Base Press")
+            ),
+        ])
+        var local = base
+        local.items[0].bibliography.title = "Locally Edited"
+        local.items[1].bibliography.publisher = "Local Press"
+        let localAddition = CatalogItem(source: SourceFileMetadata(relativePath: "Local Addition.jpg"))
+        local.items.append(localAddition)
+        var external = base
+        external.items.removeAll { $0.id == conflictedID }
+        external.items[0].bibliography.title = "External Independent"
+        let externalAddition = CatalogItem(source: SourceFileMetadata(relativePath: "External Addition.jpg"))
+        external.items.append(externalAddition)
+        let service = CatalogMergeService()
+
+        let pending = await service.merge(base: base, local: local, external: external)
+        let deletion = try XCTUnwrap(pending.conflicts.first { $0.recordID == conflictedID && $0.field == .record })
+        let resolved = await service.resolving(pending, useExternal: [deletion.id])
+
+        XCTAssertNil(resolved.items.first { $0.id == conflictedID })
+        XCTAssertEqual(resolved.items.first { $0.id == independentID }?.bibliography.title, "External Independent")
+        XCTAssertEqual(resolved.items.first { $0.id == independentID }?.bibliography.publisher, "Local Press")
+        XCTAssertNotNil(resolved.items.first { $0.id == localAddition.id })
+        XCTAssertNotNil(resolved.items.first { $0.id == externalAddition.id })
+    }
 }

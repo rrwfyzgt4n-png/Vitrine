@@ -60,7 +60,6 @@ struct CatalogConflictReviewView: View {
     }
 
     private func conflictTitle(_ conflict: CatalogMergeConflict) -> String {
-        let field = String(localized: String.LocalizationValue(conflict.field.rawValue))
-        return [conflict.bookTitle, field].compactMap { $0 }.joined(separator: " — ")
+        [conflict.bookTitle, conflict.field.label].compactMap { $0 }.joined(separator: " — ")
     }
 }
