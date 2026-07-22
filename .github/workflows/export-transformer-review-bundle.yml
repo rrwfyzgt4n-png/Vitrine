@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - automation/transformer-review-bundle-20260722
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -16,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Build annotated review bundle
         shell: bash
@@ -116,7 +120,7 @@ jobs:
           generated_at = datetime.now(timezone.utc).isoformat()
           repo = os.environ.get("GITHUB_REPOSITORY", "rrwfyzgt4n-png/Vitrine")
           commit = git("rev-parse", "HEAD")
-          branch = os.environ.get("GITHUB_REF_NAME", "automation/transformer-review-bundle-20260722")
+          branch = os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME", "automation/transformer-review-bundle-20260722")
 
           with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
               out.write("VITRINE TRANSFORMER CODE-REVIEW BUNDLE\n")
