@@ -1,0 +1,183 @@
+name: Export transformer review bundle
+
+on:
+  push:
+    branches:
+      - automation/transformer-review-bundle-20260722
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build annotated review bundle
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import os
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          ROOT = Path.cwd()
+          OUTPUT = ROOT / "Vitrine-transformer-review-bundle.txt"
+          SELF = ".github/workflows/export-transformer-review-bundle.yml"
+
+          INCLUDED_NAMES = {".gitignore"}
+          INCLUDED_SUFFIXES = {
+              ".swift", ".md", ".sh", ".toml", ".json", ".xcstrings",
+              ".plist", ".entitlements", ".pbxproj", ".xcscheme",
+              ".xcworkspacedata", ".yml", ".yaml"
+          }
+          EXCLUDED_PREFIXES = (
+              ".git/", ".build/", "DerivedData/", "xcuserdata/"
+          )
+          EXCLUDED_SUFFIXES = {
+              ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".zip",
+              ".xcuserstate", ".DS_Store"
+          }
+
+          def git(*args: str) -> str:
+              return subprocess.check_output(["git", *args], text=True).strip()
+
+          def language_for(path: str) -> str:
+              suffix = Path(path).suffix.lower()
+              return {
+                  ".swift": "Swift",
+                  ".md": "Markdown",
+                  ".sh": "Shell",
+                  ".toml": "TOML",
+                  ".json": "JSON",
+                  ".xcstrings": "Xcode String Catalog JSON",
+                  ".plist": "Property List XML",
+                  ".entitlements": "Entitlements Property List XML",
+                  ".pbxproj": "Xcode Project",
+                  ".xcscheme": "Xcode Scheme XML",
+                  ".xcworkspacedata": "Xcode Workspace XML",
+                  ".yml": "YAML",
+                  ".yaml": "YAML",
+              }.get(suffix, "Text")
+
+          tracked = git("ls-files").splitlines()
+          selected: list[str] = []
+          skipped: list[tuple[str, str]] = []
+
+          for path in sorted(tracked):
+              if path == SELF:
+                  skipped.append((path, "temporary export workflow"))
+                  continue
+              if path == OUTPUT.name:
+                  continue
+              if path.startswith(EXCLUDED_PREFIXES):
+                  skipped.append((path, "generated/user-state directory"))
+                  continue
+              suffix = Path(path).suffix.lower()
+              if suffix in EXCLUDED_SUFFIXES:
+                  skipped.append((path, "binary or non-reviewable asset"))
+                  continue
+              if Path(path).name in INCLUDED_NAMES or suffix in INCLUDED_SUFFIXES:
+                  try:
+                      (ROOT / path).read_text(encoding="utf-8")
+                  except UnicodeDecodeError:
+                      skipped.append((path, "not valid UTF-8 text"))
+                  else:
+                      selected.append(path)
+              else:
+                  skipped.append((path, "unrecognized non-code text type"))
+
+          records = []
+          total_bytes = 0
+          total_lines = 0
+          for path in selected:
+              data = (ROOT / path).read_bytes()
+              text = data.decode("utf-8")
+              lines = text.splitlines()
+              records.append({
+                  "path": path,
+                  "language": language_for(path),
+                  "bytes": len(data),
+                  "lines": len(lines),
+                  "sha256": hashlib.sha256(data).hexdigest(),
+                  "content": text,
+              })
+              total_bytes += len(data)
+              total_lines += len(lines)
+
+          generated_at = datetime.now(timezone.utc).isoformat()
+          repo = os.environ.get("GITHUB_REPOSITORY", "rrwfyzgt4n-png/Vitrine")
+          commit = git("rev-parse", "HEAD")
+          branch = os.environ.get("GITHUB_REF_NAME", "automation/transformer-review-bundle-20260722")
+
+          with OUTPUT.open("w", encoding="utf-8", newline="\n") as out:
+              out.write("VITRINE TRANSFORMER CODE-REVIEW BUNDLE\n")
+              out.write("=" * 80 + "\n\n")
+              out.write("REPOSITORY METADATA\n")
+              out.write(f"repository: {repo}\n")
+              out.write(f"source_commit: {commit}\n")
+              out.write(f"source_branch: {branch}\n")
+              out.write(f"generated_at_utc: {generated_at}\n")
+              out.write(f"included_files: {len(records)}\n")
+              out.write(f"included_source_lines: {total_lines}\n")
+              out.write(f"included_source_bytes: {total_bytes}\n\n")
+
+              out.write("REVIEW INSTRUCTIONS FOR THE TRANSFORMER\n")
+              out.write("- Review the repository as a macOS SwiftUI application, not as isolated snippets.\n")
+              out.write("- Prioritize correctness, data-loss risks, concurrency and actor-isolation defects, sandbox/security-scoped access, file coordination, Markdown round-trip integrity, merge/recovery behavior, performance at catalog scale, accessibility, localization, and test gaps.\n")
+              out.write("- Trace behavior across models, services, CatalogStore, views, tests, Xcode configuration, entitlements, and scripts.\n")
+              out.write("- Distinguish confirmed defects from risks, maintainability concerns, and optional improvements.\n")
+              out.write("- For every finding, report severity, confidence, affected file and line range, technical mechanism, user-visible impact, and a concrete fix.\n")
+              out.write("- Do not claim a defect solely because platform APIs are unfamiliar; explain the failing execution path.\n")
+              out.write("- Identify dead code, duplicated state, inconsistent schemas, missing test coverage, and violations of the documented architecture.\n")
+              out.write("- Treat localizable string catalogs and generated Xcode metadata as low-priority unless they reveal functional, localization, entitlement, or build defects.\n")
+              out.write("- End with: critical findings, high-priority findings, medium/low findings, architectural observations, test plan, and ranked remediation sequence.\n\n")
+
+              out.write("ANNOTATION FORMAT\n")
+              out.write("Each source file is enclosed by BEGIN_FILE/END_FILE markers. Source lines are prefixed with a six-digit original line number and a tab. The prefix is annotation, not repository content.\n\n")
+
+              out.write("INCLUDED FILE MANIFEST\n")
+              for index, record in enumerate(records, start=1):
+                  out.write(
+                      f"{index:04d} | {record['path']} | {record['language']} | "
+                      f"{record['lines']} lines | {record['bytes']} bytes | sha256={record['sha256']}\n"
+                  )
+              out.write("\nSKIPPED FILE MANIFEST\n")
+              for path, reason in skipped:
+                  out.write(f"- {path} | {reason}\n")
+              out.write("\n" + "=" * 80 + "\n\n")
+
+              for index, record in enumerate(records, start=1):
+                  out.write(f"BEGIN_FILE {index:04d}\n")
+                  out.write(f"path: {record['path']}\n")
+                  out.write(f"language: {record['language']}\n")
+                  out.write(f"line_count: {record['lines']}\n")
+                  out.write(f"byte_count: {record['bytes']}\n")
+                  out.write(f"sha256: {record['sha256']}\n")
+                  out.write("BEGIN_SOURCE\n")
+                  lines = record["content"].splitlines()
+                  for line_number, line in enumerate(lines, start=1):
+                      out.write(f"{line_number:06d}\t{line}\n")
+                  if record["content"].endswith("\n"):
+                      out.write(f"{len(lines) + 1:06d}\t<EOF_NEWLINE>\n")
+                  out.write("END_SOURCE\n")
+                  out.write(f"END_FILE {index:04d}\n\n")
+
+          print(f"Created {OUTPUT} with {len(records)} files and {total_lines} source lines")
+          PY
+
+      - name: Upload review bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vitrine-transformer-review-bundle
+          path: Vitrine-transformer-review-bundle.txt
+          if-no-files-found: error
+          retention-days: 7
