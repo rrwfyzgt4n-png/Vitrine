@@ -102,6 +102,19 @@ keyed by catalog UUID. They include bookmarks, source-folder signature and
 volume identity. A remount is accepted by stable volume UUID or resource
 identifier, never by display name alone.
 
+`preserveExistingCoverAccess` has one narrow meaning: relocating or reopening a
+catalog while its cover volume is unavailable may update the catalog bookmark
+without erasing the remembered cover bookmark. An explicit Locate/Replace Cover
+Folder action supplies a new folder URL and therefore replaces the old cover
+bookmark and volume identity. When Foundation reports either bookmark as stale,
+resolution refreshes that bookmark in place. A removed volume keeps its last
+stable identity; a remount is accepted only when UUID or resource identifier
+matches, while an unrelated same-name volume is rejected. These intent rules are
+covered by `SecurityScopedBookmarkStoreTests.testUnavailableFolderDoesNotEraseRememberedAccess`,
+`testSaveAndResolveLastCatalogAndCoverFolder`,
+`testRemountMatchesStableIdentityAndRejectsUnrelatedSameNameVolume`, and
+`testVolumeNameAloneIsNeverAcceptedForRemount`.
+
 ### Scanning and reconciliation
 
 `CatalogScanner` enumerates supported images recursively and returns a complete
@@ -139,6 +152,18 @@ All logical edits eventually call `CatalogSaveCoordinator.save`. The coordinator
 - preserves the current file to a local backup before replacement;
 - writes atomically;
 - establishes a new disk baseline after success.
+
+Before replacing an existing destination, the coordinator parses that file's
+catalog identity. A matching identity follows the normal save path. A different
+identity requires explicit replacement authorization and is backed up under the
+old identity, not the incoming one. Unparseable or unrelated bytes also require
+authorization and are preserved verbatim in
+`Vitrine/Orphaned Catalog Replacements/`. Native save panels provide that
+authorization for Create and Export; autosaves and maintenance writes never do.
+Cancellation or missing authorization leaves the destination unchanged. The
+Show Local Backups action reveals the complete `Vitrine/` recovery archive so
+backups under replaced catalog identities and unrecognized replacements remain
+discoverable.
 
 Backups are stored in Application Support under
 `Vitrine/Backups/<catalog UUID>/`. The newest ten are retained.
@@ -179,6 +204,11 @@ Maintenance services are intentionally separate:
   identifiers, paths, titles, authors, notes, cover contents, fingerprints and
   checksums.
 - `CatalogCoverInformationRebuilder` refreshes cover-derived metadata.
+
+All paths read from catalog `relativePath` fields pass through
+`CoverPathResolver` before thumbnails, Open, Quick Look, or Finder reveal. The
+resolver rejects absolute paths, traversal components, malformed separators,
+the source root itself, and symlinks that escape the selected cover tree.
 
 ## 8. Metadata integration
 

@@ -33,7 +33,7 @@ mandatory safety gate is open or lacks focused regression coverage.
 | 0 — Baseline and evidence | Package adoption, truthful checklist, portable test boundary | Complete | A clean, reproducible baseline tied to a real commit |
 | 1 — Transactional saves | V11-001, V11-002, V11-017 | Verified 2026-07-22 | No silent loss on quit or save failure; one ordered file-event buffer |
 | 2 — Reconciliation safety | V11-003, V11-004, V11-011, V11-015 | Verified 2026-07-22 | No ambiguous or explicitly retained record is automatically deleted |
-| 3 — Filesystem and overwrite recovery | V11-005, V11-006, V11-026 | Planned | All cover access is contained and overwritten catalogs remain recoverable |
+| 3 — Filesystem and overwrite recovery | V11-005, V11-006, V11-026 | Verified 2026-07-22 | All cover access is contained and overwritten catalogs remain recoverable |
 | 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Planned | Every metadata surface round-trips and is localized |
 | 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Planned | Exact behavior with measured improvement at 5,000 records |
 | 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Planned | Stable behavior without a high-risk speculative rewrite |
@@ -82,3 +82,30 @@ refresh rather than applying an obsolete diff.
 Focused cluster, retention, stale-diff, deletion, and localization coverage and
 the complete `script/test.sh` suite passed on 2026-07-22. This closes V11-003,
 V11-004, V11-011, and V11-015.
+
+## Phase 3 verification
+
+`CoverPathResolver` is now the single boundary used when a catalog cover path
+becomes a filesystem URL. It standardizes the source root and each resolved path
+component, resolves intermediate symlinks, requires a strict descendant, and
+rejects absolute paths, traversal, malformed separators, root-equal paths, and
+symlink escapes. Thumbnail, Open, Quick Look, and Finder reveal all use this
+resolver; interactive actions report a localized error instead of opening an
+unsafe URL.
+
+The save coordinator now identifies existing destination bytes before replacing
+them. Matching catalogs retain normal backup behavior; a different catalog is
+replaced only through an explicitly authorized Create/Export flow and its bytes
+are backed up under the old catalog UUID. Malformed or unrelated bytes require
+the same authorization and are preserved verbatim under
+`Vitrine/Orphaned Catalog Replacements/`. A rejected or cancelled replacement
+does not change the destination. Show Local Backups reveals the complete recovery
+archive rather than only the active catalog's newest backup, keeping replaced
+identities and unrecognized replacements discoverable.
+
+The architecture now records the exact `preserveExistingCoverAccess` invariant,
+including catalog relocation, explicit source replacement, stale bookmark
+refresh, and stable-volume remount rules. Focused containment, symlink,
+same/different identity, malformed destination, raw preservation, cancellation,
+and bookmark tests pass. The complete non-interactive `script/test.sh` suite
+passed on 2026-07-22. This closes V11-005, V11-006, and V11-026.

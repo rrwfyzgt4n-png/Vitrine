@@ -16,6 +16,8 @@ enum CatalogError: LocalizedError, Sendable {
     case finderCommentReadFailed(URL)
     case imageMetadataReadFailed(URL)
     case thumbnailGenerationFailed(URL)
+    case invalidCoverPath
+    case catalogReplacementConfirmationRequired
     case unstableSourceFile(URL)
     case invalidISBN
     case openLibraryUnavailable
@@ -39,6 +41,8 @@ enum CatalogError: LocalizedError, Sendable {
         case .finderCommentReadFailed: L10n.text("One cover's File Notes could not be read.")
         case .imageMetadataReadFailed: L10n.text("One cover's image information could not be read.")
         case .thumbnailGenerationFailed: L10n.text("One cover preview could not be created.")
+        case .invalidCoverPath: L10n.text("This cover reference is invalid or points outside the selected cover folder.")
+        case .catalogReplacementConfirmationRequired: L10n.text("Replacing this file requires confirmation because it contains another catalog or unrecognized data.")
         case .unstableSourceFile: L10n.text("One cover is still changing and will be tried again later.")
         case .invalidISBN: L10n.text("That ISBN is not valid.")
         case .openLibraryUnavailable: L10n.text("Book details are temporarily unavailable.")

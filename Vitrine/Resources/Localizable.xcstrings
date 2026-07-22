@@ -4281,6 +4281,22 @@
         }
       }
     },
+    "Replacing this file requires confirmation because it contains another catalog or unrecognized data." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le remplacement de ce fichier doit être confirmé, car il contient un autre catalogue ou des données non reconnues."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le remplacement de ce fichier doit être confirmé, car il contient un autre catalogue ou des données non reconnues."
+          }
+        }
+      }
+    },
     "Reset Cover Size" : {
       "localizations" : {
         "fr" : {
@@ -5388,6 +5404,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le rapport exclut les titres, les notes, les chemins de fichiers et le contenu du catalogue."
+          }
+        }
+      }
+    },
+    "This cover reference is invalid or points outside the selected cover folder." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
           }
         }
       }

@@ -4,7 +4,7 @@ Last updated: 2026-07-22
 
 ## Release status
 
-**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. Save durability and reconciliation safety are fixed and verified; mandatory cover-path containment gate `V11-005` remains open. Hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
+**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. All mandatory V11-001 through V11-005 safety gates are fixed and verified. Conflict/localization, measured-scale, maintainability, and final release-verification phases remain open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
 
 Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
 
@@ -38,6 +38,9 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Ambiguous reconciliation clusters | Pass | Group-level full-hash resolution and 3×3, 3×2, 2×3, single-assignment, and deterministic-order regressions pass. |
 | Explicit metadata-only retention | Pass | Kept records survive complete scans, uniquely returning covers reconnect, and explicit deletion remains available. |
 | Reconciliation baseline | Pass | A changed `baseCatalogUpdatedAt` rejects the complete stale diff without altering the current catalog. |
+| Cover-path containment | Pass | One resolver protects thumbnails, Open, Quick Look, and Finder reveal; traversal, absolute, malformed, root-equal, Unicode, and symlink cases are covered. |
+| Cross-catalog replacement | Pass | Different catalog IDs back up under the old identity; malformed/unrelated bytes require authorization and are preserved verbatim; cancellation is non-mutating. |
+| Cover-access bookmark intent | Pass | Catalog relocation preserves remembered cover access only when requested; explicit replacement and stable-volume remount semantics are documented and tested. |
 | Legacy catalog compatibility | Pass | A pre-parser schema-1 catalog rewrites without losing unknown fields. |
 | Localization | Pass | Every catalogued string has `fr` and `fr-CA`; extracted SwiftUI keys are audited. |
 | Unit, concurrency and integrity suite | Pass | `script/test.sh` completed successfully. |

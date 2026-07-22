@@ -2,6 +2,27 @@ import XCTest
 @testable import Vitrine
 
 final class CatalogBackupAndRecoveryTests: XCTestCase {
+    func testRecoveryArchiveMakesCatalogIdentitiesAndOrphanedReplacementsDiscoverable() async throws {
+        let id = UUID()
+        let service = CatalogBackupService()
+        try await service.preserve(Data("catalog backup".utf8), catalogID: id)
+        let orphan = try await service.preserveUnrecognizedReplacement(
+            Data("unrecognized destination".utf8),
+            destinationName: "Existing.md"
+        )
+        let catalogBackups = try await service.backups(catalogID: id)
+        let archive = try await service.recoveryArchiveURL()
+        defer {
+            if let folder = catalogBackups.first?.url.deletingLastPathComponent() {
+                try? FileManager.default.removeItem(at: folder)
+            }
+            try? FileManager.default.removeItem(at: orphan)
+        }
+
+        XCTAssertTrue(try XCTUnwrap(catalogBackups.first).url.pathComponents.starts(with: archive.pathComponents))
+        XCTAssertTrue(orphan.pathComponents.starts(with: archive.pathComponents))
+    }
+
     func testBackupRotationKeepsTenNewestCopies() async throws {
         let id = UUID()
         let catalogURL = FileManager.default.temporaryDirectory.appending(path: "\(id.uuidString).md")

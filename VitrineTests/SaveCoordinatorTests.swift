@@ -334,6 +334,101 @@ final class SaveCoordinatorTests: XCTestCase {
         XCTAssertEqual(parsed.snapshot.name, "External")
     }
 
+    func testExistingCatalogWithSameIdentityCanBeReplacedAndIsBackedUp() async throws {
+        let id = UUID()
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let original = CatalogSnapshot(catalogID: id, name: "Original")
+        var replacement = original
+        replacement.name = "Replacement"
+        try await CatalogSaveCoordinator(editDebounce: .zero).save(original, to: url)
+
+        let coordinator = CatalogSaveCoordinator(editDebounce: .zero)
+        try await coordinator.save(replacement, to: url)
+
+        let persisted = try await CatalogMarkdownStore().read(from: url).snapshot
+        XCTAssertEqual(persisted.name, "Replacement")
+        let backups = try await coordinator.backups(catalogID: id)
+        defer { if let folder = backups.first?.url.deletingLastPathComponent() { try? FileManager.default.removeItem(at: folder) } }
+        let backedUp = try await CatalogMarkdownStore().read(from: XCTUnwrap(backups.first).url).snapshot
+        XCTAssertEqual(backedUp.name, "Original")
+    }
+
+    func testDifferentCatalogRequiresConfirmationAndCancelledReplacementLeavesBytesUntouched() async throws {
+        let original = CatalogSnapshot(name: "Existing Catalog")
+        let replacement = CatalogSnapshot(name: "Incoming Catalog")
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try await CatalogSaveCoordinator(editDebounce: .zero).save(original, to: url)
+        let originalData = try Data(contentsOf: url)
+
+        do {
+            try await CatalogSaveCoordinator(editDebounce: .zero).save(replacement, to: url)
+            XCTFail("Expected replacement confirmation to be required")
+        } catch let error as CatalogError {
+            guard case .catalogReplacementConfirmationRequired = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+
+        XCTAssertEqual(try Data(contentsOf: url), originalData)
+    }
+
+    func testConfirmedDifferentCatalogReplacementBacksUpOldIdentity() async throws {
+        let original = CatalogSnapshot(name: "Existing Catalog")
+        let replacement = CatalogSnapshot(name: "Incoming Catalog")
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try await CatalogSaveCoordinator(editDebounce: .zero).save(original, to: url)
+        let coordinator = CatalogSaveCoordinator(editDebounce: .zero)
+
+        try await coordinator.save(
+            replacement,
+            to: url,
+            reason: .export,
+            replacementPolicy: .replaceExistingDestination
+        )
+
+        let persisted = try await CatalogMarkdownStore().read(from: url).snapshot
+        XCTAssertEqual(persisted.catalogID, replacement.catalogID)
+        let oldBackups = try await coordinator.backups(catalogID: original.catalogID)
+        defer { if let folder = oldBackups.first?.url.deletingLastPathComponent() { try? FileManager.default.removeItem(at: folder) } }
+        XCTAssertFalse(oldBackups.isEmpty)
+        let backedUp = try await CatalogMarkdownStore().read(from: oldBackups[0].url).snapshot
+        XCTAssertEqual(backedUp.catalogID, original.catalogID)
+    }
+
+    func testConfirmedMalformedReplacementPreservesRawBytesInOrphanArea() async throws {
+        let malformedData = Data("unrelated user data".utf8)
+        let replacement = CatalogSnapshot(name: "Incoming Catalog")
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try malformedData.write(to: url)
+        let coordinator = CatalogSaveCoordinator(editDebounce: .zero)
+        let before = Set((try? await coordinator.unrecognizedReplacementBackups()) ?? [])
+
+        do {
+            try await coordinator.save(replacement, to: url)
+            XCTFail("Expected replacement confirmation to be required")
+        } catch let error as CatalogError {
+            guard case .catalogReplacementConfirmationRequired = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+        XCTAssertEqual(try Data(contentsOf: url), malformedData)
+
+        try await coordinator.save(
+            replacement,
+            to: url,
+            reason: .export,
+            replacementPolicy: .replaceExistingDestination
+        )
+        let after = try await coordinator.unrecognizedReplacementBackups()
+        let created = try XCTUnwrap(after.first(where: { !before.contains($0) }))
+        defer { try? FileManager.default.removeItem(at: created) }
+        XCTAssertEqual(try Data(contentsOf: created), malformedData)
+    }
+
     func testRestoreRefreshesBaselineForTheNextSave() async throws {
         let id = UUID()
         let url = FileManager.default.temporaryDirectory.appending(path: "\(id.uuidString).md")

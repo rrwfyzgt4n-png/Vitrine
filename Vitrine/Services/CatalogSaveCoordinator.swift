@@ -28,7 +28,8 @@ actor CatalogSaveCoordinator {
     func save(
         _ snapshot: CatalogSnapshot,
         to url: URL,
-        reason: CatalogSaveReason = .explicit
+        reason: CatalogSaveReason = .explicit,
+        replacementPolicy: CatalogReplacementPolicy = .requireMatchingCatalog
     ) async throws -> CatalogSnapshot {
         try await withCheckedThrowingContinuation { continuation in
             let key = url.standardizedFileURL
@@ -36,12 +37,14 @@ actor CatalogSaveCoordinator {
                 saveQueue[index].snapshot = snapshot
                 saveQueue[index].reasons.insert(reason)
                 saveQueue[index].requestedAt = .now
+                saveQueue[index].replacementPolicy = replacementPolicy
                 saveQueue[index].continuations.append(continuation)
             } else {
                 saveQueue.append(SaveRequest(
                     snapshot: snapshot,
                     url: key,
                     reasons: [reason],
+                    replacementPolicy: replacementPolicy,
                     requestedAt: .now,
                     continuations: [continuation]
                 ))
@@ -86,7 +89,11 @@ actor CatalogSaveCoordinator {
                 if let saveOperation {
                     try await saveOperation(request.snapshot, request.url)
                 } else {
-                    try await performSave(request.snapshot, to: request.url)
+                    try await performSave(
+                        request.snapshot,
+                        to: request.url,
+                        replacementPolicy: request.replacementPolicy
+                    )
                 }
                 request.continuations.forEach { $0.resume(returning: request.snapshot) }
             } catch {
@@ -119,7 +126,11 @@ actor CatalogSaveCoordinator {
         }
     }
 
-    private func performSave(_ snapshot: CatalogSnapshot, to url: URL) async throws {
+    private func performSave(
+        _ snapshot: CatalogSnapshot,
+        to url: URL,
+        replacementPolicy: CatalogReplacementPolicy
+    ) async throws {
         guard !snapshot.isReadOnly else {
             throw CatalogError.unsupportedSchema(snapshot.schemaVersion)
         }
@@ -145,7 +156,26 @@ actor CatalogSaveCoordinator {
             }
         }
         if let previousData = diskState.data {
-            try await backupService.preserve(previousData, catalogID: snapshot.catalogID)
+            do {
+                guard let previousSource = String(data: previousData, encoding: .utf8) else {
+                    throw CatalogError.catalogMalformed
+                }
+                let previousCatalog = try CatalogMarkdownParser().parse(previousSource).snapshot
+                guard previousCatalog.catalogID == snapshot.catalogID || replacementPolicy == .replaceExistingDestination else {
+                    throw CatalogError.catalogReplacementConfirmationRequired
+                }
+                try await backupService.preserve(previousData, catalogID: previousCatalog.catalogID)
+            } catch CatalogError.catalogReplacementConfirmationRequired {
+                throw CatalogError.catalogReplacementConfirmationRequired
+            } catch {
+                guard replacementPolicy == .replaceExistingDestination else {
+                    throw CatalogError.catalogReplacementConfirmationRequired
+                }
+                _ = try await backupService.preserveUnrecognizedReplacement(
+                    previousData,
+                    destinationName: url.lastPathComponent
+                )
+            }
         }
         try await Task.detached(priority: .userInitiated) {
             try Self.coordinatedReplace(
@@ -267,6 +297,14 @@ actor CatalogSaveCoordinator {
         try await backupService.backups(catalogID: catalogID)
     }
 
+    func unrecognizedReplacementBackups() async throws -> [URL] {
+        try await backupService.unrecognizedReplacementBackups()
+    }
+
+    func recoveryArchiveURL() async throws -> URL {
+        try await backupService.recoveryArchiveURL()
+    }
+
     @discardableResult
     func restore(
         _ backup: CatalogBackupService.Backup,
@@ -322,6 +360,7 @@ private struct SaveRequest {
     var snapshot: CatalogSnapshot
     var url: URL
     var reasons: Set<CatalogSaveReason>
+    var replacementPolicy: CatalogReplacementPolicy
     var requestedAt: Date
     var continuations: [CheckedContinuation<CatalogSnapshot, any Error>]
 }

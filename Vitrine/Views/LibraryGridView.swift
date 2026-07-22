@@ -112,6 +112,6 @@ struct LibraryGridView: View {
     }
 
     private func showQuickLook() {
-        if let url = store.selectedCoverURL { QuickLookService.shared.show(url: url) }
+        store.quickLookSelectedCover()
     }
 }

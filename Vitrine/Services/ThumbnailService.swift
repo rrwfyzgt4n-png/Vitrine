@@ -25,6 +25,7 @@ actor ThumbnailService {
     }
 
     private let cache: NSCache<NSString, CachedThumbnail>
+    private let pathResolver = CoverPathResolver()
     private var cacheHits = 0
     private var cacheMisses = 0
     private let countLimit = 500
@@ -42,7 +43,10 @@ actor ThumbnailService {
         maximumPixelSize: Int
     ) throws -> ThumbnailImage {
         try Task.checkCancellation()
-        let fileURL = try coverURL(sourceFolderURL: sourceFolderURL, relativePath: source.relativePath)
+        let fileURL = try pathResolver.resolve(
+            relativePath: source.relativePath,
+            inside: sourceFolderURL
+        )
         let cacheKey = NSString(string: [
             fileURL.path(percentEncoded: false),
             source.fileSize.map(String.init) ?? "unknown-size",
@@ -97,17 +101,5 @@ actor ThumbnailService {
             countLimit: countLimit,
             totalCostLimit: totalCostLimit
         )
-    }
-
-    private func coverURL(sourceFolderURL: URL, relativePath: String) throws -> URL {
-        let root = sourceFolderURL.resolvingSymlinksInPath().standardizedFileURL
-        let fileURL = root.appending(path: relativePath).resolvingSymlinksInPath().standardizedFileURL
-        let rootComponents = root.pathComponents
-        let fileComponents = fileURL.pathComponents
-        guard fileComponents.count > rootComponents.count,
-              Array(fileComponents.prefix(rootComponents.count)) == rootComponents else {
-            throw CatalogError.thumbnailGenerationFailed(fileURL)
-        }
-        return fileURL
     }
 }

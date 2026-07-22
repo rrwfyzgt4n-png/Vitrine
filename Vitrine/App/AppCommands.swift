@@ -62,7 +62,7 @@ struct AppCommands: Commands {
             Button("Open Cover") { store.openSelectedCover() }.keyboardShortcut(.return)
                 .disabled(store.selectedCoverURL == nil)
             Button("Quick Look") {
-                if let url = store.selectedCoverURL { QuickLookService.shared.show(url: url) }
+                store.quickLookSelectedCover()
             }.keyboardShortcut(.space).disabled(store.selectedCoverURL == nil)
             Button("Reveal Cover in Finder") { store.revealSelectedCover() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])

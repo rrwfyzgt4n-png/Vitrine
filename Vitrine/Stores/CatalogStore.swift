@@ -104,10 +104,12 @@ final class CatalogStore {
     init(
         saveCoordinator: CatalogSaveCoordinator = CatalogSaveCoordinator(),
         catalogURL: URL? = nil,
+        sourceFolderURL: URL? = nil,
         undoManagerProvider: @escaping () -> UndoManager? = { NSApp.keyWindow?.undoManager }
     ) {
         self.saveCoordinator = saveCoordinator
         self.catalogURL = catalogURL
+        self.sourceFolderURL = sourceFolderURL
         self.undoManagerProvider = undoManagerProvider
     }
 
@@ -289,7 +291,12 @@ final class CatalogStore {
         do {
             var copy = catalog
             copy.isReadOnly = false
-            try await saveCoordinator.save(copy, to: destination)
+            try await saveCoordinator.save(
+                copy,
+                to: destination,
+                reason: .export,
+                replacementPolicy: .replaceExistingDestination
+            )
             statusMessage = L10n.text("Catalog copy exported")
         } catch {
             presentedError = .coordinatedWriteFailed
@@ -297,13 +304,10 @@ final class CatalogStore {
     }
 
     func showLocalBackups() async {
-        guard let catalog else { return }
+        guard catalog != nil else { return }
         do {
-            guard let latest = try await saveCoordinator.backups(catalogID: catalog.catalogID).first else {
-                statusMessage = L10n.text("No catalog backups are available.")
-                return
-            }
-            NSWorkspace.shared.activateFileViewerSelecting([latest.url])
+            let archiveURL = try await saveCoordinator.recoveryArchiveURL()
+            NSWorkspace.shared.activateFileViewerSelecting([archiveURL])
         } catch {
             presentedError = .catalogUnavailable
         }
@@ -390,7 +394,11 @@ final class CatalogStore {
                 catalogID: snapshot.catalogID
             )
             saveState = .saving
-            try await saveCoordinator.save(snapshot, to: destinationURL)
+            try await saveCoordinator.save(
+                snapshot,
+                to: destinationURL,
+                replacementPolicy: .replaceExistingDestination
+            )
             accessController.replace(catalogURL: destinationURL, coverFolderURL: folderURL)
             try await persistAccess(catalogURL: destinationURL, coverFolderURL: folderURL, snapshot: snapshot)
             catalog = snapshot
@@ -981,18 +989,35 @@ final class CatalogStore {
     }
 
     func revealSelectedCover() {
-        guard let url = selectedCoverURL else { return }
+        guard let url = resolveSelectedCoverURL(reportingFailure: true) else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     func openSelectedCover() {
-        guard let url = selectedCoverURL else { return }
+        guard let url = resolveSelectedCoverURL(reportingFailure: true) else { return }
         NSWorkspace.shared.open(url)
     }
 
+    func quickLookSelectedCover() {
+        guard let url = resolveSelectedCoverURL(reportingFailure: true) else { return }
+        QuickLookService.shared.show(url: url)
+    }
+
     var selectedCoverURL: URL? {
+        resolveSelectedCoverURL(reportingFailure: false)
+    }
+
+    private func resolveSelectedCoverURL(reportingFailure: Bool) -> URL? {
         guard let sourceFolderURL, let selectedItem, selectedItem.availability == .available else { return nil }
-        return sourceFolderURL.appending(path: selectedItem.source.relativePath)
+        do {
+            return try CoverPathResolver().resolve(
+                relativePath: selectedItem.source.relativePath,
+                inside: sourceFolderURL
+            )
+        } catch {
+            if reportingFailure { presentedError = .invalidCoverPath }
+            return nil
+        }
     }
 
     private func restoreLastCatalog() async {
