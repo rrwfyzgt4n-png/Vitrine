@@ -30,6 +30,7 @@ actor OpenLibraryService {
         var lastError: Error?
         for attempt in 0..<maximumAttempts {
             do {
+                try Task.checkCancellation()
                 lastRequestAt = .now
                 let (data, response) = try await session.data(for: request)
                 guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
@@ -41,6 +42,9 @@ actor OpenLibraryService {
                 cache[query] = candidates
                 return candidates
             } catch {
+                if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
+                    throw CancellationError()
+                }
                 lastError = error
                 if attempt < maximumAttempts - 1 {
                     try await Task.sleep(for: .milliseconds(retryDelayMilliseconds * (attempt + 1)))

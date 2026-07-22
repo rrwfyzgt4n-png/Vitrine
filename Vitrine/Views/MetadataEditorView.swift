@@ -48,7 +48,7 @@ struct MetadataEditorView: View {
             HStack {
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Save") {
+                Button("Save", systemImage: "checkmark") {
                     item.bibliography.metadataSource = .manual
                     item.bibliography.metadataConfirmedByUser = true
                     let editedItem = item
@@ -56,7 +56,9 @@ struct MetadataEditorView: View {
                     Task { await onSave(editedItem) }
                 }
                 .keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent)
             }
+            .buttonStyle(.glass)
             .padding()
         }
         .frame(width: 620, height: 720)

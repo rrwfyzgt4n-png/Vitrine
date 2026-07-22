@@ -76,9 +76,10 @@ struct CatalogRecoveryView: View {
                 }
                 if let selectedBackupID {
                     Button("Repair from Backup") { restore(selectedBackupID) }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.glassProminent)
                 }
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 660)

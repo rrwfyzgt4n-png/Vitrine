@@ -98,6 +98,7 @@ final class CatalogStore {
     @ObservationIgnored private var deferredCatalogFileEvents: [CatalogFileEvent] = []
     @ObservationIgnored private var isProcessingCatalogFileEvent = false
     @ObservationIgnored private var pendingRecoveryCoverFolderURL: URL?
+    @ObservationIgnored private var forceLookupRefreshOnPresentation = false
 
     var canRefreshCovers: Bool {
         catalog != nil && catalog?.isReadOnly == false && sourceFolderURL != nil && !catalogOperationIsActive
@@ -865,22 +866,35 @@ final class CatalogStore {
 
     func findBookDetailsOnline(forceRefresh: Bool = false) async {
         guard let item = selectedItem else { return }
-        isLookupPresented = true
         lookupTitle = item.displayTitle
         lookupAuthor = item.displayAuthor ?? ""
         lookupISBN = item.bibliography.isbn13 ?? item.bibliography.isbn10 ?? ""
         lookupMessage = nil
         lookupCandidates = []
-        if lookupISBN.isEmpty {
-            isLookingUp = false
+        isLookingUp = false
+        forceLookupRefreshOnPresentation = forceRefresh
+        isLookupPresented = true
+    }
+
+    func prefetchOpenLibraryIfNeeded() async {
+        guard isLookupPresented, !isLookingUp, lookupCandidates.isEmpty else { return }
+        let hasISBN = !lookupISBN.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasTitle = !lookupTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard hasISBN || hasTitle else {
             lookupMessage = L10n.text("Confirm the title and author, then search. Only this query will be sent.")
-        } else {
-            await searchOpenLibrary(forceRefresh: forceRefresh)
+            return
         }
+        let forceRefresh = forceLookupRefreshOnPresentation
+        forceLookupRefreshOnPresentation = false
+        await searchOpenLibrary(forceRefresh: forceRefresh)
     }
 
     func searchOpenLibrary(forceRefresh: Bool = false) async {
+        guard !isLookingUp else { return }
         let query: MetadataLookupQuery
+        isLookingUp = true
+        lookupMessage = nil
+        defer { isLookingUp = false }
         do {
             if !lookupISBN.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 query = .isbn(try ISBNValidator.validate(lookupISBN).isbn13)
@@ -890,9 +904,9 @@ final class CatalogStore {
                 let author = lookupAuthor.trimmingCharacters(in: .whitespacesAndNewlines)
                 query = .titleAuthor(title: title, author: author.isEmpty ? nil : author)
             }
-            isLookingUp = true
-            lookupMessage = nil
             lookupCandidates = try await openLibrary.candidates(for: query, forceRefresh: forceRefresh)
+        } catch is CancellationError {
+            return
         } catch let error as CatalogError {
             lookupCandidates = []
             lookupMessage = error.localizedDescription
@@ -900,7 +914,6 @@ final class CatalogStore {
             lookupCandidates = []
             lookupMessage = CatalogError.openLibraryUnavailable.localizedDescription
         }
-        isLookingUp = false
     }
 
     func applyMetadataCandidate(_ candidate: MetadataCandidate, fields: Set<MetadataCandidateField>) async {

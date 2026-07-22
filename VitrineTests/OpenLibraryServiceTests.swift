@@ -42,10 +42,42 @@ final class OpenLibraryServiceTests: XCTestCase {
         }
     }
 
+    func testRepeatedLookupUsesMemoryCacheWithoutAnotherRequest() async throws {
+        let requestCounter = RequestCounter()
+        URLProtocolStub.handler = { request in
+            requestCounter.increment()
+            let data = Data(#"{"docs":[{"key":"/works/OL2W","title":"Cached Book"}]}"#.utf8)
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, data)
+        }
+        let service = OpenLibraryService(
+            session: stubSession(), minimumRequestInterval: 0, retryDelayMilliseconds: 0, maximumAttempts: 1
+        )
+        let query = MetadataLookupQuery.titleAuthor(title: "Cached Book", author: nil)
+
+        let first = try await service.candidates(for: query)
+        let second = try await service.candidates(for: query)
+
+        XCTAssertEqual(first, second)
+        XCTAssertEqual(requestCounter.value, 1)
+    }
+
     private func stubSession() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolStub.self]
         return URLSession(configuration: configuration)
+    }
+}
+
+private final class RequestCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int {
+        lock.withLock { count }
+    }
+
+    func increment() {
+        lock.withLock { count += 1 }
     }
 }
 

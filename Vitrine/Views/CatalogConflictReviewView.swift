@@ -31,7 +31,7 @@ struct CatalogConflictReviewView: View {
                 Button("Keep Browsing") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                     .disabled(isApplying)
-                Button("Apply Resolutions") {
+                Button("Apply Resolutions", systemImage: "checkmark") {
                     isApplying = true
                     Task {
                         if await onApply(useExternal) { dismiss() }
@@ -39,8 +39,10 @@ struct CatalogConflictReviewView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent)
                 .disabled(isApplying)
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 760, height: 680)

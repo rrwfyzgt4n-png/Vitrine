@@ -138,8 +138,10 @@ struct FilenameSuggestionReviewView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent)
                 .disabled(isApplying)
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 760, height: 720)
@@ -154,7 +156,9 @@ struct FilenameSuggestionReviewView: View {
                         .toggleStyle(.checkbox)
                         .frame(width: 180, alignment: .leading)
                     VStack(alignment: .leading, spacing: 4) {
-                        TextField(label, text: value)
+                        TextField(text: value) {
+                            Text(label)
+                        }
                             .labelsHidden()
                             .disabled(!enabled.wrappedValue)
                         confidenceLine(for: suggestion)

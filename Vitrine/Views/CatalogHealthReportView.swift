@@ -40,6 +40,7 @@ struct CatalogHealthReportView: View {
                 Spacer()
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.glassProminent)
             }
         }
         .padding(24)

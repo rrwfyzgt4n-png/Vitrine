@@ -20,10 +20,11 @@ struct WelcomeView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 440)
             HStack(spacing: 12) {
-                Button("Create a Catalog", action: createCatalog)
-                    .buttonStyle(.borderedProminent)
+                Button("Create a Catalog", systemImage: "plus", action: createCatalog)
+                    .buttonStyle(.glassProminent)
                     .accessibilityIdentifier("welcome.createCatalog")
-                Button("Open a Catalog", action: openCatalog)
+                Button("Open a Catalog", systemImage: "folder", action: openCatalog)
+                    .buttonStyle(.glass)
                     .accessibilityIdentifier("welcome.openCatalog")
             }
             .disabled(isWorking)

@@ -163,10 +163,17 @@ struct ContentView: View {
         if let catalog = store.catalog {
             ToolbarItem(placement: .navigation) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(catalog.name).font(.headline)
-                    Text(L10n.bookCount(store.visibleItems.count)).font(.caption).foregroundStyle(.secondary)
+                    Text(catalog.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(L10n.bookCount(store.visibleItems.count))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
+                .fixedSize(horizontal: true, vertical: false)
             }
+            .sharedBackgroundVisibility(.hidden)
+
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
                     Section("Sort") {
@@ -180,22 +187,39 @@ struct ContentView: View {
                         }
                     }
                 } label: {
-                    Label(
-                        store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label,
-                        systemImage: "line.3.horizontal.decrease.circle"
-                    )
+                    Label(store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label,
+                          systemImage: store.filter == .all
+                              ? "line.3.horizontal.decrease"
+                              : "line.3.horizontal.decrease.circle.fill")
                 }
-                HStack(spacing: 6) {
-                    Image(systemName: "textformat.size.smaller")
-                    Slider(value: $coverWidth, in: 120...260, step: 4).frame(width: 100)
-                    Image(systemName: "textformat.size.larger")
+                .labelStyle(.iconOnly)
+                .help(store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label)
+
+                HStack(spacing: 7) {
+                    Image(systemName: "rectangle.portrait")
+                        .font(.caption2)
+                        .accessibilityHidden(true)
+                    Slider(value: $coverWidth, in: 120...260, step: 4)
+                        .frame(width: 94)
+                    Image(systemName: "rectangle.portrait")
+                        .font(.body)
+                        .accessibilityHidden(true)
                 }
+                .controlSize(.mini)
                 .accessibilityLabel("Cover size")
+                .accessibilityValue(Int(coverWidth).formatted())
+            }
+
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button("Refresh Covers", systemImage: "arrow.clockwise") { Task { await store.refreshCovers() } }
+                    .labelStyle(.iconOnly)
                     .help("Refresh Covers")
                     .disabled(!store.canRefreshCovers)
                     .accessibilityIdentifier("toolbar.refresh")
                 Button("Inspector", systemImage: "sidebar.trailing") { store.showInspector() }
+                    .labelStyle(.iconOnly)
                     .help(store.isInspectorPresented ? "Hide Inspector" : "Show Inspector")
                     .accessibilityIdentifier("toolbar.inspector")
             }

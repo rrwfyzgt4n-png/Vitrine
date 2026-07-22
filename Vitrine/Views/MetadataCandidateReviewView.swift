@@ -39,14 +39,16 @@ struct MetadataCandidateReviewView: View {
             HStack {
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Apply Selected Fields") {
+                Button("Apply Selected Fields", systemImage: "checkmark") {
                     let acceptedFields = selected
                     dismiss()
                     Task { await onApply(acceptedFields) }
                 }
                 .keyboardShortcut(.defaultAction)
+                .buttonStyle(.glassProminent)
                 .disabled(selected.isEmpty)
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 720, height: 700)

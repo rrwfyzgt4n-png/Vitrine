@@ -48,6 +48,7 @@ struct BookRemovalConfirmationView: View {
                 }
                 .disabled(isRemoving)
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 560)

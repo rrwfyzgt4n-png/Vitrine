@@ -44,10 +44,11 @@ struct CatalogBackupRestoreView: View {
                         else { isRestoring = false }
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(selection == nil || isRestoring)
             }
+            .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 560, height: 460)
