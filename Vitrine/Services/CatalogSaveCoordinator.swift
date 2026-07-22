@@ -2,22 +2,34 @@ import Foundation
 import CryptoKit
 
 actor CatalogSaveCoordinator {
+    typealias SaveOperation = @Sendable (CatalogSnapshot, URL) async throws -> Void
+
     private let writer = CatalogMarkdownWriter()
     private let backupService = CatalogBackupService()
     private var baselines: [URL: CatalogDiskBaseline] = [:]
     private var saveQueue: [SaveRequest] = []
     private var isProcessingSaveQueue = false
+    private var processingTask: Task<Void, Never>?
+    private var flushWaiters: [CheckedContinuation<Void, any Error>] = []
+    private var flushFailure: (any Error)?
+    private var isFlushRequested = false
     private let editDebounce: Duration
+    private let saveOperation: SaveOperation?
 
-    init(editDebounce: Duration = .seconds(1.5)) {
+    init(
+        editDebounce: Duration = .seconds(1.5),
+        saveOperation: SaveOperation? = nil
+    ) {
         self.editDebounce = editDebounce
+        self.saveOperation = saveOperation
     }
 
+    @discardableResult
     func save(
         _ snapshot: CatalogSnapshot,
         to url: URL,
         reason: CatalogSaveReason = .explicit
-    ) async throws {
+    ) async throws -> CatalogSnapshot {
         try await withCheckedThrowingContinuation { continuation in
             let key = url.standardizedFileURL
             if let index = saveQueue.firstIndex(where: { $0.url == key }) {
@@ -34,27 +46,77 @@ actor CatalogSaveCoordinator {
                     continuations: [continuation]
                 ))
             }
+            if reason != .metadataEdit {
+                processingTask?.cancel()
+            }
             if !isProcessingSaveQueue {
-                isProcessingSaveQueue = true
-                Task { await self.processSaveQueue() }
+                startProcessingSaveQueue()
             }
         }
     }
 
+    func flushPendingSaves() async throws {
+        guard isProcessingSaveQueue || !saveQueue.isEmpty else { return }
+        try await withCheckedThrowingContinuation { continuation in
+            flushWaiters.append(continuation)
+            isFlushRequested = true
+            processingTask?.cancel()
+            if !isProcessingSaveQueue {
+                startProcessingSaveQueue()
+            }
+        }
+    }
+
+    func hasPendingSaveWork() -> Bool {
+        isProcessingSaveQueue || !saveQueue.isEmpty
+    }
+
+    private func startProcessingSaveQueue() {
+        isProcessingSaveQueue = true
+        processingTask = Task { await self.processSaveQueue() }
+    }
+
     private func processSaveQueue() async {
         while !saveQueue.isEmpty {
-            if saveQueue[0].reasons.contains(.metadataEdit) {
+            if saveQueue[0].reasons == [.metadataEdit], !isFlushRequested {
                 try? await Task.sleep(for: editDebounce)
             }
             let request = saveQueue.removeFirst()
             do {
-                try await performSave(request.snapshot, to: request.url)
-                request.continuations.forEach { $0.resume() }
+                if let saveOperation {
+                    try await saveOperation(request.snapshot, request.url)
+                } else {
+                    try await performSave(request.snapshot, to: request.url)
+                }
+                request.continuations.forEach { $0.resume(returning: request.snapshot) }
             } catch {
+                if isFlushRequested, flushFailure == nil {
+                    flushFailure = error
+                }
                 request.continuations.forEach { $0.resume(throwing: error) }
             }
         }
         isProcessingSaveQueue = false
+        processingTask = nil
+        finishFlushIfNeeded()
+    }
+
+    private func finishFlushIfNeeded() {
+        guard !flushWaiters.isEmpty else {
+            isFlushRequested = false
+            flushFailure = nil
+            return
+        }
+        let waiters = flushWaiters
+        let failure = flushFailure
+        flushWaiters.removeAll(keepingCapacity: true)
+        flushFailure = nil
+        isFlushRequested = false
+        if let failure {
+            waiters.forEach { $0.resume(throwing: failure) }
+        } else {
+            waiters.forEach { $0.resume() }
+        }
     }
 
     private func performSave(_ snapshot: CatalogSnapshot, to url: URL) async throws {
@@ -261,5 +323,5 @@ private struct SaveRequest {
     var url: URL
     var reasons: Set<CatalogSaveReason>
     var requestedAt: Date
-    var continuations: [CheckedContinuation<Void, any Error>]
+    var continuations: [CheckedContinuation<CatalogSnapshot, any Error>]
 }

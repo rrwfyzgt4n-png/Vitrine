@@ -52,4 +52,20 @@ final class CatalogFilePresenterTests: XCTestCase {
         let deleted = await iterator.next()
         XCTAssertEqual(deleted, .deleted)
     }
+
+    func testRapidEventsRemainOrderedUntilTheStoreCanRereadState() async {
+        let url = FileManager.default.temporaryDirectory.appending(path: "Catalog-\(UUID().uuidString).md")
+        let presenter = CatalogFilePresenter(url: url)
+        defer { presenter.stop() }
+        var iterator = presenter.events.makeAsyncIterator()
+
+        for index in 0..<20 {
+            presenter.presentedItemDidMove(to: url.appendingPathExtension("\(index)"))
+        }
+
+        for index in 0..<20 {
+            let event = await iterator.next()
+            XCTAssertEqual(event, .moved(url.appendingPathExtension("\(index)")))
+        }
+    }
 }

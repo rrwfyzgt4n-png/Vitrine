@@ -8,7 +8,7 @@ final class CatalogStore {
     private let scanner = CatalogScanner()
     private let reconciler = CatalogReconciler()
     private let markdownStore = CatalogMarkdownStore()
-    private let saveCoordinator = CatalogSaveCoordinator()
+    private let saveCoordinator: CatalogSaveCoordinator
     private let bookmarkStore = SecurityScopedBookmarkStore.shared
     private let folderValidator = SourceFolderValidator()
     private let filenameParser = FilenameMetadataParser()
@@ -95,10 +95,21 @@ final class CatalogStore {
     @ObservationIgnored private var activeReconciliationTask: Task<CatalogReconciliationDiff, any Error>?
     @ObservationIgnored private var isPerformingBackgroundCatalogOperation = false
     @ObservationIgnored private var lastForegroundRefreshAt: Date?
-    @ObservationIgnored private var deferredCatalogFileEvents: [CatalogFileEvent] = []
-    @ObservationIgnored private var isProcessingCatalogFileEvent = false
+    @ObservationIgnored private var catalogOperationWaiters: [CheckedContinuation<Void, Never>] = []
+    @ObservationIgnored private var pendingEditedCatalog: CatalogSnapshot?
     @ObservationIgnored private var pendingRecoveryCoverFolderURL: URL?
     @ObservationIgnored private var forceLookupRefreshOnPresentation = false
+    @ObservationIgnored private let undoManagerProvider: () -> UndoManager?
+
+    init(
+        saveCoordinator: CatalogSaveCoordinator = CatalogSaveCoordinator(),
+        catalogURL: URL? = nil,
+        undoManagerProvider: @escaping () -> UndoManager? = { NSApp.keyWindow?.undoManager }
+    ) {
+        self.saveCoordinator = saveCoordinator
+        self.catalogURL = catalogURL
+        self.undoManagerProvider = undoManagerProvider
+    }
 
     var canRefreshCovers: Bool {
         catalog != nil && catalog?.isReadOnly == false && sourceFolderURL != nil && !catalogOperationIsActive
@@ -650,7 +661,8 @@ final class CatalogStore {
 
     @discardableResult
     func saveEditedItem(_ editedItem: CatalogItem, actionName: String = "Edit Book Details") async -> Bool {
-        guard var snapshot = catalog, !snapshot.isReadOnly, let catalogURL,
+        guard var snapshot = pendingEditedCatalog ?? catalog,
+              !snapshot.isReadOnly, let catalogURL,
               let index = snapshot.items.firstIndex(where: { $0.id == editedItem.id }) else { return false }
         let previous = snapshot.items[index]
         var edited = editedItem
@@ -662,17 +674,28 @@ final class CatalogStore {
         edited.dateModified = .now
         snapshot.items[index] = edited
         snapshot.updatedAt = .now
-        catalog = snapshot
-        registerUndo(previous: previous, actionName: actionName)
+        pendingEditedCatalog = snapshot
         do {
             saveState = .saving
-            try await saveCoordinator.save(snapshot, to: catalogURL, reason: .metadataEdit)
+            let savedSnapshot = try await saveCoordinator.save(snapshot, to: catalogURL, reason: .metadataEdit)
+            catalog = savedSnapshot
+            if pendingEditedCatalog == savedSnapshot {
+                pendingEditedCatalog = nil
+            }
+            registerUndo(previous: previous, actionName: actionName)
             saveState = .saved(.now)
             return true
         } catch {
+            if pendingEditedCatalog == snapshot {
+                pendingEditedCatalog = nil
+            }
             await handleSaveFailure(error)
             return false
         }
+    }
+
+    func flushPendingSaves() async throws {
+        try await saveCoordinator.flushPendingSaves()
     }
 
     func requestBookRemoval(itemID: CatalogItem.ID? = nil) {
@@ -1085,20 +1108,14 @@ final class CatalogStore {
     }
 
     private func handleCatalogFileEvent(_ event: CatalogFileEvent) async {
-        if catalogOperationIsActive || isProcessingCatalogFileEvent {
-            deferCatalogFileEvent(event)
-            return
-        }
-        isProcessingCatalogFileEvent = true
+        await waitForCatalogOperationToFinish()
         await processCatalogFileEvent(event)
-        isProcessingCatalogFileEvent = false
-        await drainDeferredCatalogFileEvents()
     }
 
     private func processCatalogFileEvent(_ event: CatalogFileEvent) async {
         switch event {
         case .changed:
-            guard let catalogURL, let local = catalog, !catalogOperationIsActive else { return }
+            guard let catalogURL, let local = catalog else { return }
             do {
                 let externalResult = try await markdownStore.read(from: catalogURL)
                 let external = externalResult.snapshot
@@ -1154,7 +1171,7 @@ final class CatalogStore {
             try? await Task.sleep(for: .milliseconds(300))
             if let catalogURL,
                (try? catalogURL.checkResourceIsReachable()) == true {
-                await handleCatalogFileEvent(.changed)
+                await processCatalogFileEvent(.changed)
                 return
             }
             if var snapshot = catalog {
@@ -1164,28 +1181,23 @@ final class CatalogStore {
             saveState = .readOnly
             statusMessage = L10n.text("The catalog file was removed. Restore it in Finder or open a backup.")
         case .conflictResolved, .reacquired:
-            await handleCatalogFileEvent(.changed)
+            await processCatalogFileEvent(.changed)
         case .relinquished:
             break
         }
     }
 
-    private func deferCatalogFileEvent(_ event: CatalogFileEvent) {
-        if deferredCatalogFileEvents.count == 8 {
-            deferredCatalogFileEvents.removeFirst()
+    private func waitForCatalogOperationToFinish() async {
+        guard catalogOperationIsActive else { return }
+        await withCheckedContinuation { continuation in
+            catalogOperationWaiters.append(continuation)
         }
-        deferredCatalogFileEvents.append(event)
     }
 
-    private func drainDeferredCatalogFileEvents() async {
-        guard !catalogOperationIsActive,
-              !isProcessingCatalogFileEvent,
-              !deferredCatalogFileEvents.isEmpty else { return }
-        let events = deferredCatalogFileEvents
-        deferredCatalogFileEvents.removeAll(keepingCapacity: true)
-        for event in events {
-            await handleCatalogFileEvent(event)
-        }
+    private func resumeCatalogFileEventWaiters() {
+        let waiters = catalogOperationWaiters
+        catalogOperationWaiters.removeAll(keepingCapacity: true)
+        waiters.forEach { $0.resume() }
     }
 
     private func scan(folderURL: URL) async throws -> CatalogScanResult {
@@ -1264,7 +1276,7 @@ final class CatalogStore {
     }
 
     private func registerUndo(previous: CatalogItem, actionName: String) {
-        guard let undoManager = NSApp.keyWindow?.undoManager else { return }
+        guard let undoManager = undoManagerProvider() else { return }
         undoManager.registerUndo(withTarget: self) { store in
             Task { await store.saveEditedItem(previous, actionName: actionName) }
         }
@@ -1406,9 +1418,9 @@ final class CatalogStore {
         } else {
             isPerformingBackgroundCatalogOperation = false
         }
-        await drainDeferredCatalogFileEvents()
+        resumeCatalogFileEventWaiters()
         if externalConflictOccurred {
-            await handleCatalogFileEvent(.changed)
+            await processCatalogFileEvent(.changed)
         }
     }
 

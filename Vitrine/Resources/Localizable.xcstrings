@@ -1,6 +1,70 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Keep Vitrine Open" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder Vitrine ouverte"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder Vitrine ouverte"
+          }
+        }
+      }
+    },
+    "Saving took too long. Vitrine remains open and your catalog has not been discarded." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’enregistrement a pris trop de temps. Vitrine reste ouverte et aucune modification du catalogue n’a été abandonnée."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’enregistrement a pris trop de temps. Vitrine reste ouverte et aucune modification du catalogue n’a été abandonnée."
+          }
+        }
+      }
+    },
+    "Vitrine couldn't save your latest changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine n’a pas pu enregistrer vos dernières modifications"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine n’a pas pu enregistrer vos dernières modifications"
+          }
+        }
+      }
+    },
+    "Vitrine will stay open so your changes are not silently lost. Check the catalog location, then try quitting again." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine restera ouverte afin que vos modifications ne soient pas perdues. Vérifiez l’emplacement du catalogue, puis essayez de quitter de nouveau."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitrine restera ouverte afin que vos modifications ne soient pas perdues. Vérifiez l’emplacement du catalogue, puis essayez de quitter de nouveau."
+          }
+        }
+      }
+    },
     "·" : {
       "localizations" : {
         "fr" : {

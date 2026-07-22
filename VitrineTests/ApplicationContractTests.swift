@@ -1,5 +1,7 @@
+import AppKit
 import Foundation
 import XCTest
+@testable import Vitrine
 
 final class ApplicationContractTests: XCTestCase {
     func testMainSceneIsSingletonAndRestorable() throws {
@@ -29,6 +31,73 @@ final class ApplicationContractTests: XCTestCase {
         for command in requiredCommands {
             XCTAssertTrue(source.contains("\"\(command)\""), "Missing command declaration: \(command)")
         }
+    }
+
+    @MainActor
+    func testTerminationWaitsForFlushAndCompletesOnce() async {
+        let controller = ApplicationTerminationController(timeout: .seconds(1))
+        let completed = expectation(description: "Termination completed")
+        var flushCount = 0
+        var completionCount = 0
+
+        let firstReply = controller.requestTermination {
+            flushCount += 1
+            try await Task.sleep(for: .milliseconds(30))
+        } completion: { result in
+            if case .failure(let error) = result {
+                XCTFail("Unexpected flush failure: \(error)")
+            }
+            completionCount += 1
+            completed.fulfill()
+        }
+        let repeatedReply = controller.requestTermination {
+            flushCount += 1
+        } completion: { _ in
+            completionCount += 1
+        }
+
+        XCTAssertEqual(firstReply, .terminateLater)
+        XCTAssertEqual(repeatedReply, .terminateLater)
+        await fulfillment(of: [completed], timeout: 1)
+        XCTAssertEqual(flushCount, 1)
+        XCTAssertEqual(completionCount, 1)
+        XCTAssertFalse(controller.isTerminationPending)
+    }
+
+    @MainActor
+    func testTerminationFailureCancelsTermination() async {
+        let controller = ApplicationTerminationController(timeout: .seconds(1))
+        let completed = expectation(description: "Termination failure returned")
+        var didFail = false
+
+        _ = controller.requestTermination {
+            throw CatalogError.coordinatedWriteFailed
+        } completion: { result in
+            if case .failure = result { didFail = true }
+            completed.fulfill()
+        }
+
+        await fulfillment(of: [completed], timeout: 1)
+        XCTAssertTrue(didFail)
+        XCTAssertFalse(controller.isTerminationPending)
+    }
+
+    @MainActor
+    func testTerminationTimeoutCannotHangIndefinitely() async {
+        let controller = ApplicationTerminationController(timeout: .milliseconds(20))
+        let completed = expectation(description: "Termination timeout returned")
+        var didFail = false
+
+        _ = controller.requestTermination {
+            try await Task.sleep(for: .seconds(30))
+        } completion: { result in
+            if case .failure = result { didFail = true }
+            completed.fulfill()
+        }
+
+        await fulfillment(of: [completed], timeout: 1)
+        XCTAssertTrue(didFail)
+        XCTAssertFalse(controller.isTerminationPending)
     }
 
     private func projectSource(_ relativePath: String) throws -> String {

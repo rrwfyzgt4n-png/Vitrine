@@ -10,6 +10,11 @@ struct VitrineApp: App {
         Window("Vitrine", id: "main") {
             ContentView(store: store)
                 .frame(minWidth: 900, minHeight: 600)
+                .onAppear {
+                    appDelegate.configureTermination {
+                        try await store.flushPendingSaves()
+                    }
+                }
         }
         .defaultSize(width: 1280, height: 820)
         .defaultLaunchBehavior(.presented)

@@ -12,7 +12,10 @@ final class CatalogFilePresenter: NSObject, NSFilePresenter, @unchecked Sendable
         queue.name = "Vitrine.CatalogFilePresenter"
         queue.maxConcurrentOperationCount = 1
         presentedItemOperationQueue = queue
-        let pair = AsyncStream<CatalogFileEvent>.makeStream(bufferingPolicy: .bufferingNewest(8))
+        // This stream is the sole event buffer. CatalogStore consumes it serially and
+        // waits for active catalog operations instead of maintaining a second queue.
+        // Every event therefore remains ordered until full state can be re-read.
+        let pair = AsyncStream<CatalogFileEvent>.makeStream(bufferingPolicy: .unbounded)
         events = pair.stream
         continuation = pair.continuation
         super.init()

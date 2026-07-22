@@ -1,12 +1,16 @@
 # Vitrine V1 release-candidate checklist
 
-Last updated: 2026-07-21
+Last updated: 2026-07-22
 
 ## Release status
 
-**Candidate status: not yet releasable.** Core, integrity, localization, schema-integration, scale, source-safety, signing, launch, and UI automation checks pass. Hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix still require a scheduled acceptance session.
+**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. The two critical save-durability findings are fixed and verified; mandatory reconciliation and path-containment gates `V11-003` through `V11-005` remain open. Hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
 
-Critical product safety failures found: **0**.
+Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
+
+The live remediation register is maintained in
+[`docs/v1.1/REMEDIATION.md`](docs/v1.1/REMEDIATION.md). Existing V1 automated
+results remain useful baseline evidence, but do not close a V1.1 gate.
 
 ## Shared-schema freeze
 
@@ -28,6 +32,9 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Area | Result | Evidence |
 | --- | --- | --- |
 | Metadata schema integration | Pass | Every reviewed filename field is adapter-mapped; full metadata round-trips and merges. |
+| Termination save durability | Pass | Pending debounced saves flush before termination; failure cancels quit; repeated quit and timeout paths are covered. |
+| Transactional metadata edits | Pass | Catalog and undo state commit only after a successful save; failed and concurrent edits are covered. |
+| External file-event ordering | Pass | One unbounded presenter stream preserves ordered events while catalog operations finish. |
 | Legacy catalog compatibility | Pass | A pre-parser schema-1 catalog rewrites without losing unknown fields. |
 | Localization | Pass | Every catalogued string has `fr` and `fr-CA`; extracted SwiftUI keys are audited. |
 | Unit, concurrency and integrity suite | Pass | `script/test.sh` completed successfully. |
