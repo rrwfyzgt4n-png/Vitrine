@@ -29,8 +29,9 @@ final class CatalogDiffApplicationTests: XCTestCase {
         XCTAssertTrue(CatalogStore.refreshRequiresSave(current: current, proposed: proposed))
     }
 
-    func testSourceDiffAppliesToLatestCatalogWithoutRollingBackBookDetails() {
+    func testSourceDiffAtCurrentBaselineDoesNotRollBackBookDetails() {
         let id = UUID()
+        let baselineDate = Date(timeIntervalSince1970: 1_700_000_000)
         let originalSource = SourceFileMetadata(
             relativePath: "Old.jpg",
             portableFingerprint: "fingerprint"
@@ -46,7 +47,7 @@ final class CatalogDiffApplicationTests: XCTestCase {
         )
         let diff = CatalogReconciliationDiff(
             baseCatalogID: UUID(),
-            baseCatalogUpdatedAt: .distantPast,
+            baseCatalogUpdatedAt: baselineDate,
             sourceFolderValidated: true,
             scannedSources: [refreshedSource],
             operations: [.updateSource(id: id, expected: expected, newValue: refreshedSource)],
@@ -56,6 +57,7 @@ final class CatalogDiffApplicationTests: XCTestCase {
         let latest = CatalogSnapshot(
             catalogID: diff.baseCatalogID,
             name: "Library",
+            updatedAt: baselineDate,
             items: [
                 CatalogItem(
                     id: id,
@@ -72,6 +74,38 @@ final class CatalogDiffApplicationTests: XCTestCase {
 
         XCTAssertEqual(result.items.first?.source.relativePath, "New.jpg")
         XCTAssertEqual(result.items.first?.bibliography.title, "A title added while scanning")
+    }
+
+    func testStaleDiffIsRejectedWithoutApplyingAnyOperations() {
+        let item = CatalogItem(source: SourceFileMetadata(relativePath: "Old.jpg", portableFingerprint: "same"))
+        let baseline = Date(timeIntervalSince1970: 1_700_000_000)
+        let latest = CatalogSnapshot(
+            name: "Library",
+            updatedAt: baseline.addingTimeInterval(1),
+            items: [item]
+        )
+        let replacement = SourceFileMetadata(relativePath: "New.jpg", portableFingerprint: "same")
+        let diff = CatalogReconciliationDiff(
+            baseCatalogID: latest.catalogID,
+            baseCatalogUpdatedAt: baseline,
+            sourceFolderValidated: true,
+            scannedSources: [replacement],
+            operations: [.updateSource(
+                id: item.id,
+                expected: SourceRevision(
+                    relativePath: item.source.relativePath,
+                    portableFingerprint: item.source.portableFingerprint,
+                    fileModificationDate: item.source.fileModificationDate
+                ),
+                newValue: replacement
+            )],
+            completedEnumeration: true,
+            warnings: []
+        )
+
+        let result = CatalogStore().apply(diff: diff, to: latest, allowRemovals: true)
+
+        XCTAssertEqual(result, latest)
     }
 
     func testUnvalidatedFolderCannotApplyAutomaticRemoval() {
@@ -95,5 +129,30 @@ final class CatalogDiffApplicationTests: XCTestCase {
         let result = CatalogStore().apply(diff: diff, to: snapshot, allowRemovals: false)
 
         XCTAssertEqual(result.items.map(\.id), [item.id])
+    }
+
+    func testMetadataOnlyRecordCanStillBeExplicitlyRemoved() async throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let item = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Retained.jpg"),
+            availability: .metadataOnly
+        )
+        let snapshot = CatalogSnapshot(name: "Library", items: [item])
+        let coordinator = CatalogSaveCoordinator(editDebounce: .zero)
+        try await coordinator.save(snapshot, to: url)
+        let store = CatalogStore(saveCoordinator: coordinator, catalogURL: url, undoManagerProvider: { nil })
+        store.catalog = snapshot
+        store.pendingRemovalItemID = item.id
+
+        let didRemove = await store.confirmBookRemoval()
+        let reopened = try await CatalogMarkdownStore().read(from: url).snapshot
+
+        XCTAssertTrue(didRemove)
+        XCTAssertTrue(store.catalog?.items.isEmpty == true)
+        XCTAssertTrue(reopened.items.isEmpty)
+        if let folder = try await coordinator.backups(catalogID: snapshot.catalogID).first?.url.deletingLastPathComponent() {
+            try? FileManager.default.removeItem(at: folder)
+        }
     }
 }

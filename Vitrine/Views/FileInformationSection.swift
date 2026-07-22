@@ -23,18 +23,9 @@ struct FileInformationSection: View {
             if let date = item.source.fileModificationDate {
                 LabeledContent("Modified", value: date.formatted(date: .abbreviated, time: .shortened))
             }
-            LabeledContent("Cover", value: availabilityLabel)
+            LabeledContent("Cover", value: item.availability.inspectorLabel)
         }
         .padding(.top, 8)
-    }
-
-    private var availabilityLabel: String {
-        switch item.availability {
-        case .available: L10n.text("Available")
-        case .temporarilyUnavailable, .metadataOnly: L10n.text("Temporarily unavailable")
-        case .missing: L10n.text("Not found")
-        case .ambiguousMatch: L10n.text("Needs review")
-        }
     }
 
     private var relativeFolder: String {

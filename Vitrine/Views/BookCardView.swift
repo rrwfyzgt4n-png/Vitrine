@@ -129,7 +129,7 @@ struct BookCardView: View {
         case .temporarilyUnavailable: L10n.text("cover temporarily unavailable")
         case .missing: L10n.text("cover not found")
         case .ambiguousMatch: L10n.text("cover needs review")
-        case .metadataOnly: L10n.text("browsing without cover folder")
+        case .metadataOnly: L10n.text("Kept without cover")
         }
     }
 

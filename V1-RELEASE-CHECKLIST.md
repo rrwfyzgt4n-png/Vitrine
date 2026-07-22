@@ -4,7 +4,7 @@ Last updated: 2026-07-22
 
 ## Release status
 
-**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. The two critical save-durability findings are fixed and verified; mandatory reconciliation and path-containment gates `V11-003` through `V11-005` remain open. Hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
+**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. Save durability and reconciliation safety are fixed and verified; mandatory cover-path containment gate `V11-005` remains open. Hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
 
 Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
 
@@ -35,6 +35,9 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Termination save durability | Pass | Pending debounced saves flush before termination; failure cancels quit; repeated quit and timeout paths are covered. |
 | Transactional metadata edits | Pass | Catalog and undo state commit only after a successful save; failed and concurrent edits are covered. |
 | External file-event ordering | Pass | One unbounded presenter stream preserves ordered events while catalog operations finish. |
+| Ambiguous reconciliation clusters | Pass | Group-level full-hash resolution and 3×3, 3×2, 2×3, single-assignment, and deterministic-order regressions pass. |
+| Explicit metadata-only retention | Pass | Kept records survive complete scans, uniquely returning covers reconnect, and explicit deletion remains available. |
+| Reconciliation baseline | Pass | A changed `baseCatalogUpdatedAt` rejects the complete stale diff without altering the current catalog. |
 | Legacy catalog compatibility | Pass | A pre-parser schema-1 catalog rewrites without losing unknown fields. |
 | Localization | Pass | Every catalogued string has `fr` and `fr-CA`; extracted SwiftUI keys are audited. |
 | Unit, concurrency and integrity suite | Pass | `script/test.sh` completed successfully. |
@@ -86,7 +89,7 @@ Status meanings: **Pass** was exercised in this release pass, **Automated** has 
 | 18 | Confirm mismatch warning | Pending manual | Physical-volume workflow required. |
 | 19 | Copy a large cover during refresh | Pending manual | Instability guards covered; live copy scenario remains manual. |
 | 20 | Confirm unstable cover is deferred | Automated | Unstable-known-path reconciliation test. |
-| 21 | Edit notes during refresh | Automated | Latest-state diff application coverage. |
+| 21 | Edit notes during refresh | Automated | Stale-diff rejection preserves the edit and requests a fresh reconciliation. |
 | 22 | Confirm one combined save | Automated | Debounced/overlapping save-collapse coverage. |
 | 23 | Modify Markdown externally during refresh | Automated | External baseline and latest-catalog diff coverage. |
 | 24 | Confirm both changes survive | Automated | Safe source/bibliographic merge coverage. |

@@ -578,6 +578,11 @@ final class CatalogStore {
                   latestCatalog.catalogID == currentCatalog.catalogID else {
                 return
             }
+            guard latestCatalog.updatedAt == diff.baseCatalogUpdatedAt else {
+                scanState = .idle
+                statusMessage = L10n.text("The library changed while covers were refreshing. Refresh again to apply the latest cover changes.")
+                return
+            }
             let allowAutomaticRemovals = diff.sourceFolderValidated &&
                 diff.completedEnumeration && diff.warnings.isEmpty
             var refreshed = apply(
@@ -1229,6 +1234,8 @@ final class CatalogStore {
         to snapshot: CatalogSnapshot,
         allowRemovals: Bool
     ) -> CatalogSnapshot {
+        guard snapshot.catalogID == diff.baseCatalogID,
+              snapshot.updatedAt == diff.baseCatalogUpdatedAt else { return snapshot }
         var result = snapshot
         for operation in diff.operations {
             switch operation {
