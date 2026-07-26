@@ -2,6 +2,55 @@ import XCTest
 @testable import Vitrine
 
 final class MetadataIntegrationTests: XCTestCase {
+    @MainActor
+    func testRepeatedReviewedFilenameSuggestionsSaveImmediatelyAndSurviveReopen() async throws {
+        let catalogID = UUID()
+        let first = CatalogItem(source: SourceFileMetadata(relativePath: "First.jpg"))
+        let second = CatalogItem(source: SourceFileMetadata(relativePath: "Second.jpg"))
+        let snapshot = CatalogSnapshot(catalogID: catalogID, name: "Library", items: [first, second])
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(catalogID.uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let coordinator = CatalogSaveCoordinator(editDebounce: .seconds(2))
+        try await coordinator.save(snapshot, to: url)
+        let store = CatalogStore(saveCoordinator: coordinator, catalogURL: url, undoManagerProvider: { nil })
+        store.catalog = snapshot
+
+        let started = CFAbsoluteTimeGetCurrent()
+        let firstSaved = await store.applyFilenameSuggestion(
+            filenameSuggestion(title: "First Parsed Title"),
+            to: first.id
+        )
+        let secondSaved = await store.applyFilenameSuggestion(
+            filenameSuggestion(
+                title: "Second Parsed Title",
+                publisher: "Second Publisher",
+                pageCount: 277
+            ),
+            to: second.id
+        )
+        let elapsed = CFAbsoluteTimeGetCurrent() - started
+        let reopened = try await CatalogMarkdownStore().read(from: url).snapshot
+        let reopenedByID = Dictionary(uniqueKeysWithValues: reopened.items.map { ($0.id, $0) })
+
+        XCTAssertTrue(firstSaved)
+        XCTAssertTrue(secondSaved)
+        XCTAssertLessThan(elapsed, 1.5, "A reviewed Save must bypass the autosave debounce.")
+        XCTAssertEqual(reopenedByID[first.id]?.bibliography.title, "First Parsed Title")
+        XCTAssertEqual(reopenedByID[second.id]?.bibliography.title, "Second Parsed Title")
+        XCTAssertEqual(reopenedByID[second.id]?.bibliography.publisher, "Second Publisher")
+        XCTAssertEqual(reopenedByID[second.id]?.bibliography.pageCount, 277)
+        XCTAssertEqual(store.catalog?.items.map(\.id), reopened.items.map(\.id))
+        XCTAssertEqual(
+            store.catalog?.items.map(\.bibliography),
+            reopened.items.map(\.bibliography)
+        )
+        XCTAssertEqual(store.catalog?.catalogID, reopened.catalogID)
+
+        if let folder = try await coordinator.backups(catalogID: catalogID).first?.url.deletingLastPathComponent() {
+            try? FileManager.default.removeItem(at: folder)
+        }
+    }
+
     func testReviewedFilenameSuggestionAdapterMapsEveryParserField() {
         let original = CatalogItem(
             source: SourceFileMetadata(relativePath: "Book.jpg"),
@@ -156,6 +205,34 @@ final class MetadataIntegrationTests: XCTestCase {
 
     private func suggested<Value>(_ value: Value) -> SuggestedValue<Value> {
         SuggestedValue(value: value, confidence: .high, evidence: "fixture")
+    }
+
+    private func filenameSuggestion(
+        title: String,
+        publisher: String? = nil,
+        pageCount: Int? = nil
+    ) -> FilenameMetadataSuggestion {
+        FilenameMetadataSuggestion(
+            title: suggested(title),
+            subtitle: nil,
+            authors: nil,
+            translators: nil,
+            contributors: nil,
+            publisher: publisher.map(suggested),
+            collectionName: nil,
+            collectionNumber: nil,
+            publicationPlace: nil,
+            publicationDate: nil,
+            originalPublicationDate: nil,
+            editionDescription: nil,
+            volumeDescription: nil,
+            languageCodes: nil,
+            originalLanguageCode: nil,
+            pageCount: pageCount.map(suggested),
+            paginationStatus: nil,
+            physicalAttributes: nil,
+            descriptiveNotes: nil
+        )
     }
 
     private func completeMetadata(suffix: String, retrievedAt: Date) -> BibliographicMetadata {

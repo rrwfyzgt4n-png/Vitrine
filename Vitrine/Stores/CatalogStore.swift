@@ -21,7 +21,9 @@ final class CatalogStore {
     private let diagnosticService = CatalogDiagnosticService()
     private let coverInformationRebuilder = CatalogCoverInformationRebuilder()
 
-    var catalog: CatalogSnapshot?
+    var catalog: CatalogSnapshot? {
+        didSet { derivedIndex.removeAll() }
+    }
     private(set) var catalogURL: URL?
     private(set) var sourceFolderURL: URL?
     var selection: CatalogItem.ID?
@@ -99,6 +101,7 @@ final class CatalogStore {
     @ObservationIgnored private var pendingEditedCatalog: CatalogSnapshot?
     @ObservationIgnored private var pendingRecoveryCoverFolderURL: URL?
     @ObservationIgnored private var forceLookupRefreshOnPresentation = false
+    @ObservationIgnored private var derivedIndex = CatalogDerivedIndex()
     @ObservationIgnored private let undoManagerProvider: () -> UndoManager?
 
     init(
@@ -124,8 +127,14 @@ final class CatalogStore {
     var visibleItems: [CatalogItem] {
         guard let catalog else { return [] }
         let query = SearchNormalizer.normalize(searchText)
+        derivedIndex.prepare(
+            for: catalog.items,
+            sortOption: sortOption,
+            includingSearchText: !query.isEmpty
+        )
         let filtered = catalog.items.filter { item in
-            matchesFilter(item) && (query.isEmpty || searchableText(for: item).contains(query))
+            matchesFilter(item) &&
+                (query.isEmpty || derivedIndex.entry(for: item.id)?.searchableText?.contains(query) == true)
         }
         return filtered.sorted(by: areInIncreasingOrder)
     }
@@ -549,7 +558,8 @@ final class CatalogStore {
               !currentCatalog.isReadOnly,
               let folderURL = sourceFolderURL,
               let catalogURL,
-              !catalogOperationIsActive else { return }
+              !catalogOperationIsActive,
+              pendingEditedCatalog == nil else { return }
 
         await performCatalogOperation(
             message: showStatus ? L10n.text("Refreshing covers…") : nil,
@@ -630,7 +640,8 @@ final class CatalogStore {
               !currentCatalog.isReadOnly,
               let folderURL = sourceFolderURL,
               let catalogURL,
-              !catalogOperationIsActive else { return }
+              !catalogOperationIsActive,
+              pendingEditedCatalog == nil else { return }
 
         await performCatalogOperation(
             message: L10n.text("Rebuilding cover information…"),
@@ -673,7 +684,12 @@ final class CatalogStore {
     }
 
     @discardableResult
-    func saveEditedItem(_ editedItem: CatalogItem, actionName: String = "Edit Book Details") async -> Bool {
+    func saveEditedItem(
+        _ editedItem: CatalogItem,
+        actionName: String = "Edit Book Details",
+        reason: CatalogSaveReason = .metadataEdit
+    ) async -> Bool {
+        await waitForCatalogOperationToFinish()
         guard var snapshot = pendingEditedCatalog ?? catalog,
               !snapshot.isReadOnly, let catalogURL,
               let index = snapshot.items.firstIndex(where: { $0.id == editedItem.id }) else { return false }
@@ -690,7 +706,7 @@ final class CatalogStore {
         pendingEditedCatalog = snapshot
         do {
             saveState = .saving
-            let savedSnapshot = try await saveCoordinator.save(snapshot, to: catalogURL, reason: .metadataEdit)
+            let savedSnapshot = try await saveCoordinator.save(snapshot, to: catalogURL, reason: reason)
             catalog = savedSnapshot
             if pendingEditedCatalog == savedSnapshot {
                 pendingEditedCatalog = nil
@@ -891,7 +907,11 @@ final class CatalogStore {
     ) async -> Bool {
         guard let existing = catalog?.items.first(where: { $0.id == itemID }) else { return false }
         let item = filenameSuggestionAdapter.applying(suggestion, to: existing)
-        let saved = await saveEditedItem(item, actionName: "Accept Filename Suggestions")
+        let saved = await saveEditedItem(
+            item,
+            actionName: "Accept Filename Suggestions",
+            reason: .explicit
+        )
         if saved {
             bookDetailsExpansionRequest += 1
             statusMessage = L10n.text("Book details saved")
@@ -1261,50 +1281,94 @@ final class CatalogStore {
     ) -> CatalogSnapshot {
         guard snapshot.catalogID == diff.baseCatalogID,
               snapshot.updatedAt == diff.baseCatalogUpdatedAt else { return snapshot }
-        var result = snapshot
+        var items = snapshot.items.map(Optional.some)
+        var indicesByID: [UUID: [Int]] = [:]
+        var pathCounts: [String: Int] = [:]
+        for (index, item) in snapshot.items.enumerated() {
+            indicesByID[item.id, default: []].append(index)
+            pathCounts[item.source.relativePath, default: 0] += 1
+        }
+
+        func firstIndex(id: UUID) -> Int? {
+            indicesByID[id]?.first { items[$0] != nil }
+        }
+
+        func matchingIndex(id: UUID, expected: SourceRevision) -> Int? {
+            indicesByID[id]?.first { index in
+                guard let item = items[index] else { return false }
+                return item.source.relativePath == expected.relativePath &&
+                    item.source.portableFingerprint == expected.portableFingerprint &&
+                    item.source.fileModificationDate == expected.fileModificationDate
+            }
+        }
+
+        func decrementPath(_ path: String) {
+            guard let count = pathCounts[path] else { return }
+            if count == 1 {
+                pathCounts[path] = nil
+            } else {
+                pathCounts[path] = count - 1
+            }
+        }
+
         for operation in diff.operations {
             switch operation {
             case .addRecord(let record):
-                guard !result.items.contains(where: { $0.source.relativePath == record.item.source.relativePath }) else { continue }
-                result.items.append(record.item)
+                let path = record.item.source.relativePath
+                guard pathCounts[path] == nil else { continue }
+                let index = items.count
+                items.append(record.item)
+                indicesByID[record.item.id, default: []].append(index)
+                pathCounts[path] = 1
             case .updateSource(let id, let expected, let newValue):
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items[index].source = newValue
-                result.items[index].availability = .available
+                guard let index = matchingIndex(id: id, expected: expected),
+                      var item = items[index] else { continue }
+                decrementPath(item.source.relativePath)
+                pathCounts[newValue.relativePath, default: 0] += 1
+                item.source = newValue
+                item.availability = .available
+                items[index] = item
             case .updatePath(let id, let expected, let newPath, let newTitle):
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items[index].source.relativePath = newPath
-                result.items[index].source.filename = (newPath as NSString).lastPathComponent
-                result.items[index].source.sourceTitle = newTitle
+                guard let index = matchingIndex(id: id, expected: expected),
+                      var item = items[index] else { continue }
+                decrementPath(item.source.relativePath)
+                pathCounts[newPath, default: 0] += 1
+                item.source.relativePath = newPath
+                item.source.filename = (newPath as NSString).lastPathComponent
+                item.source.sourceTitle = newTitle
+                items[index] = item
             case .updateFinderComment(let id, let expected, let comment):
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items[index].source.finderComment = comment
+                guard let index = matchingIndex(id: id, expected: expected),
+                      var item = items[index] else { continue }
+                item.source.finderComment = comment
+                items[index] = item
             case .markMissing(let id, let expected):
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items[index].availability = .temporarilyUnavailable
+                guard let index = matchingIndex(id: id, expected: expected),
+                      var item = items[index] else { continue }
+                item.availability = .temporarilyUnavailable
+                items[index] = item
             case .markAvailable(let id, let expected):
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items[index].availability = .available
+                guard let index = matchingIndex(id: id, expected: expected),
+                      var item = items[index] else { continue }
+                item.availability = .available
+                items[index] = item
             case .markAmbiguous(let id, let candidates):
-                if let index = result.items.firstIndex(where: { $0.id == id }) {
-                    result.items[index].availability = .ambiguousMatch
+                if let index = firstIndex(id: id), var item = items[index] {
+                    item.availability = .ambiguousMatch
+                    items[index] = item
                     ambiguousCandidates[id] = candidates
                 }
             case .removeRecord(let id, let expected):
                 guard allowRemovals else { continue }
-                guard let index = matchingIndex(id: id, expected: expected, in: result) else { continue }
-                result.items.remove(at: index)
+                guard let index = matchingIndex(id: id, expected: expected),
+                      let item = items[index] else { continue }
+                decrementPath(item.source.relativePath)
+                items[index] = nil
             }
         }
+        var result = snapshot
+        result.items = items.compactMap { $0 }
         return result
-    }
-
-    private func matchingIndex(id: UUID, expected: SourceRevision, in snapshot: CatalogSnapshot) -> Int? {
-        snapshot.items.firstIndex {
-            $0.id == id && $0.source.relativePath == expected.relativePath &&
-            $0.source.portableFingerprint == expected.portableFingerprint &&
-            $0.source.fileModificationDate == expected.fileModificationDate
-        }
     }
 
     private func registerUndo(previous: CatalogItem, actionName: String) {
@@ -1469,31 +1533,6 @@ final class CatalogStore {
             proposed.sourceFolderSignature != current.sourceFolderSignature
     }
 
-    private func searchableText(for item: CatalogItem) -> String {
-        let bibliography = item.bibliography
-        let scalarValues: [String?] = [
-            item.source.sourceTitle, item.source.filename, item.source.finderComment,
-            bibliography.title, bibliography.subtitle, bibliography.isbn10, bibliography.isbn13,
-            bibliography.publisher, bibliography.collectionName, bibliography.collectionNumber, bibliography.publicationPlace,
-            bibliography.publicationDate, bibliography.originalPublicationDate, bibliography.editionDescription,
-            bibliography.volumeDescription, bibliography.languageCode, bibliography.originalLanguageCode,
-            bibliography.paginationStatus?.label, bibliography.paginationStatus?.rawValue,
-            bibliography.description, item.personalNotes,
-        ]
-        var values = scalarValues.compactMap { $0 }
-        values.append(contentsOf: bibliography.authors)
-        values.append(contentsOf: bibliography.translators)
-        values.append(contentsOf: bibliography.contributors.map { $0.name })
-        let contributorRoles = bibliography.contributors.flatMap { $0.roles }
-        values.append(contentsOf: contributorRoles.map { $0.label })
-        values.append(contentsOf: contributorRoles.map { $0.rawValue })
-        values.append(contentsOf: bibliography.additionalLanguageCodes)
-        values.append(contentsOf: bibliography.physicalAttributes.map { $0.label })
-        values.append(contentsOf: bibliography.physicalAttributes.map { $0.rawValue })
-        values.append(contentsOf: bibliography.subjects)
-        return SearchNormalizer.normalize(values.joined(separator: " "))
-    }
-
     private func matchesFilter(_ item: CatalogItem) -> Bool {
         switch filter {
         case .all: true
@@ -1508,16 +1547,33 @@ final class CatalogStore {
     }
 
     private func areInIncreasingOrder(_ lhs: CatalogItem, _ rhs: CatalogItem) -> Bool {
+        guard let left = derivedIndex.entry(for: lhs.id),
+              let right = derivedIndex.entry(for: rhs.id) else { return false }
         switch sortOption {
-        case .titleAscending: SearchNormalizer.normalize(lhs.displayTitle) < SearchNormalizer.normalize(rhs.displayTitle)
-        case .titleDescending: SearchNormalizer.normalize(lhs.displayTitle) > SearchNormalizer.normalize(rhs.displayTitle)
-        case .author: SearchNormalizer.normalize(lhs.displayAuthor ?? lhs.displayTitle) < SearchNormalizer.normalize(rhs.displayAuthor ?? rhs.displayTitle)
-        case .filename: lhs.source.filename.localizedStandardCompare(rhs.source.filename) == .orderedAscending
-        case .publisher: SearchNormalizer.normalize(lhs.bibliography.publisher ?? lhs.displayTitle) < SearchNormalizer.normalize(rhs.bibliography.publisher ?? rhs.displayTitle)
-        case .collection: SearchNormalizer.normalize(lhs.bibliography.collectionName ?? lhs.displayTitle) < SearchNormalizer.normalize(rhs.bibliography.collectionName ?? rhs.displayTitle)
-        case .dateAdded: lhs.dateAdded < rhs.dateAdded
-        case .coverFileModified: (lhs.source.fileModificationDate ?? .distantPast) < (rhs.source.fileModificationDate ?? .distantPast)
-        case .recentlyUpdated: lhs.dateModified > rhs.dateModified
+        case .titleAscending:
+            guard let leftTitle = left.title, let rightTitle = right.title else { return false }
+            return leftTitle < rightTitle
+        case .titleDescending:
+            guard let leftTitle = left.title, let rightTitle = right.title else { return false }
+            return leftTitle > rightTitle
+        case .author:
+            guard let leftAuthor = left.author, let rightAuthor = right.author else { return false }
+            return leftAuthor < rightAuthor
+        case .filename:
+            return lhs.source.filename.localizedStandardCompare(rhs.source.filename) == .orderedAscending
+        case .publisher:
+            guard let leftPublisher = left.publisher, let rightPublisher = right.publisher else { return false }
+            return leftPublisher < rightPublisher
+        case .collection:
+            guard let leftCollection = left.collection, let rightCollection = right.collection else { return false }
+            return leftCollection < rightCollection
+        case .dateAdded:
+            return lhs.dateAdded < rhs.dateAdded
+        case .coverFileModified:
+            return (lhs.source.fileModificationDate ?? .distantPast) <
+                (rhs.source.fileModificationDate ?? .distantPast)
+        case .recentlyUpdated:
+            return lhs.dateModified > rhs.dateModified
         }
     }
 

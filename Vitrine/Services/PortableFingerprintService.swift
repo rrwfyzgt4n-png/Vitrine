@@ -5,8 +5,10 @@ actor PortableFingerprintService {
     private let sampleSize = 65_536
 
     func fingerprint(for url: URL, fileSize: Int64, width: Int, height: Int) throws -> String {
+        try Task.checkCancellation()
         let before = try revision(url)
         guard before.size == fileSize else { throw CatalogError.unstableSourceFile(url) }
+        try Task.checkCancellation()
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var digestInput = Data("\(fileSize)|\(width)|\(height)|".utf8)
@@ -14,11 +16,14 @@ actor PortableFingerprintService {
             digestInput.append(try handle.readToEnd() ?? Data())
         } else {
             digestInput.append(try handle.read(upToCount: sampleSize) ?? Data())
+            try Task.checkCancellation()
             try handle.seek(toOffset: UInt64(fileSize - Int64(sampleSize)))
             digestInput.append(try handle.read(upToCount: sampleSize) ?? Data())
         }
+        try Task.checkCancellation()
         let after = try revision(url)
         guard before == after else { throw CatalogError.unstableSourceFile(url) }
+        try Task.checkCancellation()
         return SHA256.hash(data: digestInput).map { String(format: "%02x", $0) }.joined()
     }
 

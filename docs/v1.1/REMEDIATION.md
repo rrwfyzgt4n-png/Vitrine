@@ -35,7 +35,7 @@ mandatory safety gate is open or lacks focused regression coverage.
 | 2 — Reconciliation safety | V11-003, V11-004, V11-011, V11-015 | Verified 2026-07-22 | No ambiguous or explicitly retained record is automatically deleted |
 | 3 — Filesystem and overwrite recovery | V11-005, V11-006, V11-026 | Verified 2026-07-22 | All cover access is contained and overwritten catalogs remain recoverable |
 | 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Verified 2026-07-22 | Every metadata surface round-trips and is localized |
-| 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Planned | Exact behavior with measured improvement at 5,000 records |
+| 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Verified 2026-07-25 | Exact behavior with measured improvement at 5,000 records |
 | 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Planned | Stable behavior without a high-risk speculative rewrite |
 | 7 — Release verification | V11-021, V11-022 and all 24 remediation vectors | Planned | Complete automated and manual acceptance evidence |
 
@@ -140,3 +140,43 @@ endings use one normalization helper while retaining distinct block-quote and
 multiline rendering and byte-equivalent schema output. Focused tests and the
 complete non-interactive suite passed on 2026-07-22. This closes V11-007,
 V11-008, V11-018, V11-020, and V11-024.
+
+## Phase 5 verification
+
+Search and sort normalization now lives in a transient, main-actor-owned index
+that is invalidated on every catalog snapshot change. It computes only the
+active sort key and adds normalized search text lazily, preserving the exact
+search fields and sort behavior without penalizing the initial grid. Markdown
+rendering computes each normalized title once per item.
+
+The filename parser reuses immutable regular expressions through a bounded,
+locked repository. Concurrent parser stress preserves complete suggestion
+values, evidence, confidence, and source spans. Partial fingerprints check task
+cancellation before and between filesystem reads. Reconciliation applies its
+ordered operation stream through indexed IDs and tombstoned records, preserving
+conditional revisions, duplicate-path behavior, additions, removals, and
+ambiguity while avoiding repeated full-array searches.
+
+On the same x86_64 macOS 26.5.2 test destination, the measured 5,000-record
+results were:
+
+| Workload | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Initial title-sorted grid model | 63.674 ms | 58.894 ms | 7.5% faster |
+| Filename parser corpus | 11,555.7 ms | 6,750.1 ms | 41.6% faster |
+| Mixed reconciliation apply | 4,185.1 ms | 44.9 ms | 98.9% faster |
+| Markdown render | 2,170.9 ms | 2,162.7 ms | Within run-to-run noise |
+
+The release-scale run retained identical catalog bytes and source-cover hashes.
+Focused tests also verify derived-index invalidation, concurrent parser
+determinism, cancelled partial fingerprints, and exact optimized-versus-legacy
+reconciliation output.
+
+Reviewed filename suggestions and manual Save actions now bypass autosave
+debouncing. Maintenance refresh/rebuild work cannot supersede a pending metadata
+edit, and an edit waits for an active whole-catalog operation. A regression test
+accepts suggestions for two books and reopens the Markdown catalog to verify
+that both records and every accepted field persist.
+
+The non-interactive release-scale test passed on 2026-07-25. This closes
+V11-009, V11-014, V11-023, and V11-025.

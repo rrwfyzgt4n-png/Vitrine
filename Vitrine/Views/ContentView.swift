@@ -83,7 +83,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $store.isMetadataEditorPresented) {
             if let item = store.selectedItem {
-                MetadataEditorView(item: item) { await store.saveEditedItem($0) }
+                MetadataEditorView(item: item) {
+                    await store.saveEditedItem($0, reason: .explicit)
+                }
             }
         }
         .sheet(isPresented: $store.isFilenameReviewPresented) {

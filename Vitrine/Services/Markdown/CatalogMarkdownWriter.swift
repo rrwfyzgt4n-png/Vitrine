@@ -6,14 +6,14 @@ struct CatalogMarkdownWriter: Sendable {
             throw CatalogError.unsupportedSchema(snapshot.schemaVersion)
         }
 
-        let sortedItems = snapshot.items.sorted { lhs, rhs in
-            let leftTitle = SearchNormalizer.normalize(lhs.displayTitle)
-            let rightTitle = SearchNormalizer.normalize(rhs.displayTitle)
-            if leftTitle == rightTitle {
-                return lhs.source.relativePath < rhs.source.relativePath
+        let sortedItems = snapshot.items
+            .map { (item: $0, title: SearchNormalizer.normalize($0.displayTitle)) }
+            .sorted { lhs, rhs in
+                if lhs.title == rhs.title {
+                    return lhs.item.source.relativePath < rhs.item.source.relativePath
+                }
+                return lhs.title < rhs.title
             }
-            return leftTitle < rightTitle
-        }
 
         var lines = [
             "---",
@@ -49,9 +49,9 @@ struct CatalogMarkdownWriter: Sendable {
             lines.append(unmanagedText)
         }
 
-        for item in sortedItems {
+        for entry in sortedItems {
             lines.append("")
-            lines.append(contentsOf: render(item))
+            lines.append(contentsOf: render(entry.item))
         }
 
         return lines.joined(separator: "\n").trimmingCharacters(in: .newlines) + "\n"

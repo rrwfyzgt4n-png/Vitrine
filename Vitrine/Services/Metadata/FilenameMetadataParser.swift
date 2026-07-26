@@ -226,7 +226,13 @@ struct FilenameMetadataParser: Sendable {
     }
 
     private func splitPeople(_ value: String) -> [String] {
-        value.components(separatedBy: try! NSRegularExpression(pattern: #"\s+(?:et|and|&)\s+"#, options: .caseInsensitive))
+        guard let separator = FilenameRegexRepository.shared.regex(
+            pattern: #"\s+(?:et|and|&)\s+"#,
+            options: .caseInsensitive
+        ) else {
+            return [value]
+        }
+        return value.components(separatedBy: separator)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)) }
             .filter { !$0.isEmpty }
     }
@@ -544,7 +550,7 @@ struct FilenameMetadataParser: Sendable {
     }
 
     private func matches(_ pattern: String, in value: String) -> [RegexMatch] {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        guard let regex = FilenameRegexRepository.shared.regex(pattern: pattern) else { return [] }
         let range = NSRange(value.startIndex..<value.endIndex, in: value)
         return regex.matches(in: value, range: range).compactMap { result in
             guard let fullRange = Range(result.range, in: value) else { return nil }
@@ -561,6 +567,38 @@ struct FilenameMetadataParser: Sendable {
         var full: String
         var groups: [String]
         var range: Range<String.Index>
+    }
+}
+
+/// `NSRegularExpression` is immutable after initialization. Access to the
+/// bounded cache is locked; matching happens outside the lock so independent
+/// parser requests do not serialize their work.
+private final class FilenameRegexRepository: @unchecked Sendable {
+    static let shared = FilenameRegexRepository()
+
+    private struct Key: Hashable {
+        let pattern: String
+        let options: NSRegularExpression.Options.RawValue
+    }
+
+    private let lock = NSLock()
+    private var cache: [Key: NSRegularExpression] = [:]
+
+    func regex(
+        pattern: String,
+        options: NSRegularExpression.Options = []
+    ) -> NSRegularExpression? {
+        let key = Key(pattern: pattern, options: options.rawValue)
+        lock.lock()
+        defer { lock.unlock() }
+        if let cached = cache[key] {
+            return cached
+        }
+        guard let compiled = try? NSRegularExpression(pattern: pattern, options: options) else {
+            return nil
+        }
+        cache[key] = compiled
+        return compiled
     }
 }
 
