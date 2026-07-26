@@ -21,7 +21,6 @@ struct LibraryGridView: View {
                             item: item,
                             isSelected: store.selection == item.id,
                             sourceFolderURL: store.sourceFolderURL,
-                            coverWidth: coverWidth,
                             showFileNoteSummary: showFileNoteSummaries,
                             gridPosition: index + 1,
                             gridCount: items.count,

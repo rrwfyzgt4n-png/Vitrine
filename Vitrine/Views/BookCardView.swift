@@ -4,7 +4,6 @@ struct BookCardView: View {
     let item: CatalogItem
     let isSelected: Bool
     let sourceFolderURL: URL?
-    let coverWidth: Double
     let showFileNoteSummary: Bool
     let gridPosition: Int
     let gridCount: Int
@@ -95,7 +94,7 @@ struct BookCardView: View {
             let updatedThumbnail = try? await ThumbnailService.shared.thumbnail(
                 sourceFolderURL: sourceFolderURL,
                 source: item.source,
-                maximumPixelSize: Int(coverWidth * 2)
+                maximumPixelSize: 520
             )
             guard !Task.isCancelled, let updatedThumbnail else { return }
             thumbnail = updatedThumbnail
@@ -143,8 +142,7 @@ struct BookCardView: View {
             sourceFolderURL?.path(percentEncoded: false) ?? "unavailable",
             item.source.relativePath,
             item.source.fileSize.map(String.init) ?? "",
-            item.source.fileModificationDate.map { String($0.timeIntervalSince1970) } ?? "",
-            String(Int(coverWidth))
+            item.source.fileModificationDate.map { String($0.timeIntervalSince1970) } ?? ""
         ].joined(separator: "|")
     }
 }

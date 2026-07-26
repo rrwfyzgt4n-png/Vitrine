@@ -4,8 +4,8 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var store: CatalogStore
     @AppStorage("coverWidth") private var coverWidth = 168.0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var searchFocused: Bool
+    private let coverSizeSteps = [120.0, 144.0, 168.0, 196.0, 228.0, 260.0]
 
     var body: some View {
         Group {
@@ -220,23 +220,32 @@ struct ContentView: View {
 
                 ControlGroup {
                     Button {
-                        stepCoverSize(by: -12)
+                        stepCoverSize(down: true)
                     } label: {
                         Image(systemName: "textformat.size.smaller")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary.opacity(decreaseCoverEmphasis))
+                            .frame(width: 40, height: 30)
+                            .contentShape(.rect)
                     }
                     .help("Decrease Cover Size")
+                    .accessibilityLabel("Decrease Cover Size")
 
                     Button {
-                        stepCoverSize(by: 12)
+                        stepCoverSize(down: false)
                     } label: {
                         Image(systemName: "textformat.size.larger")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary.opacity(increaseCoverEmphasis))
+                            .frame(width: 40, height: 30)
+                            .contentShape(.rect)
                     }
                     .help("Increase Cover Size")
+                    .accessibilityLabel("Increase Cover Size")
                 }
-                .controlSize(.small)
+                .controlSize(.regular)
                 .buttonStyle(.glass)
+                .buttonRepeatBehavior(.enabled)
                 .accessibilityLabel("Cover size")
                 .accessibilityValue(Int(coverWidth).formatted())
             }
@@ -271,14 +280,11 @@ struct ContentView: View {
         0.38 + (coverSizeProgress * 0.62)
     }
 
-    private func stepCoverSize(by amount: Double) {
-        let update = {
-            coverWidth = min(260, max(120, coverWidth + amount))
-        }
-        if reduceMotion {
-            update()
+    private func stepCoverSize(down: Bool) {
+        if down {
+            coverWidth = coverSizeSteps.last(where: { $0 < coverWidth }) ?? coverSizeSteps[0]
         } else {
-            withAnimation(.snappy(duration: 0.16), update)
+            coverWidth = coverSizeSteps.first(where: { $0 > coverWidth }) ?? coverSizeSteps[coverSizeSteps.count - 1]
         }
     }
 }
