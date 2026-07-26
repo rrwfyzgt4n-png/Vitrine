@@ -58,7 +58,7 @@ struct AboutVitrineView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Link("View Project Gutenberg", destination: URL(string: "https://www.gutenberg.org/")!)
+            Link("View Project Gutenberg", destination: LibraryStatistics.gutenbergReference.sourceURL)
                 .font(.caption)
         }
         .frame(maxWidth: 520)

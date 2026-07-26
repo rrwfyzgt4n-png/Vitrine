@@ -4781,6 +4781,38 @@
         }
       }
     },
+    "Scanning covers %lld of %lld…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse des couvertures : %1$lld sur %2$lld…"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse des couvertures : %1$lld sur %2$lld…"
+          }
+        }
+      }
+    },
+    "Scanning covers…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse des couvertures…"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse des couvertures…"
+          }
+        }
+      }
+    },
     "Search your library" : {
       "localizations" : {
         "fr" : {

@@ -228,6 +228,17 @@ in-memory result cache. Candidate fields are presented for comparison and do not
 mutate the catalog until accepted. Google and DuckDuckGo are browser fallbacks,
 not metadata APIs.
 
+The rule-driven v2 parser is the production engine. The literal-heavy legacy
+engine is retained only as an explicit debug and differential-test oracle.
+Parser configuration remains immutable and data driven; accepted suggestions
+still cross the same adapter and save boundary.
+
+Scanner progress is a bounded stream of `CatalogScanProgress` values. The
+scanner reports enumeration totals and at most 100 intermediate updates plus
+the initial and terminal states. `CatalogStore` maps these values onto the
+existing cancelable activity presentation while background refreshes remain
+non-modal.
+
 Any new bibliographic field must be added to all of these surfaces in the same
 change:
 
@@ -247,6 +258,12 @@ merge surface, then round-trip a fully populated value. Merge choices use
 with the inspector and distinguishes nil from empty values without debug output.
 Enum-backed localized labels use exhaustive static mappings; runtime-computed
 localization keys are rejected by the localization audit.
+
+Deterministic UI-test catalog construction belongs to
+`CatalogUITestFixtureBuilder`, not `CatalogStore`. Further decomposition of the
+store requires a reproduced correctness issue, a second implementation, or a
+narrow test-double seam; release work does not split the main-actor mutation
+boundary merely to reduce line count.
 
 ## 9. UI architecture
 

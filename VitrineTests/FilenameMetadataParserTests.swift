@@ -4,6 +4,15 @@ import XCTest
 final class FilenameMetadataParserTests: XCTestCase {
     private let parser = FilenameMetadataParser(engine: .v2)
 
+    func testRuleDrivenParserIsTheProductionDefault() {
+        let source = "Farnese, The House of, \"A Portrait of a Great Family of the Renaissance, par Giovanna R. Solari, translated by Simona Morini and Frederic Tuten, Doubleday & Company, Inc., Garden City, New York 1968 (1964) 310p. ill. avec jaquette"
+
+        XCTAssertEqual(
+            FilenameMetadataParser().suggestions(from: source),
+            FilenameMetadataParser(engine: .v2).suggestions(from: source)
+        )
+    }
+
     func testRestoresTrailingArticleAndExtractsEditionDetails() {
         let suggestion = parser.suggestions(
             from: "Japon, Le, Dictionnaire et civilisation, par Louis Frédéric, \"Bouquins\" Éditions Robert Laffont, 1996 1419p"

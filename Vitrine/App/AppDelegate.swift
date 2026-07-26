@@ -11,9 +11,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
-        presentMainWindow()
-        DispatchQueue.main.async { [weak self] in self?.presentMainWindow() }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in self?.presentMainWindow() }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

@@ -36,7 +36,7 @@ mandatory safety gate is open or lacks focused regression coverage.
 | 3 — Filesystem and overwrite recovery | V11-005, V11-006, V11-026 | Verified 2026-07-22 | All cover access is contained and overwritten catalogs remain recoverable |
 | 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Verified 2026-07-22 | Every metadata surface round-trips and is localized |
 | 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Verified 2026-07-25 | Exact behavior with measured improvement at 5,000 records |
-| 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Planned | Stable behavior without a high-risk speculative rewrite |
+| 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Verified 2026-07-26 | Stable behavior without a high-risk speculative rewrite |
 | 7 — Release verification | V11-021, V11-022 and all 24 remediation vectors | Planned | Complete automated and manual acceptance evidence |
 
 ## Phase 1 invariants
@@ -180,3 +180,48 @@ that both records and every accepted field persist.
 
 The non-interactive release-scale test passed on 2026-07-25. This closes
 V11-009, V11-014, V11-023, and V11-025.
+
+## Phase 6 verification
+
+The scanner now publishes bounded progress after enumeration and during cover
+inspection. `CatalogStore` maps that progress to `ScanState` and the existing
+cancelable status capsule, with at most 102 progress events for a scan of any
+size. Background refreshes update state without accidentally presenting a
+foreground status capsule. Focused scanner coverage verifies the initial and
+terminal counts and the progress bounds.
+
+The rule-driven v2 filename parser is now the production default. The
+corpus-specific legacy parser remains available only as an explicit debug and
+differential-test engine; portable golden fixtures continue to compare both
+engines. This isolates historical corpus branches without deleting the
+compatibility oracle or weakening mandatory field-level review.
+
+The main SwiftUI `Window` already declares
+`.defaultLaunchBehavior(.presented)`. App launch now relies on that deterministic
+scene lifecycle instead of immediate, asynchronous, and delayed attempts to
+force the same window forward. Reopen handling still presents an existing
+hidden window. Contract coverage rejects delayed launch retries.
+
+The Project Gutenberg comparison uses one explicit historical reference value
+containing the count, capture month/year, and source URL. The About window
+continues to identify it as a July 2026 eBook-count reference rather than a live
+page count, and the maintenance procedure is documented and tested.
+
+The first recommended `CatalogStore` extraction is complete:
+`CatalogUITestFixtureBuilder` owns deterministic test-fixture construction and
+has direct unit coverage for scale, unsupported-schema, conflict, and recovery
+fixtures. Further splitting of undo, mutations, and presentation state is
+deliberately deferred: no second implementation or reproduced correctness
+defect currently justifies moving the sole main-actor mutation boundary during
+release stabilization.
+
+Focused Phase 6 coverage and the complete non-interactive suite passed on
+2026-07-26. This closes V11-010, V11-012, V11-013, and V11-016. V11-019's
+high-confidence first extraction is complete; speculative decomposition is
+deferred with the no-data-loss rationale above.
+
+The repeat 1,000/2,500/5,000-cover matrix measured refresh times of
+1.70/4.12/8.24 seconds. At 5,000 covers, catalog parsing took 6.14 seconds,
+grid-model construction took 58 ms, cancellation took 44 ms, and peak resident
+memory was 647 MB. Source SHA-256 manifests remained identical before and after
+every run.

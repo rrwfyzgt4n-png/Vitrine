@@ -39,6 +39,6 @@ struct FilenameMetadataParser: Sendable {
             return .legacy
         }
 #endif
-        return .legacy
+        return .v2
     }
 }

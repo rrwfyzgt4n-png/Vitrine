@@ -52,11 +52,13 @@ VITRINE_DERIVED_DATA_PATH=/path/to/derived-data \
   ./script/build_and_run.sh --verify
 ```
 
-The filename parser migration keeps the reviewed legacy engine as the default
-until the corpus differential gate is closed. In a Debug scheme, add
-`--filename-parser-v2` to the app launch arguments to exercise the v2.1 engine,
-or `--filename-parser-legacy` to force the rollback path. These flags select the
-engine before parsing; they do not alter source filenames or catalog metadata.
+The data-driven v2.1 filename parser is the production default. The reviewed
+legacy engine remains a compatibility oracle for differential tests. In a Debug
+scheme, add `--filename-parser-legacy` to force that comparison path, or
+`--filename-parser-v2` to state the production selection explicitly. These
+flags select the engine before parsing; they do not alter source filenames or
+catalog metadata. New production behavior belongs in the versioned JSON rule
+package and sanitized golden fixtures, not in new exact-title branches.
 
 The script validates these sandbox entitlements:
 
@@ -159,6 +161,18 @@ independently checks locale coverage and all registered enum labels.
 
 Do not assemble sentences from translated fragments when grammar or number can
 change. Prefer complete localized strings and existing `L10n` helpers.
+
+## Project Gutenberg reference
+
+The About window comparison is historical, not a live network lookup. Its
+count, capture month/year, and source URL are maintained together in
+`LibraryStatistics.gutenbergReference`. When updating it:
+
+1. verify the count at the recorded source URL;
+2. update the count and capture month/year in the same commit;
+3. update the localized About-window reference sentence;
+4. update `LibraryStatisticsTests` and record the change in the release
+   checklist.
 
 ## Architecture and ownership
 

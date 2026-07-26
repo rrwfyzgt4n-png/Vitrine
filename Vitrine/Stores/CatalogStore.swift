@@ -20,6 +20,7 @@ final class CatalogStore {
     private let healthService = CatalogHealthService()
     private let diagnosticService = CatalogDiagnosticService()
     private let coverInformationRebuilder = CatalogCoverInformationRebuilder()
+    private let uiTestFixtureBuilder = CatalogUITestFixtureBuilder()
 
     var catalog: CatalogSnapshot? {
         didSet { derivedIndex.removeAll() }
@@ -160,86 +161,19 @@ final class CatalogStore {
     }
 
     private func configureUITestFixtureIfRequested() -> Bool {
-        let process = ProcessInfo.processInfo
-        guard process.environment["VITRINE_UI_TESTING"] == "1",
-              let fixtureFlag = process.arguments.firstIndex(of: "-VitrineUITestFixture"),
-              process.arguments.indices.contains(fixtureFlag + 1) else { return false }
-        let fixture = process.arguments[fixtureFlag + 1]
-        let fixtureItemCount = fixture == "scale5000" ? 5_000 : 6
-        let itemIDs = (1...fixtureItemCount).compactMap {
-            UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", $0))
-        }
-        let hasAvailableCovers = fixture == "available"
-        let availability: ItemAvailability = hasAvailableCovers ? .available : .metadataOnly
-        let items = itemIDs.enumerated().map { index, id in
-            let itemNumber = index + 1
-            let displayNumber = fixture == "scale5000"
-                ? String(format: "%04d", itemNumber)
-                : String(itemNumber)
-            return CatalogItem(
-                id: id,
-                source: SourceFileMetadata(relativePath: "Book \(displayNumber).jpg"),
-                bibliography: BibliographicMetadata(
-                    title: "Book \(displayNumber)",
-                    authors: ["Author \(displayNumber)"],
-                    pageCount: 100 + index,
-                    metadataSource: .manual,
-                    metadataConfirmedByUser: true
-                ),
-                availability: availability
-            )
-        }
-        var snapshot = CatalogSnapshot(name: "UI Test Library", items: items)
-        if fixture == "unsupported" {
-            snapshot.schemaVersion = CatalogSnapshot.supportedSchemaVersion + 1
-            snapshot.isReadOnly = true
-        }
-        catalog = snapshot
-        catalogDiagnostics = fixture == "repairable"
-            ? [MarkdownDiagnostic(
-                severity: .error,
-                code: .missingRequiredField,
-                recordID: itemIDs.first,
-                message: "A record could not be read."
-            )]
-            : []
+        guard let fixture = uiTestFixtureBuilder.build() else { return false }
+        catalog = fixture.snapshot
+        catalogDiagnostics = fixture.diagnostics
         selection = nil
-        sourceFolderURL = hasAvailableCovers
-            ? URL(fileURLWithPath: "/tmp/Vitrine-UI-Test-Covers", isDirectory: true)
-            : nil
-        saveState = snapshot.isReadOnly ? .readOnly : .idle
+        sourceFolderURL = fixture.sourceFolderURL
+        saveState = fixture.snapshot.isReadOnly ? .readOnly : .idle
+        pendingCatalogMerge = fixture.pendingMerge
+        pendingRecovery = fixture.pendingRecovery
 
-        if fixture == "conflict", let firstID = itemIDs.first {
-            var external = snapshot
-            external.items[0].bibliography.title = "Other Title"
-            pendingCatalogMerge = PendingCatalogMerge(
-                merged: snapshot,
-                external: external,
-                conflicts: [CatalogMergeConflict(
-                    recordID: firstID,
-                    bookTitle: "Book 1",
-                    field: .title,
-                    localValue: "Book 1",
-                    externalValue: "Other Title"
-                )]
-            )
+        if fixture.pendingMerge != nil {
             isConflictChoicePresented = true
-        } else if fixture == "repair" {
-            let damagedURL = URL(fileURLWithPath: "/tmp/Vitrine-UI-Test-Damaged.md")
-            let backup = CatalogBackupService.Backup(
-                url: URL(fileURLWithPath: "/tmp/Vitrine-UI-Test-Backup.md"),
-                date: Date(timeIntervalSince1970: 1_750_000_000)
-            )
-            pendingRecovery = CatalogRecoveryCandidate(
-                damagedCatalogURL: damagedURL,
-                catalogID: snapshot.catalogID,
-                preservedDamagedCopyURL: damagedURL,
-                backupOptions: [CatalogRecoveryBackupOption(
-                    backup: backup,
-                    parsedCatalog: CatalogParseResult(snapshot: snapshot, diagnostics: [])
-                )],
-                recoveredCatalog: CatalogParseResult(snapshot: snapshot, diagnostics: [])
-            )
+        }
+        if fixture.pendingRecovery != nil {
             isRecoveryPresented = true
         }
         return true
@@ -1292,25 +1226,49 @@ final class CatalogStore {
     private func scan(folderURL: URL) async throws -> CatalogScanResult {
         let isAccessing = folderURL.startAccessingSecurityScopedResource()
         defer { if isAccessing { folderURL.stopAccessingSecurityScopedResource() } }
-        let task = Task { try await scanner.scan(folderURL: folderURL) }
+        let task = Task {
+            try await scanner.scan(folderURL: folderURL) { [weak self] progress in
+                await self?.reportScanProgress(progress)
+            }
+        }
         activeScanTask = task
         canCancelOperation = true
         defer {
             activeScanTask = nil
             canCancelOperation = false
+            clearTransientScanProgress()
         }
         return try await task.value
     }
 
     private func reconcile(catalog: CatalogSnapshot, folderURL: URL) async throws -> CatalogReconciliationDiff {
-        let task = Task { try await scanner.reconciliationDiff(catalog: catalog, folderURL: folderURL) }
+        let task = Task {
+            try await scanner.reconciliationDiff(catalog: catalog, folderURL: folderURL) { [weak self] progress in
+                await self?.reportScanProgress(progress)
+            }
+        }
         activeReconciliationTask = task
         canCancelOperation = true
         defer {
             activeReconciliationTask = nil
             canCancelOperation = false
+            clearTransientScanProgress()
         }
         return try await task.value
+    }
+
+    private func clearTransientScanProgress() {
+        guard case .refreshing = scanState else { return }
+        scanState = .idle
+    }
+
+    private func reportScanProgress(_ progress: CatalogScanProgress) {
+        scanState = .refreshing(completed: progress.completed, total: progress.total)
+        if isPerformingCatalogOperation {
+            operationMessage = progress.total > 0
+                ? String(localized: "Scanning covers \(progress.completed) of \(progress.total)…")
+                : L10n.text("Scanning covers…")
+        }
     }
 
     func apply(

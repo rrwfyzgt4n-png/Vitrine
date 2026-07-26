@@ -14,6 +14,19 @@ final class ApplicationContractTests: XCTestCase {
         XCTAssertTrue(source.contains(".restorationBehavior(.disabled)"))
     }
 
+    func testLaunchUsesSceneLifecycleInsteadOfWindowPresentationRetries() throws {
+        let source = try projectSource("Vitrine/App/AppDelegate.swift")
+
+        XCTAssertFalse(source.contains("asyncAfter"))
+        let launchBody = try XCTUnwrap(
+            source.range(
+                of: #"func applicationDidFinishLaunching\(_ notification: Notification\) \{[\s\S]*?\n    \}"#,
+                options: .regularExpression
+            )
+        )
+        XCTAssertFalse(source[launchBody].contains("presentMainWindow"))
+    }
+
     func testRequiredFileLibraryBookAndViewCommandsAreDeclared() throws {
         let source = try projectSource("Vitrine/App/AppCommands.swift")
         let requiredCommands = [

@@ -52,6 +52,29 @@ final class CatalogScannerTests: XCTestCase {
         XCTAssertEqual(result.sources.compactMap(\.fullContentHash).count, 2)
     }
 
+    func testScannerReportsBoundedProgressThroughCompletion() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try writeImage(to: root.appending(path: "First.jpg"), type: .jpeg)
+        try writeImage(to: root.appending(path: "Second.png"), type: .png)
+        for index in 3...199 {
+            try Data().write(to: root.appending(path: "Unreadable \(index).jpg"))
+        }
+        try Data("ignored".utf8).write(to: root.appending(path: "Notes.txt"))
+        let recorder = ScanProgressRecorder()
+
+        _ = try await CatalogScanner().scan(folderURL: root) { progress in
+            await recorder.append(progress)
+        }
+
+        let values = await recorder.values
+        XCTAssertEqual(values.first, CatalogScanProgress(completed: 0, total: 199))
+        XCTAssertEqual(values.last, CatalogScanProgress(completed: 199, total: 199))
+        XCTAssertTrue(values.allSatisfy { $0.completed >= 0 && $0.completed <= $0.total })
+        XCTAssertLessThanOrEqual(values.count, 102)
+    }
+
     func testAllSupportedExtensionsAndUnicodePathsAreScanned() async throws {
         let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -95,5 +118,13 @@ final class CatalogScannerTests: XCTestCase {
         let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, type.identifier as CFString, 1, nil))
         CGImageDestinationAddImage(destination, image, nil)
         XCTAssertTrue(CGImageDestinationFinalize(destination))
+    }
+}
+
+private actor ScanProgressRecorder {
+    private(set) var values: [CatalogScanProgress] = []
+
+    func append(_ progress: CatalogScanProgress) {
+        values.append(progress)
     }
 }

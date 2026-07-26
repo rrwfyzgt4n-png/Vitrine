@@ -1,7 +1,23 @@
 import Foundation
 
+struct GutenbergCatalogReference: Equatable, Sendable {
+    var eBookCount: Int
+    var asOfYear: Int
+    var asOfMonth: Int
+    var sourceURL: URL
+}
+
 struct LibraryStatistics: Equatable, Sendable {
-    static let gutenbergBookCount = 77_687
+    static let gutenbergReference = GutenbergCatalogReference(
+        eBookCount: 77_687,
+        asOfYear: 2026,
+        asOfMonth: 7,
+        sourceURL: URL(string: "https://www.gutenberg.org/")!
+    )
+
+    static var gutenbergBookCount: Int {
+        gutenbergReference.eBookCount
+    }
 
     var bookCount: Int
     var cataloguedPageCount: Int

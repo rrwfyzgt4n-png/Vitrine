@@ -27,6 +27,9 @@ final class LibraryStatisticsTests: XCTestCase {
             Double(66) / Double(77_687),
             accuracy: 0.000_000_001
         )
+        XCTAssertEqual(LibraryStatistics.gutenbergReference.asOfYear, 2026)
+        XCTAssertEqual(LibraryStatistics.gutenbergReference.asOfMonth, 7)
+        XCTAssertEqual(LibraryStatistics.gutenbergReference.sourceURL.host(), "www.gutenberg.org")
     }
 
     private func item(pageCount: Int?) -> CatalogItem {

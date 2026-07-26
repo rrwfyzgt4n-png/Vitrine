@@ -11,7 +11,10 @@ actor CatalogScanner {
         "jpg", "jpeg", "png", "heic", "heif", "tif", "tiff", "webp",
     ]
 
-    func scan(folderURL: URL) async throws -> CatalogScanResult {
+    func scan(
+        folderURL: URL,
+        progress: (@Sendable (CatalogScanProgress) async -> Void)? = nil
+    ) async throws -> CatalogScanResult {
         let canonicalFolderURL = folderURL.resolvingSymlinksInPath().standardizedFileURL
         let enumerationErrors = ScanEnumerationErrorCollector()
         let keys: Set<URLResourceKey> = [
@@ -36,56 +39,63 @@ actor CatalogScanner {
         }
 
         let enumeratedURLs = enumerator.compactMap { $0 as? URL }
+        let supportedURLs = enumeratedURLs.filter {
+            supportedExtensions.contains($0.pathExtension.lowercased())
+        }
+        let progressInterval = max(1, (supportedURLs.count + 99) / 100)
+        await progress?(CatalogScanProgress(completed: 0, total: supportedURLs.count))
         var files: [SourceFileMetadata] = []
         var warnings = enumerationErrors.warnings
-        for fileURL in enumeratedURLs {
+        for (index, fileURL) in supportedURLs.enumerated() {
             try Task.checkCancellation()
-            let fileExtension = fileURL.pathExtension.lowercased()
-            guard supportedExtensions.contains(fileExtension) else { continue }
             let standardizedFileURL = fileURL.standardizedFileURL
             let relativeComponents = standardizedFileURL.pathComponents.dropFirst(canonicalFolderURL.pathComponents.count)
-            guard !relativeComponents.isEmpty else { continue }
-            let relativePath = relativeComponents.joined(separator: "/")
+            if !relativeComponents.isEmpty {
+                let relativePath = relativeComponents.joined(separator: "/")
 
-            do {
-                let values = try fileURL.resourceValues(forKeys: keys)
-                guard values.isRegularFile == true,
-                      values.isHidden != true,
-                      values.isSymbolicLink != true,
-                      (values.fileSize ?? 0) > 0 else {
-                    continue
+                do {
+                    let values = try fileURL.resourceValues(forKeys: keys)
+                    if values.isRegularFile == true,
+                       values.isHidden != true,
+                       values.isSymbolicLink != true,
+                       (values.fileSize ?? 0) > 0 {
+                        let canonicalFileURL = fileURL.resolvingSymlinksInPath().standardizedFileURL
+                        if canonicalFileURL.pathComponents.starts(with: canonicalFolderURL.pathComponents) {
+                            let dimensions = try await imageReader.dimensions(for: canonicalFileURL)
+                            let size = Int64(values.fileSize ?? 0)
+                            let fingerprint = try await fingerprintService.fingerprint(
+                                for: canonicalFileURL,
+                                fileSize: size,
+                                width: dimensions.width,
+                                height: dimensions.height
+                            )
+                            let comment = await commentReader.comment(for: canonicalFileURL)
+                            files.append(SourceFileMetadata(
+                                relativePath: relativePath,
+                                filename: standardizedFileURL.lastPathComponent,
+                                sourceTitle: standardizedFileURL.deletingPathExtension().lastPathComponent,
+                                finderComment: comment,
+                                portableFingerprint: fingerprint,
+                                fileResourceIdentifier: values.fileResourceIdentifier.map { String(describing: $0) },
+                                fileSize: size,
+                                pixelWidth: dimensions.width,
+                                pixelHeight: dimensions.height,
+                                fileCreationDate: CatalogDateFormatter.normalizedForPersistence(values.creationDate),
+                                fileModificationDate: CatalogDateFormatter.normalizedForPersistence(values.contentModificationDate)
+                            ))
+                        }
+                    }
+                } catch {
+                    warnings.append(CatalogScanWarning(
+                        relativePath: relativePath,
+                        message: L10n.text("One cover could not be read and will be tried again later.")
+                    ))
                 }
-                let canonicalFileURL = fileURL.resolvingSymlinksInPath().standardizedFileURL
-                guard canonicalFileURL.pathComponents.starts(with: canonicalFolderURL.pathComponents) else {
-                    continue
-                }
-                let dimensions = try await imageReader.dimensions(for: canonicalFileURL)
-                let size = Int64(values.fileSize ?? 0)
-                let fingerprint = try await fingerprintService.fingerprint(
-                    for: canonicalFileURL,
-                    fileSize: size,
-                    width: dimensions.width,
-                    height: dimensions.height
-                )
-                let comment = await commentReader.comment(for: canonicalFileURL)
-                files.append(SourceFileMetadata(
-                    relativePath: relativePath,
-                    filename: standardizedFileURL.lastPathComponent,
-                    sourceTitle: standardizedFileURL.deletingPathExtension().lastPathComponent,
-                    finderComment: comment,
-                    portableFingerprint: fingerprint,
-                    fileResourceIdentifier: values.fileResourceIdentifier.map { String(describing: $0) },
-                    fileSize: size,
-                    pixelWidth: dimensions.width,
-                    pixelHeight: dimensions.height,
-                    fileCreationDate: CatalogDateFormatter.normalizedForPersistence(values.creationDate),
-                    fileModificationDate: CatalogDateFormatter.normalizedForPersistence(values.contentModificationDate)
-                ))
-            } catch {
-                warnings.append(CatalogScanWarning(
-                    relativePath: relativePath,
-                    message: L10n.text("One cover could not be read and will be tried again later.")
-                ))
+            }
+
+            let completed = index + 1
+            if completed == supportedURLs.count || completed.isMultiple(of: progressInterval) {
+                await progress?(CatalogScanProgress(completed: completed, total: supportedURLs.count))
             }
         }
 
@@ -113,8 +123,12 @@ actor CatalogScanner {
         )
     }
 
-    func reconciliationDiff(catalog: CatalogSnapshot, folderURL: URL) async throws -> CatalogReconciliationDiff {
-        let scan = try await scan(folderURL: folderURL)
+    func reconciliationDiff(
+        catalog: CatalogSnapshot,
+        folderURL: URL,
+        progress: (@Sendable (CatalogScanProgress) async -> Void)? = nil
+    ) async throws -> CatalogReconciliationDiff {
+        let scan = try await scan(folderURL: folderURL, progress: progress)
         var diff = await reconciler.diff(catalog: catalog, scan: scan)
         diff.sourceFolderValidated = folderValidator.looksLikeCatalogFolder(
             catalog: catalog,

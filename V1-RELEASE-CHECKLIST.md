@@ -1,10 +1,10 @@
 # Vitrine V1 release-candidate checklist
 
-Last updated: 2026-07-22
+Last updated: 2026-07-26
 
 ## Release status
 
-**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. All mandatory V11-001 through V11-005 safety gates and the conflict/schema/localization gate are fixed and verified. Measured-scale, maintainability, and final release-verification phases remain open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
+**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. Mandatory safety, conflict/schema/localization, measured-scale, and product-maintainability gates are fixed and verified. Final release verification remains open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
 
 Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
 
@@ -32,6 +32,11 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Area | Result | Evidence |
 | --- | --- | --- |
 | Metadata schema integration | Pass | Every reviewed filename field is adapter-mapped; full metadata round-trips and merges. |
+| Scan progress | Pass | Scanner progress is bounded, reaches the enumerated total, drives the cancelable status capsule, and does not leak foreground UI from background work. |
+| Filename parser production path | Pass | The data-driven v2 parser is the default; the legacy corpus parser is isolated to explicit debug/differential use. |
+| Window launch lifecycle | Pass | The presented singleton SwiftUI scene owns launch; delayed AppKit presentation retries are rejected by contract coverage. |
+| Gutenberg reference | Pass | Count, capture date, and source URL form one tested historical reference; the About window labels it as July 2026 rather than live data. |
+| Store fixture boundary | Pass | UI fixture construction is isolated and unit-tested without moving the sole main-actor catalog mutation boundary. |
 | Termination save durability | Pass | Pending debounced saves flush before termination; failure cancels quit; repeated quit and timeout paths are covered. |
 | Transactional metadata edits | Pass | Catalog and undo state commit only after a successful save; failed and concurrent edits are covered. |
 | External file-event ordering | Pass | One unbounded presenter stream preserves ordered events while catalog operations finish. |
