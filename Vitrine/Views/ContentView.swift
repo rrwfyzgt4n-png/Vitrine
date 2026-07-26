@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var store: CatalogStore
     @AppStorage("coverWidth") private var coverWidth = 168.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -165,6 +166,22 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            HStack(spacing: 7) {
+                Image(nsImage: NSApplication.shared.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 22, height: 22)
+                    .clipShape(.rect(cornerRadius: 5))
+                    .accessibilityHidden(true)
+                Text("Vitrine")
+                    .font(.headline)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Vitrine")
+        }
+        .sharedBackgroundVisibility(.hidden)
+
         if let catalog = store.catalog {
             ToolbarItem(placement: .navigation) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -199,18 +216,27 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label)
+                .buttonStyle(.glass)
 
-                HStack(spacing: 7) {
-                    Image(systemName: "rectangle.portrait")
-                        .font(.caption2)
-                        .accessibilityHidden(true)
-                    Slider(value: $coverWidth, in: 120...260, step: 4)
-                        .frame(width: 94)
-                    Image(systemName: "rectangle.portrait")
-                        .font(.body)
-                        .accessibilityHidden(true)
+                ControlGroup {
+                    Button {
+                        stepCoverSize(by: -12)
+                    } label: {
+                        Image(systemName: "textformat.size.smaller")
+                            .foregroundStyle(.primary.opacity(decreaseCoverEmphasis))
+                    }
+                    .help("Decrease Cover Size")
+
+                    Button {
+                        stepCoverSize(by: 12)
+                    } label: {
+                        Image(systemName: "textformat.size.larger")
+                            .foregroundStyle(.primary.opacity(increaseCoverEmphasis))
+                    }
+                    .help("Increase Cover Size")
                 }
-                .controlSize(.mini)
+                .controlSize(.small)
+                .buttonStyle(.glass)
                 .accessibilityLabel("Cover size")
                 .accessibilityValue(Int(coverWidth).formatted())
             }
@@ -221,13 +247,38 @@ struct ContentView: View {
                 Button("Refresh Covers", systemImage: "arrow.clockwise") { Task { await store.refreshCovers() } }
                     .labelStyle(.iconOnly)
                     .help("Refresh Covers")
+                    .buttonStyle(.glass)
                     .disabled(!store.canRefreshCovers)
                     .accessibilityIdentifier("toolbar.refresh")
                 Button("Inspector", systemImage: "sidebar.trailing") { store.showInspector() }
                     .labelStyle(.iconOnly)
                     .help(store.isInspectorPresented ? "Hide Inspector" : "Show Inspector")
+                    .buttonStyle(.glass)
                     .accessibilityIdentifier("toolbar.inspector")
             }
+        }
+    }
+
+    private var coverSizeProgress: Double {
+        min(1, max(0, (coverWidth - 120) / (260 - 120)))
+    }
+
+    private var decreaseCoverEmphasis: Double {
+        0.38 + ((1 - coverSizeProgress) * 0.62)
+    }
+
+    private var increaseCoverEmphasis: Double {
+        0.38 + (coverSizeProgress * 0.62)
+    }
+
+    private func stepCoverSize(by amount: Double) {
+        let update = {
+            coverWidth = min(260, max(120, coverWidth + amount))
+        }
+        if reduceMotion {
+            update()
+        } else {
+            withAnimation(.snappy(duration: 0.16), update)
         }
     }
 }

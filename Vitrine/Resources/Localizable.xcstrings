@@ -129,6 +129,22 @@
         }
       }
     },
+    "Add Field" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un champ"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un champ"
+          }
+        }
+      }
+    },
     "Add cover images to your selected folder, then refresh covers." : {
       "localizations" : {
         "fr" : {
@@ -141,6 +157,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajoutez des images de couverture au dossier sélectionné, puis actualisez les couvertures."
+          }
+        }
+      }
+    },
+    "Added manually" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouté manuellement"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouté manuellement"
           }
         }
       }
