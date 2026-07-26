@@ -1,42 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Empty" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vide" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Vide" } }
-      }
-    },
-    "No" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Non" } }
-      }
-    },
-    "Not set" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Non défini" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Non défini" } }
-      }
-    },
-    "Removed" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimé" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Supprimé" } }
-      }
-    },
-    "Unavailable" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Indisponible" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Indisponible" } }
-      }
-    },
-    "Yes" : {
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Oui" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Oui" } }
-      }
-    },
     "·" : {
       "localizations" : {
         "fr" : {
@@ -198,7 +162,6 @@
       }
     },
     "Additional languages" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -600,7 +563,6 @@
       }
     },
     "Book record" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -811,7 +773,6 @@
       }
     },
     "Catalog name" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1308,7 +1269,6 @@
       }
     },
     "Cover availability" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1341,7 +1301,6 @@
       }
     },
     "Cover file information" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1374,7 +1333,6 @@
       }
     },
     "Cover folder identity" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1391,7 +1349,6 @@
       }
     },
     "Cover folder name" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1917,6 +1874,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Éditeur/directeur"
+          }
+        }
+      }
+    },
+    "Empty" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vide"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vide"
           }
         }
       }
@@ -2932,7 +2905,6 @@
       }
     },
     "Metadata confirmation" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -2965,7 +2937,6 @@
       }
     },
     "Metadata retrieval date" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -2982,7 +2953,6 @@
       }
     },
     "Metadata source" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -3106,6 +3076,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "À examiner"
+          }
+        }
+      }
+    },
+    "No" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non"
           }
         }
       }
@@ -3284,6 +3270,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Introuvable"
+          }
+        }
+      }
+    },
+    "Not set" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non défini"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non défini"
           }
         }
       }
@@ -3529,7 +3531,6 @@
       }
     },
     "Open Library edition" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -3546,7 +3547,6 @@
       }
     },
     "Open Library work" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -3675,7 +3675,6 @@
       }
     },
     "Page count" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -3772,7 +3771,6 @@
       }
     },
     "Personal notes" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -3805,7 +3803,6 @@
       }
     },
     "Physical attributes" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -4297,6 +4294,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer du catalogue…"
+          }
+        }
+      }
+    },
+    "Removed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimé"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimé"
           }
         }
       }
@@ -5444,22 +5457,6 @@
         }
       }
     },
-    "This cover reference is invalid or points outside the selected cover folder." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
-          }
-        }
-      }
-    },
     "This catalog was created by a newer version of Vitrine and is open read-only." : {
       "localizations" : {
         "fr" : {
@@ -5472,6 +5469,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce catalogue a été créé par une version plus récente de Vitrine et est ouvert en lecture seule."
+          }
+        }
+      }
+    },
+    "This cover reference is invalid or points outside the selected cover folder." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette référence de couverture est invalide ou pointe en dehors du dossier de couvertures sélectionné."
           }
         }
       }
@@ -5525,7 +5538,6 @@
       }
     },
     "Title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -5621,6 +5633,22 @@
         }
       }
     },
+    "Unavailable" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponible"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponible"
+          }
+        }
+      }
+    },
     "Unavailable covers" : {
       "localizations" : {
         "fr" : {
@@ -5638,7 +5666,6 @@
       }
     },
     "Unrecognized catalog data" : {
-      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -6119,6 +6146,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Volume ou partie"
+          }
+        }
+      }
+    },
+    "Yes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oui"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oui"
           }
         }
       }

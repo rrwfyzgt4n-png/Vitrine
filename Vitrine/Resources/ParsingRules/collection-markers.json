@@ -1,0 +1,8 @@
+[
+  {"id":"collection.explicit-marker.v1","category":"collection","pattern":"(?i)\\bcollection\\s+[\"“]?([^\"”,:/]+)[\"”]?(?:\\s+(?:n[oº]|no)\\.?\\s*(\\d+))?","precedence":900,"specificity":90,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"collection.quoted-number.v1","category":"collection","pattern":"(?i)[\"“]([^\"”]+)[\"”]\\s+(?:n[oº]|no)\\.?\\s*(\\d*)","precedence":850,"specificity":85,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"collection.quoted.v1","category":"collection","pattern":"^[\"“]([^\"”]+)[\"”]$","precedence":700,"specificity":60,"confidence":"heuristic","negativeGuards":[],"version":"1"},
+  {"id":"collection.series.grandes-etudes.v1","category":"collection","pattern":"(?i)^(Les Grandes [eé]tudes historiques)(?::|$)","precedence":800,"specificity":80,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"collection.series.livre-de-poche.v1","category":"collection","pattern":"(?i)^(Le Livre de Poche)(?::|$)","precedence":800,"specificity":80,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"collection.series.bouquins.v1","category":"collection","pattern":"(?i)^[\"“]?(Bouquins)[\"”]?(?:\\s+.*)?$","precedence":800,"specificity":80,"confidence":"mechanical","negativeGuards":[],"version":"1"}
+]

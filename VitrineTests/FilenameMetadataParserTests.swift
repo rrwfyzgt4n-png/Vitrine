@@ -2,7 +2,7 @@ import XCTest
 @testable import Vitrine
 
 final class FilenameMetadataParserTests: XCTestCase {
-    private let parser = FilenameMetadataParser()
+    private let parser = FilenameMetadataParser(engine: .v2)
 
     func testRestoresTrailingArticleAndExtractsEditionDetails() {
         let suggestion = parser.suggestions(

@@ -1,0 +1,23 @@
+[
+  {"id":"anchor.page-count.v1","category":"page-count","pattern":"(?i)(?<![\\d-])(\\d{1,4})\\s*p(?:\\.|ages?\\b|\\b)","precedence":1000,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"anchor.terminal-page-count.v1","category":"page-count","pattern":"(?<![\\d-])(\\d{2,4})\\s*$","precedence":800,"specificity":70,"confidence":"heuristic","negativeGuards":[],"version":"1"},
+  {"id":"anchor.non-paginated.v1","category":"pagination","pattern":"(?i)\\bnon[- ]pagin[eé]\\b","precedence":1000,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"anchor.undated.v1","category":"undated","pattern":"(?i)\\bs\\s*[/ :]\\s*d\\b","precedence":1000,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"anchor.paired-years.v1","category":"paired-years","pattern":"(?<!\\d)(1[4-9]\\d{2}|20\\d{2})\\s*\\((1[4-9]\\d{2}|20\\d{2})\\)","precedence":1000,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"anchor.publication-year.v1","category":"publication-year","pattern":"(?<!\\d)(1[4-9]\\d{2}|20\\d{2})(?!\\d)","precedence":900,"specificity":80,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"anchor.multi-publication-year.v1","category":"publication-year-range","pattern":"(?<!\\d)(1[4-9]\\d{2}|20\\d{2})\\s+et\\s+(1[4-9]\\d{2}|20\\d{2})(?!\\d)","precedence":950,"specificity":90,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.edition.v1","category":"edition","pattern":"(?i)\\b((?:\\d+(?:re|e|th|nd|rd)\\s+|onzi[eè]me\\s+|third\\s+)[eé]dition)\\b","precedence":850,"specificity":85,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.volume.v1","category":"volume","pattern":"(?i)\\b(tome\\s*\\d+|vol(?:ume)?[.,]?\\s*(?:[A-ZÀ-ÖØ-Þ]+|\\d+)(?:\\s+(?!(?:par|by|de|[eé]ditions?|[eé]d\\.|librairie|presses?)\\b)[^,]+)?|\\d+\\s+vols?|6\\.1)\\b","precedence":850,"specificity":85,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.publisher.v1","category":"publisher","pattern":"(?i)\\b(?:[eé]ditions?|[eé]d\\.|edizioni|librairie|presses?|press|books?|company|inc\\.|ltd\\.?|imprimerie|typ\\.)\\b","precedence":800,"specificity":75,"confidence":"heuristic","negativeGuards":[],"version":"1"},
+  {"id":"marker.provenance.received.v1","category":"provenance","pattern":"(?i)\\bre[cç]u\\s+de\\s+([^,\\d]+)","precedence":990,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"provenance.private-collection-owners.v1","category":"provenance-private-owners","pattern":"(?i)^.*\\b\\d{4}\\s*[/:]\\s*\\d{4}\\s*,\\s*([^,]+)\\s*,\\s*(?:par|by)\\s+","precedence":980,"specificity":95,"confidence":"heuristic","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.illustrated.v1","category":"physical-illustrated","pattern":"(?i)\\bill\\.?\\b","precedence":900,"specificity":90,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.maps.v1","category":"physical-maps","pattern":"(?i)\\b(?:qq\\s+)?cartes?|\\bmaps?\\b","precedence":900,"specificity":80,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.foldout-maps.v1","category":"physical-foldout-maps","pattern":"(?i)cartes?\\s+d[eé]pliantes?","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.battle-plans.v1","category":"physical-battle-plans","pattern":"(?i)plans?\\s+de\\s+bataille","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.genealogical-trees.v1","category":"physical-genealogical-trees","pattern":"(?i)arbres?\\s+g[eé]n[eé]alogiques?","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.black-white.v1","category":"physical-black-white","pattern":"(?i)noir\\s+et\\s+blanc","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.dust-jacket.v1","category":"physical-dust-jacket","pattern":"(?i)\\bjaquette\\b","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.slipcase.v1","category":"physical-slipcase","pattern":"(?i)\\bbo[iî]tier\\b","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"},
+  {"id":"marker.physical.double-pages.v1","category":"physical-double-pages","pattern":"(?i)pages?\\s+doubles?","precedence":950,"specificity":95,"confidence":"mechanical","negativeGuards":[],"version":"1"}
+]

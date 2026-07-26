@@ -1,0 +1,114 @@
+[
+  {
+    "id": "correction.spelling.classiques-canadiens.v1",
+    "match": "Classiquea canadien",
+    "replacement": "Classiques canadiens",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spelling.foreword.v1",
+    "match": "Forword",
+    "replacement": "Foreword",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "en",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spelling.illustrations.v1",
+    "match": "Illustrationss",
+    "replacement": "Illustrations",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "en",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spelling.atterri.v1",
+    "match": "ont aterri",
+    "replacement": "ont atterri",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.names.missing-conjunction.v1",
+    "match": "Michel Lessard Gillas Vilandré",
+    "replacement": "Michel Lessard et Gilles Vilandré",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.publisher.universite-laval.v1",
+    "match": "Les de lUniversité Laval",
+    "replacement": "Les Presses de l'Université Laval",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spelling.boitier.v1",
+    "match": "dans un boitier",
+    "replacement": "dans un boîtier",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.collaboration.v1",
+    "match": "col laboration",
+    "replacement": "collaboration",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.bibliotheque-nationale.v1",
+    "match": "BibliothèqueNationale",
+    "replacement": "Bibliothèque Nationale",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.libre-echange.v1",
+    "match": "libre-éc hange",
+    "replacement": "libre-échange",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.colon.v1",
+    "match": ":(?!\\s|\\d)",
+    "replacement": ": ",
+    "matchMode": "regular-expression",
+    "languageScope": null,
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.orthography.oeuvres.v1",
+    "match": "Oeuvres choisies",
+    "replacement": "Œuvres choisies",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.author-marker.v1",
+    "match": "pa r l'abbé",
+    "replacement": "par l'abbé",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.ocr.editions.v1",
+    "match": "E?ditions",
+    "replacement": "Éditions",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  }
+]

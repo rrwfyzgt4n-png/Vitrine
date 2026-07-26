@@ -1,0 +1,11 @@
+[
+  {"id":"inversion.article.fr-le.v1","category":"article","pattern":"(?i)^le$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"Le"},
+  {"id":"inversion.article.fr-la.v1","category":"article","pattern":"(?i)^la$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"La"},
+  {"id":"inversion.article.fr-les.v1","category":"article","pattern":"(?i)^les$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"Les"},
+  {"id":"inversion.article.fr-elided.v1","category":"article","pattern":"(?i)^l['’]?$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"L'"},
+  {"id":"inversion.article.en-the.v1","category":"article","pattern":"(?i)^the$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"The"},
+  {"id":"inversion.article.en-a.v1","category":"article","pattern":"(?i)^a$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"A"},
+  {"id":"inversion.article.en-an.v1","category":"article","pattern":"(?i)^an$","precedence":900,"specificity":100,"confidence":"mechanical","negativeGuards":[],"version":"1","canonicalValue":"An"},
+  {"id":"inversion.connective.of.v1","category":"trailing-connective","pattern":"(?i)\\bof$","precedence":700,"specificity":70,"confidence":"heuristic","negativeGuards":[],"version":"1","canonicalValue":"of"},
+  {"id":"inversion.connective.de.v1","category":"trailing-connective","pattern":"(?i)\\bde$","precedence":700,"specificity":70,"confidence":"heuristic","negativeGuards":[],"version":"1","canonicalValue":"de"}
+]

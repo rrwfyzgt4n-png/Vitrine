@@ -52,6 +52,12 @@ VITRINE_DERIVED_DATA_PATH=/path/to/derived-data \
   ./script/build_and_run.sh --verify
 ```
 
+The filename parser migration keeps the reviewed legacy engine as the default
+until the corpus differential gate is closed. In a Debug scheme, add
+`--filename-parser-v2` to the app launch arguments to exercise the v2.1 engine,
+or `--filename-parser-legacy` to force the rollback path. These flags select the
+engine before parsing; they do not alter source filenames or catalog metadata.
+
 The script validates these sandbox entitlements:
 
 - App Sandbox;

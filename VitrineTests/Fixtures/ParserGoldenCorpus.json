@@ -1,0 +1,48 @@
+[
+  {
+    "sourceTitle": "Japon, Le, Dictionnaire et civilisation, par Louis Frédéric, \"Bouquins\" Éditions Robert Laffont, 1996 1419p",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Album delle catacombe di S. Callisto, Via Appia Antica 52, R.R. P.P. Trappisti, Custodi, en français et en italien, s/d non-paginé ill",
+    "approvedValueDifferences": {
+      "descriptiveNotes": "Typed pagination and physical attributes replace the legacy duplicate opaque note."
+    }
+  },
+  {
+    "sourceTitle": "Éloquence indienne, Textes. choisis, présentés et annotés par André Vachon, Collection \"Classiquea canadien\", Éditions Fides Ottawa 1968 96p",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Paul Leduc 1876/1943, Patrick et Viviane Berko, par Stéphane Rey, Collection Berko 1990 167p. ill. avec jaquette",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Farnese, The House of, \"A Portrait of a Great Family of the Renaissance, par Giovanna R. Solari, translated by Simona Morini and Frederic Tuten, Doubleday & Company, Inc., Garden City, New York 1968 (1964) 310p. ill. avec jaquette",
+    "approvedValueDifferences": {
+      "publisher": "The v2 structural publisher span correctly retains the corporate suffix Inc.",
+      "languageCodes": "An English-language citation with an English translation credit is not a French translation.",
+      "originalLanguageCode": "No source-language marker is present, so v2 does not invent English as the original language."
+    }
+  },
+  {
+    "sourceTitle": "Daniel-Rops de l'Académie française, 6.1 L'Église des révolutions -en face de nouveaux destins, Les Grandes études historiques, Librairie Arthème Fayard 1962 (1960) 1045p",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "30) Capitol, We the People -The Story of the United States, The National Geographic Society, Washington D.C., 1963 144p. ill",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Portraits de Patriotes 1837-1838, -Oeuvres de Jean-Joseph Girouard, par Jonathan Lamire, VLB éditeur, 2019 (2012) 261p. ill",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Picture Gallery of Canadian History, The, Illustrations drawn & collected by C.W. Jefferys, assisted by T.W. McLean, Vol, 1 Discovery to 1763, The Ryerson Press, Toronto 1949 (1942) 268p. ill",
+    "approvedValueDifferences": {}
+  },
+  {
+    "sourceTitle": "Commentaires royaux sur le Pérou des Incas I, par Inca Garcilaso de la Vega, Traduction de l'espagnol et notes par René L.F. Durand, Introduction de Marcel Bataillon, François Maspero:La Découverte, Paris 1982 333p",
+    "approvedValueDifferences": {}
+  }
+]
