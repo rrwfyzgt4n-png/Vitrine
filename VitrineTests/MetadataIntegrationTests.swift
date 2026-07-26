@@ -51,6 +51,61 @@ final class MetadataIntegrationTests: XCTestCase {
         }
     }
 
+    @MainActor
+    func testReviewedFilenameSuggestionRegistersUndoOnlyAfterReviewSheetDismisses() async throws {
+        let catalogID = UUID()
+        let item = CatalogItem(source: SourceFileMetadata(relativePath: "Book.jpg"))
+        let snapshot = CatalogSnapshot(catalogID: catalogID, name: "Library", items: [item])
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(catalogID.uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let undoManager = UndoManager()
+        let coordinator = CatalogSaveCoordinator(editDebounce: .milliseconds(80))
+        try await coordinator.save(snapshot, to: url)
+        let store = CatalogStore(
+            saveCoordinator: coordinator,
+            catalogURL: url,
+            undoManagerProvider: { undoManager }
+        )
+        store.catalog = snapshot
+        store.selection = item.id
+        store.suggestDetailsFromFilename()
+
+        let didSave = await store.applyFilenameSuggestion(
+            filenameSuggestion(title: "Persisted Parsed Title"),
+            to: item.id
+        )
+
+        XCTAssertTrue(didSave)
+        XCTAssertFalse(
+            undoManager.canUndo,
+            "The review sheet must not own the catalog undo registration."
+        )
+
+        undoManager.undo()
+        try await Task.sleep(for: .milliseconds(150))
+
+        var reopened = try await CatalogMarkdownStore().read(from: url).snapshot
+        XCTAssertEqual(reopened.items.first?.bibliography.title, "Persisted Parsed Title")
+
+        store.finishFilenameSuggestionReviewPresentation()
+        XCTAssertFalse(
+            undoManager.canUndo,
+            "Sheet cleanup must finish before the catalog undo is registered."
+        )
+
+        undoManager.undo()
+        await Task.yield()
+        XCTAssertTrue(undoManager.canUndo)
+
+        try await Task.sleep(for: .milliseconds(150))
+        reopened = try await CatalogMarkdownStore().read(from: url).snapshot
+        XCTAssertEqual(reopened.items.first?.bibliography.title, "Persisted Parsed Title")
+
+        if let folder = try await coordinator.backups(catalogID: catalogID).first?.url.deletingLastPathComponent() {
+            try? FileManager.default.removeItem(at: folder)
+        }
+    }
+
     func testReviewedFilenameSuggestionAdapterMapsEveryParserField() {
         let original = CatalogItem(
             source: SourceFileMetadata(relativePath: "Book.jpg"),

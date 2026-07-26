@@ -88,7 +88,10 @@ struct ContentView: View {
                 }
             }
         }
-        .sheet(isPresented: $store.isFilenameReviewPresented) {
+        .sheet(
+            isPresented: $store.isFilenameReviewPresented,
+            onDismiss: store.finishFilenameSuggestionReviewPresentation
+        ) {
             if let item = store.selectedItem, let suggestion = store.filenameSuggestion {
                 FilenameSuggestionReviewView(
                     filenameTitle: item.source.sourceTitle,

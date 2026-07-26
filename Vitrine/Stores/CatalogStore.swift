@@ -99,6 +99,8 @@ final class CatalogStore {
     @ObservationIgnored private var lastForegroundRefreshAt: Date?
     @ObservationIgnored private var catalogOperationWaiters: [CheckedContinuation<Void, Never>] = []
     @ObservationIgnored private var pendingEditedCatalog: CatalogSnapshot?
+    @ObservationIgnored private var deferredFilenameSuggestionUndo: DeferredItemUndo?
+    @ObservationIgnored private var filenameSuggestionUndoManager: UndoManager?
     @ObservationIgnored private var pendingRecoveryCoverFolderURL: URL?
     @ObservationIgnored private var forceLookupRefreshOnPresentation = false
     @ObservationIgnored private var derivedIndex = CatalogDerivedIndex()
@@ -687,7 +689,8 @@ final class CatalogStore {
     func saveEditedItem(
         _ editedItem: CatalogItem,
         actionName: String = "Edit Book Details",
-        reason: CatalogSaveReason = .metadataEdit
+        reason: CatalogSaveReason = .metadataEdit,
+        deferUndoRegistration: Bool = false
     ) async -> Bool {
         await waitForCatalogOperationToFinish()
         guard var snapshot = pendingEditedCatalog ?? catalog,
@@ -711,7 +714,14 @@ final class CatalogStore {
             if pendingEditedCatalog == savedSnapshot {
                 pendingEditedCatalog = nil
             }
-            registerUndo(previous: previous, actionName: actionName)
+            if deferUndoRegistration {
+                deferredFilenameSuggestionUndo = DeferredItemUndo(
+                    previous: previous,
+                    actionName: actionName
+                )
+            } else {
+                registerUndo(previous: previous, actionName: actionName)
+            }
             saveState = .saved(.now)
             return true
         } catch {
@@ -896,6 +906,8 @@ final class CatalogStore {
 
     func suggestDetailsFromFilename() {
         guard let selectedItem else { return }
+        deferredFilenameSuggestionUndo = nil
+        filenameSuggestionUndoManager = undoManagerProvider()
         filenameSuggestion = filenameParser.suggestions(from: selectedItem.source.sourceTitle)
         isFilenameReviewPresented = true
     }
@@ -910,7 +922,8 @@ final class CatalogStore {
         let saved = await saveEditedItem(
             item,
             actionName: "Accept Filename Suggestions",
-            reason: .explicit
+            reason: .explicit,
+            deferUndoRegistration: true
         )
         if saved {
             bookDetailsExpansionRequest += 1
@@ -918,6 +931,24 @@ final class CatalogStore {
             VitrineLog.catalog.info("Saved accepted filename suggestions")
         }
         return saved
+    }
+
+    func finishFilenameSuggestionReviewPresentation() {
+        guard let deferredFilenameSuggestionUndo,
+              let filenameSuggestionUndoManager else {
+            self.filenameSuggestionUndoManager = nil
+            return
+        }
+        self.deferredFilenameSuggestionUndo = nil
+        self.filenameSuggestionUndoManager = nil
+
+        DispatchQueue.main.async { [weak self] in
+            self?.registerUndo(
+                previous: deferredFilenameSuggestionUndo.previous,
+                actionName: deferredFilenameSuggestionUndo.actionName,
+                using: filenameSuggestionUndoManager
+            )
+        }
     }
 
     func findBookDetailsOnline(forceRefresh: Bool = false) async {
@@ -1159,7 +1190,15 @@ final class CatalogStore {
 
     private func handleCatalogFileEvent(_ event: CatalogFileEvent) async {
         await waitForCatalogOperationToFinish()
+        await waitForPendingEditedSaveToFinish()
         await processCatalogFileEvent(event)
+    }
+
+    private func waitForPendingEditedSaveToFinish() async {
+        while pendingEditedCatalog != nil {
+            guard !Task.isCancelled else { return }
+            try? await Task.sleep(for: .milliseconds(25))
+        }
     }
 
     private func processCatalogFileEvent(_ event: CatalogFileEvent) async {
@@ -1230,9 +1269,9 @@ final class CatalogStore {
             }
             saveState = .readOnly
             statusMessage = L10n.text("The catalog file was removed. Restore it in Finder or open a backup.")
-        case .conflictResolved, .reacquired:
+        case .conflictResolved:
             await processCatalogFileEvent(.changed)
-        case .relinquished:
+        case .relinquished, .reacquired:
             break
         }
     }
@@ -1373,6 +1412,14 @@ final class CatalogStore {
 
     private func registerUndo(previous: CatalogItem, actionName: String) {
         guard let undoManager = undoManagerProvider() else { return }
+        registerUndo(previous: previous, actionName: actionName, using: undoManager)
+    }
+
+    private func registerUndo(
+        previous: CatalogItem,
+        actionName: String,
+        using undoManager: UndoManager
+    ) {
         undoManager.registerUndo(withTarget: self) { store in
             Task { await store.saveEditedItem(previous, actionName: actionName) }
         }
@@ -1577,4 +1624,9 @@ final class CatalogStore {
         }
     }
 
+}
+
+private struct DeferredItemUndo {
+    let previous: CatalogItem
+    let actionName: String
 }

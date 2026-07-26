@@ -47,19 +47,18 @@ final class CatalogFilePresenter: NSObject, NSFilePresenter, @unchecked Sendable
     func relinquishPresentedItem(
         toReader reader: @escaping @Sendable ((@Sendable () -> Void)?) -> Void
     ) {
-        continuation.yield(.relinquished)
-        reader { [continuation] in
-            continuation.yield(.reacquired)
-        }
+        // NSFileCoordinator invokes this for Vitrine's own reads too. Those
+        // accesses are not external catalog changes and must not feed back into
+        // the presenter's change stream.
+        reader({})
     }
 
     func relinquishPresentedItem(
         toWriter writer: @escaping @Sendable ((@Sendable () -> Void)?) -> Void
     ) {
-        continuation.yield(.relinquished)
-        writer { [continuation] in
-            continuation.yield(.reacquired)
-        }
+        // presentedItemDidChange remains the authoritative change notification.
+        // Emitting reacquisition here creates a read/reacquire feedback loop.
+        writer({})
     }
 
     deinit {

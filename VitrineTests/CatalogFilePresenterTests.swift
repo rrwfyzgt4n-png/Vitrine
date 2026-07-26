@@ -17,7 +17,7 @@ final class CatalogFilePresenterTests: XCTestCase {
         XCTAssertEqual(moved, .moved(url.appendingPathExtension("moved")))
     }
 
-    func testRelinquishmentCompletesImmediatelyAndReportsReacquisition() async {
+    func testRelinquishmentCompletesWithoutReportingVitrinesOwnAccessAsAChange() async {
         let url = FileManager.default.temporaryDirectory.appending(path: "Catalog-\(UUID().uuidString).md")
         let presenter = CatalogFilePresenter(url: url)
         defer { presenter.stop() }
@@ -30,10 +30,9 @@ final class CatalogFilePresenterTests: XCTestCase {
         })
 
         await fulfillment(of: [reacquirerSupplied], timeout: 0.5)
-        let relinquished = await iterator.next()
-        let reacquired = await iterator.next()
-        XCTAssertEqual(relinquished, .relinquished)
-        XCTAssertEqual(reacquired, .reacquired)
+        presenter.presentedItemDidChange()
+        let nextEvent = await iterator.next()
+        XCTAssertEqual(nextEvent, .changed)
     }
 
     func testDeletionAccommodationNeverBlocksTheCoordinator() async {
