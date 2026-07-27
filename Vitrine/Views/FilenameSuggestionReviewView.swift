@@ -43,9 +43,9 @@ struct FilenameSuggestionReviewView: View {
     @State private var notesText: String
     @State private var isApplying = false
     let filenameTitle: String
-    let onApply: (FilenameMetadataSuggestion) async -> Bool
+    let onApply: (FilenameMetadataSuggestion, Bool) async -> Bool
 
-    init(filenameTitle: String, suggestion: FilenameMetadataSuggestion, onApply: @escaping (FilenameMetadataSuggestion) async -> Bool) {
+    init(filenameTitle: String, suggestion: FilenameMetadataSuggestion, onApply: @escaping (FilenameMetadataSuggestion, Bool) async -> Bool) {
         self.filenameTitle = filenameTitle
         _suggestion = State(initialValue: suggestion)
         _titleText = State(initialValue: suggestion.title?.value ?? "")
@@ -134,44 +134,49 @@ struct FilenameSuggestionReviewView: View {
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                     .disabled(isApplying)
-                Button("Apply Selected") {
-                    suggestion.title = includeTitle ? updated(suggestion.title, value: titleText) : nil
-                    suggestion.subtitle = includeSubtitle ? updated(suggestion.subtitle, value: subtitleText) : nil
-                    suggestion.authors = includeAuthors ? updated(suggestion.authors, value: list(from: authorsText)) : nil
-                    suggestion.translators = includeTranslators ? updated(suggestion.translators, value: list(from: translatorsText)) : nil
-                    suggestion.contributors = includeContributors ? updated(suggestion.contributors, value: contributors(from: contributorsText)) : nil
-                    suggestion.publisher = includePublisher ? updated(suggestion.publisher, value: publisherText) : nil
-                    suggestion.collectionName = includeCollection ? updated(suggestion.collectionName, value: collectionText) : nil
-                    suggestion.collectionNumber = includeCollectionNumber ? updated(suggestion.collectionNumber, value: collectionNumberText) : nil
-                    suggestion.publicationPlace = includePublicationPlace ? updated(suggestion.publicationPlace, value: publicationPlaceText) : nil
-                    suggestion.publicationDate = includePublication ? updated(suggestion.publicationDate, value: publicationText) : nil
-                    suggestion.originalPublicationDate = includeOriginalPublication ? updated(suggestion.originalPublicationDate, value: originalPublicationText) : nil
-                    suggestion.editionDescription = includeEdition ? updated(suggestion.editionDescription, value: editionText) : nil
-                    suggestion.volumeDescription = includeVolume ? updated(suggestion.volumeDescription, value: volumeText) : nil
-                    suggestion.languageCodes = includeLanguages ? updated(suggestion.languageCodes, value: list(from: languagesText)) : nil
-                    suggestion.originalLanguageCode = includeOriginalLanguage ? updated(suggestion.originalLanguageCode, value: originalLanguageText) : nil
-                    suggestion.pageCount = includePages ? Int(pagesText).flatMap { updated(suggestion.pageCount, value: $0) } : nil
-                    suggestion.paginationStatus = includePagination ? paginationStatus(from: paginationText).flatMap { updated(suggestion.paginationStatus, value: $0) } : nil
-                    suggestion.physicalAttributes = includePhysicalAttributes ? updated(suggestion.physicalAttributes, value: physicalAttributes(from: physicalAttributesText)) : nil
-                    suggestion.descriptiveNotes = includeNotes ? updated(suggestion.descriptiveNotes, value: notesText) : nil
-                    let acceptedSuggestion = suggestion
-                    isApplying = true
-                    Task {
-                        if await onApply(acceptedSuggestion) {
-                            dismiss()
-                        } else {
-                            isApplying = false
-                        }
-                    }
-                }
+                Button("Apply Selected") { apply(continueToNext: false) }
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.glassProminent)
                 .disabled(isApplying)
+                Button("Apply & Review Next") { apply(continueToNext: true) }
+                    .buttonStyle(.glassProminent)
+                    .disabled(isApplying)
             }
             .buttonStyle(.glass)
         }
         .padding(24)
         .frame(width: 760, height: 720)
+    }
+
+    private func apply(continueToNext: Bool) {
+        suggestion.title = includeTitle ? updated(suggestion.title, value: titleText) : nil
+        suggestion.subtitle = includeSubtitle ? updated(suggestion.subtitle, value: subtitleText) : nil
+        suggestion.authors = includeAuthors ? updated(suggestion.authors, value: list(from: authorsText)) : nil
+        suggestion.translators = includeTranslators ? updated(suggestion.translators, value: list(from: translatorsText)) : nil
+        suggestion.contributors = includeContributors ? updated(suggestion.contributors, value: contributors(from: contributorsText)) : nil
+        suggestion.publisher = includePublisher ? updated(suggestion.publisher, value: publisherText) : nil
+        suggestion.collectionName = includeCollection ? updated(suggestion.collectionName, value: collectionText) : nil
+        suggestion.collectionNumber = includeCollectionNumber ? updated(suggestion.collectionNumber, value: collectionNumberText) : nil
+        suggestion.publicationPlace = includePublicationPlace ? updated(suggestion.publicationPlace, value: publicationPlaceText) : nil
+        suggestion.publicationDate = includePublication ? updated(suggestion.publicationDate, value: publicationText) : nil
+        suggestion.originalPublicationDate = includeOriginalPublication ? updated(suggestion.originalPublicationDate, value: originalPublicationText) : nil
+        suggestion.editionDescription = includeEdition ? updated(suggestion.editionDescription, value: editionText) : nil
+        suggestion.volumeDescription = includeVolume ? updated(suggestion.volumeDescription, value: volumeText) : nil
+        suggestion.languageCodes = includeLanguages ? updated(suggestion.languageCodes, value: list(from: languagesText)) : nil
+        suggestion.originalLanguageCode = includeOriginalLanguage ? updated(suggestion.originalLanguageCode, value: originalLanguageText) : nil
+        suggestion.pageCount = includePages ? Int(pagesText).flatMap { updated(suggestion.pageCount, value: $0) } : nil
+        suggestion.paginationStatus = includePagination ? paginationStatus(from: paginationText).flatMap { updated(suggestion.paginationStatus, value: $0) } : nil
+        suggestion.physicalAttributes = includePhysicalAttributes ? updated(suggestion.physicalAttributes, value: physicalAttributes(from: physicalAttributesText)) : nil
+        suggestion.descriptiveNotes = includeNotes ? updated(suggestion.descriptiveNotes, value: notesText) : nil
+        let acceptedSuggestion = suggestion
+        isApplying = true
+        Task {
+            if await onApply(acceptedSuggestion, continueToNext) {
+                dismiss()
+            } else {
+                isApplying = false
+            }
+        }
     }
 
     @ViewBuilder

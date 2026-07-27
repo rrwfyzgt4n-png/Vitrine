@@ -273,6 +273,22 @@
         }
       }
     },
+    "Apply & Review Next" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer et examiner le suivant"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer et examiner le suivant"
+          }
+        }
+      }
+    },
     "Apply Selected" : {
       "localizations" : {
         "fr" : {
@@ -3096,6 +3112,22 @@
         }
       }
     },
+    "Filename Not Reviewed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noms de fichiers non examinés"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noms de fichiers non examinés"
+          }
+        }
+      }
+    },
     "Needs Review" : {
       "localizations" : {
         "fr" : {
@@ -4942,6 +4974,22 @@
         }
       }
     },
+    "Review Next Filename" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Examiner le nom de fichier suivant"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Examiner le nom de fichier suivant"
+          }
+        }
+      }
+    },
     "Show Backup in Finder" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6314,6 +6362,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre catalogue a été modifié sur un autre Mac."
+          }
+        }
+      }
+    },
+    "All filenames have been reviewed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les noms de fichiers ont été examinés"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les noms de fichiers ont été examinés"
           }
         }
       }

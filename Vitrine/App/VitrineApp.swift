@@ -17,6 +17,7 @@ struct VitrineApp: App {
                 }
         }
         .defaultSize(width: 1280, height: 820)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .defaultLaunchBehavior(.presented)
         .restorationBehavior(.automatic)
         .commands {

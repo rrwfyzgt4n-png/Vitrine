@@ -19,7 +19,7 @@ final class CatalogStoreFilterTests: XCTestCase {
         ))
     }
 
-    func testClearingNeedsReviewFilterRestoresAvailableBooks() {
+    func testNeedsReviewShowsEveryBookWithoutReviewedFilenameMetadata() {
         let defaults = UserDefaults.standard
         let originalFilter = defaults.object(forKey: "catalogFilter")
         defer {
@@ -35,19 +35,58 @@ final class CatalogStoreFilterTests: XCTestCase {
         store.catalog = CatalogSnapshot(
             name: "Library",
             items: [
-                CatalogItem(source: SourceFileMetadata(relativePath: "Available.jpg")),
+                CatalogItem(source: SourceFileMetadata(relativePath: "Unparsed.jpg")),
                 CatalogItem(
-                    source: SourceFileMetadata(relativePath: "Ambiguous.jpg"),
-                    availability: .ambiguousMatch
+                    source: SourceFileMetadata(relativePath: "Manual.jpg"),
+                    bibliography: BibliographicMetadata(metadataSource: .manual)
+                ),
+                CatalogItem(
+                    source: SourceFileMetadata(relativePath: "OpenLibrary.jpg"),
+                    bibliography: BibliographicMetadata(metadataSource: .openLibrary)
+                ),
+                CatalogItem(
+                    source: SourceFileMetadata(relativePath: "Parsed.jpg"),
+                    bibliography: BibliographicMetadata(metadataSource: .filename)
+                ),
+                CatalogItem(
+                    source: SourceFileMetadata(relativePath: "ParsedThenEdited.jpg"),
+                    bibliography: BibliographicMetadata(metadataSource: .mixed)
                 ),
             ]
         )
 
         store.filter = .needsReview
-        XCTAssertEqual(store.visibleItems.map(\.source.filename), ["Ambiguous.jpg"])
+        XCTAssertEqual(
+            Set(store.visibleItems.map(\.source.filename)),
+            ["Unparsed.jpg", "Manual.jpg", "OpenLibrary.jpg"]
+        )
+        XCTAssertEqual(store.filenameReviewCount, 3)
 
         store.filter = .all
-        XCTAssertEqual(Set(store.visibleItems.map(\.source.filename)), ["Available.jpg", "Ambiguous.jpg"])
+        XCTAssertEqual(store.visibleItems.count, 5)
+    }
+
+    func testShowBooksNeedingReviewClearsSearchAndSelectsNextFilename() {
+        let parsed = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Parsed.jpg"),
+            bibliography: BibliographicMetadata(metadataSource: .filename)
+        )
+        let unparsed = CatalogItem(source: SourceFileMetadata(relativePath: "Unparsed.jpg"))
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Library", items: [parsed, unparsed])
+        store.selection = parsed.id
+        store.searchText = "nothing"
+
+        store.showBooksNeedingFilenameReview()
+
+        XCTAssertEqual(store.filter, .needsReview)
+        XCTAssertTrue(store.searchText.isEmpty)
+        XCTAssertNil(store.selection)
+
+        store.reviewNextFilename()
+
+        XCTAssertEqual(store.selection, unparsed.id)
+        XCTAssertTrue(store.isFilenameReviewPresented)
     }
 
     func testRemovalConfirmationTargetsTheRequestedBook() {

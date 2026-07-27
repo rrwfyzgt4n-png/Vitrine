@@ -64,6 +64,7 @@ final class CatalogStore {
     var isCatalogHealthReportPresented = false
     var filenameSuggestion: FilenameMetadataSuggestion?
     var isFilenameReviewPresented = false
+    private(set) var shouldContinueFilenameReviewAfterDismissal = false
     var isMetadataEditorPresented = false
     var isLookupPresented = false
     var lookupCandidates: [MetadataCandidate] = []
@@ -150,6 +151,10 @@ final class CatalogStore {
     var pendingRemovalItem: CatalogItem? {
         guard let pendingRemovalItemID else { return nil }
         return catalog?.items.first { $0.id == pendingRemovalItemID }
+    }
+
+    var filenameReviewCount: Int {
+        catalog?.items.lazy.filter(needsFilenameReview).count ?? 0
     }
 
     func start() async {
@@ -850,16 +855,40 @@ final class CatalogStore {
 
     func suggestDetailsFromFilename() {
         guard let selectedItem else { return }
+        shouldContinueFilenameReviewAfterDismissal = false
         deferredFilenameSuggestionUndo = nil
         filenameSuggestionUndoManager = undoManagerProvider()
         filenameSuggestion = filenameParser.suggestions(from: selectedItem.source.sourceTitle)
         isFilenameReviewPresented = true
     }
 
+    func showBooksNeedingFilenameReview() {
+        searchText = ""
+        filter = .needsReview
+        if let selection,
+           catalog?.items.first(where: { $0.id == selection }).map(needsFilenameReview) != true {
+            self.selection = nil
+        }
+    }
+
+    func reviewNextFilename() {
+        if filter != .needsReview {
+            showBooksNeedingFilenameReview()
+        }
+        guard catalog?.isReadOnly == false,
+              let item = visibleItems.first else {
+            statusMessage = L10n.text("All filenames have been reviewed")
+            return
+        }
+        selection = item.id
+        suggestDetailsFromFilename()
+    }
+
     @discardableResult
     func applyFilenameSuggestion(
         _ suggestion: FilenameMetadataSuggestion,
-        to itemID: CatalogItem.ID
+        to itemID: CatalogItem.ID,
+        continueToNext: Bool = false
     ) async -> Bool {
         guard let existing = catalog?.items.first(where: { $0.id == itemID }) else { return false }
         let item = filenameSuggestionAdapter.applying(suggestion, to: existing)
@@ -870,6 +899,7 @@ final class CatalogStore {
             deferUndoRegistration: true
         )
         if saved {
+            shouldContinueFilenameReviewAfterDismissal = continueToNext
             bookDetailsExpansionRequest += 1
             statusMessage = L10n.text("Book details saved")
             VitrineLog.catalog.info("Saved accepted filename suggestions")
@@ -878,9 +908,12 @@ final class CatalogStore {
     }
 
     func finishFilenameSuggestionReviewPresentation() {
+        let continueToNext = shouldContinueFilenameReviewAfterDismissal
+        shouldContinueFilenameReviewAfterDismissal = false
         guard let deferredFilenameSuggestionUndo,
               let filenameSuggestionUndoManager else {
             self.filenameSuggestionUndoManager = nil
+            continueFilenameReviewIfNeeded(continueToNext)
             return
         }
         self.deferredFilenameSuggestionUndo = nil
@@ -892,6 +925,16 @@ final class CatalogStore {
                 actionName: deferredFilenameSuggestionUndo.actionName,
                 using: filenameSuggestionUndoManager
             )
+        }
+        continueFilenameReviewIfNeeded(continueToNext)
+    }
+
+    private func continueFilenameReviewIfNeeded(_ shouldContinue: Bool) {
+        guard shouldContinue else { return }
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            self?.reviewNextFilename()
         }
     }
 
@@ -1588,11 +1631,20 @@ final class CatalogStore {
         case .all: true
         case .coversAvailable: item.availability == .available
         case .coverNotFound: item.availability != .available
-        case .needsReview: item.availability == .ambiguousMatch
+        case .needsReview: needsFilenameReview(item)
         case .missingISBN: item.bibliography.isbn10 == nil && item.bibliography.isbn13 == nil
         case .hasISBN: item.bibliography.isbn10 != nil || item.bibliography.isbn13 != nil
         case .detailsAdded: item.bibliography.title != nil
         case .noDetails: item.bibliography.title == nil
+        }
+    }
+
+    private func needsFilenameReview(_ item: CatalogItem) -> Bool {
+        switch item.bibliography.metadataSource {
+        case .filename, .mixed:
+            false
+        case .manual, .openLibrary, nil:
+            true
         }
     }
 

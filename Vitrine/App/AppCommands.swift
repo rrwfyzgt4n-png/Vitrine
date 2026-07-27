@@ -38,8 +38,14 @@ struct AppCommands: Commands {
                 .disabled(store.catalog == nil)
             Button(CatalogFilter.all.label) { store.filter = .all }
                 .disabled(store.catalog == nil || store.filter == .all)
-            Button("Show Books Needing Review") { store.filter = .needsReview }
+            Button("Show Books Needing Review") { store.showBooksNeedingFilenameReview() }
                 .disabled(store.catalog == nil)
+            Button("Review Next Filename") { store.reviewNextFilename() }
+                .disabled(
+                    store.catalog == nil ||
+                    store.catalog?.isReadOnly == true ||
+                    store.filenameReviewCount == 0
+                )
             Divider()
             Menu("Maintenance") {
                 Button("Check Catalog Health…") { Task { await store.checkCatalogHealth() } }

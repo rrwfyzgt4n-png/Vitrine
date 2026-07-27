@@ -97,7 +97,13 @@ struct ContentView: View {
                 FilenameSuggestionReviewView(
                     filenameTitle: item.source.sourceTitle,
                     suggestion: suggestion,
-                    onApply: { await store.applyFilenameSuggestion($0, to: item.id) }
+                    onApply: {
+                        await store.applyFilenameSuggestion(
+                            $0,
+                            to: item.id,
+                            continueToNext: $1
+                        )
+                    }
                 )
             }
         }
@@ -167,16 +173,25 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            HStack(spacing: 7) {
+            HStack(spacing: 9) {
                 Image(nsImage: NSApplication.shared.applicationIconImage)
                     .resizable()
                     .interpolation(.high)
-                    .frame(width: 22, height: 22)
-                    .clipShape(.rect(cornerRadius: 5))
+                    .frame(width: 25, height: 25)
+                    .clipShape(.rect(cornerRadius: 6))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(.white.opacity(0.24), lineWidth: 0.5)
+                    }
+                    .shadow(color: .black.opacity(0.16), radius: 2, y: 1)
                     .accessibilityHidden(true)
                 Text("Vitrine")
-                    .font(.headline)
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
+                    .tracking(0.25)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .glassEffect(.regular, in: .rect(cornerRadius: 12))
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Vitrine")
         }
@@ -184,15 +199,26 @@ struct ContentView: View {
 
         if let catalog = store.catalog {
             ToolbarItem(placement: .navigation) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(catalog.name)
-                        .font(.headline)
-                        .lineLimit(1)
-                    Text(L10n.bookCount(store.visibleItems.count))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Image(systemName: "books.vertical")
+                        .font(.system(size: 15, weight: .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.tint)
+                        .frame(width: 30, height: 30)
+                        .background(.tint.opacity(0.12), in: .rect(cornerRadius: 8))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(catalog.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text(L10n.bookCount(store.visibleItems.count))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .padding(.trailing, 4)
                 .fixedSize(horizontal: true, vertical: false)
+                .accessibilityElement(children: .combine)
             }
             .sharedBackgroundVisibility(.hidden)
 
@@ -248,6 +274,15 @@ struct ContentView: View {
                 .buttonRepeatBehavior(.enabled)
                 .accessibilityLabel("Cover size")
                 .accessibilityValue(Int(coverWidth).formatted())
+
+                if store.filter == .needsReview {
+                    Button("Review Next Filename", systemImage: "text.magnifyingglass") {
+                        store.reviewNextFilename()
+                    }
+                    .help("Review Next Filename")
+                    .buttonStyle(.glassProminent)
+                    .disabled(store.visibleItems.isEmpty || store.catalog?.isReadOnly == true)
+                }
             }
 
             ToolbarSpacer(.fixed, placement: .primaryAction)
