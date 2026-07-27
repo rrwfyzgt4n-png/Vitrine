@@ -224,14 +224,49 @@ struct ContentView: View {
 
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
-                    Section("Sort") {
+                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
                         Picker("Sort", selection: $store.sortOption) {
-                            ForEach(CatalogSortOption.allCases) { Text($0.label).tag($0) }
+                            Section("Title") {
+                                sortChoice(.titleAscending)
+                                sortChoice(.titleDescending)
+                            }
+                            Section("Book Details") {
+                                sortChoice(.author)
+                                sortChoice(.publisher)
+                                sortChoice(.collection)
+                            }
+                            Section("File Information") {
+                                sortChoice(.filename)
+                                sortChoice(.dateAdded)
+                                sortChoice(.coverFileModified)
+                                sortChoice(.recentlyUpdated)
+                            }
                         }
                     }
-                    Section("Filter") {
+
+                    Menu("Filter", systemImage: "line.3.horizontal.decrease") {
                         Picker("Filter", selection: $store.filter) {
-                            ForEach(CatalogFilter.allCases) { Text($0.label).tag($0) }
+                            filterChoice(.all)
+                            Section("Cover") {
+                                filterChoice(.coversAvailable)
+                                filterChoice(.coverNotFound)
+                            }
+                            Section("Book Details") {
+                                filterChoice(.needsReview)
+                                filterChoice(.detailsAdded)
+                                filterChoice(.noDetails)
+                            }
+                            Section("ISBN") {
+                                filterChoice(.hasISBN)
+                                filterChoice(.missingISBN)
+                            }
+                        }
+                    }
+
+                    if store.filter != .all {
+                        Divider()
+                        Button(CatalogFilter.all.label, systemImage: "xmark.circle") {
+                            store.filter = .all
                         }
                     }
                 } label: {
@@ -301,6 +336,16 @@ struct ContentView: View {
                     .accessibilityIdentifier("toolbar.inspector")
             }
         }
+    }
+
+    private func sortChoice(_ option: CatalogSortOption) -> some View {
+        Label(option.label, systemImage: option.systemImage)
+            .tag(option)
+    }
+
+    private func filterChoice(_ filter: CatalogFilter) -> some View {
+        Label(filter.label, systemImage: filter.systemImage)
+            .tag(filter)
     }
 
     private var coverSizeProgress: Double {

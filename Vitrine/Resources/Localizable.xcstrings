@@ -129,22 +129,6 @@
         }
       }
     },
-    "Add Field" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter un champ"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter un champ"
-          }
-        }
-      }
-    },
     "Add cover images to your selected folder, then refresh covers." : {
       "localizations" : {
         "fr" : {
@@ -157,6 +141,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajoutez des images de couverture au dossier sélectionné, puis actualisez les couvertures."
+          }
+        }
+      }
+    },
+    "Add Field" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un champ"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un champ"
           }
         }
       }
@@ -241,6 +241,22 @@
         }
       }
     },
+    "All filenames have been reviewed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les noms de fichiers ont été examinés"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les noms de fichiers ont été examinés"
+          }
+        }
+      }
+    },
     "Annotator" : {
       "localizations" : {
         "fr" : {
@@ -257,22 +273,6 @@
         }
       }
     },
-    "Apply Resolutions" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appliquer les résolutions"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appliquer les résolutions"
-          }
-        }
-      }
-    },
     "Apply & Review Next" : {
       "localizations" : {
         "fr" : {
@@ -285,6 +285,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Appliquer et examiner le suivant"
+          }
+        }
+      }
+    },
+    "Apply Resolutions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer les résolutions"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer les résolutions"
           }
         }
       }
@@ -2198,6 +2214,22 @@
         }
       }
     },
+    "Filename Not Reviewed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noms de fichiers non examinés"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noms de fichiers non examinés"
+          }
+        }
+      }
+    },
     "Filename suggestion" : {
       "localizations" : {
         "fr" : {
@@ -3112,23 +3144,8 @@
         }
       }
     },
-    "Filename Not Reviewed" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noms de fichiers non examinés"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noms de fichiers non examinés"
-          }
-        }
-      }
-    },
     "Needs Review" : {
+      "extractionState" : "stale",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -4669,6 +4686,22 @@
         }
       }
     },
+    "Review Next Filename" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Examiner le nom de fichier suivant"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Examiner le nom de fichier suivant"
+          }
+        }
+      }
+    },
     "Review These Details…" : {
       "localizations" : {
         "fr" : {
@@ -4781,38 +4814,6 @@
         }
       }
     },
-    "Search %@" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechercher avec %@"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechercher avec %@"
-          }
-        }
-      }
-    },
-    "Search Open Library" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechercher dans Open Library"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechercher dans Open Library"
-          }
-        }
-      }
-    },
     "Scanning covers %lld of %lld…" : {
       "localizations" : {
         "fr" : {
@@ -4841,6 +4842,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Analyse des couvertures…"
+          }
+        }
+      }
+    },
+    "Search %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher avec %@"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher avec %@"
+          }
+        }
+      }
+    },
+    "Search Open Library" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher dans Open Library"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher dans Open Library"
           }
         }
       }
@@ -4970,22 +5003,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Plusieurs fichiers ont la même identité portable que %@. Vitrine ne choisira pas au hasard."
-          }
-        }
-      }
-    },
-    "Review Next Filename" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Examiner le nom de fichier suivant"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Examiner le nom de fichier suivant"
           }
         }
       }
@@ -6362,22 +6379,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre catalogue a été modifié sur un autre Mac."
-          }
-        }
-      }
-    },
-    "All filenames have been reviewed" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tous les noms de fichiers ont été examinés"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tous les noms de fichiers ont été examinés"
           }
         }
       }

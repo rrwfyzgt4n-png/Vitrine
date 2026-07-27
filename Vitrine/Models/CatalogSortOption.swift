@@ -26,4 +26,18 @@ enum CatalogSortOption: String, CaseIterable, Identifiable, Sendable {
         case .recentlyUpdated: L10n.text("Recently Updated")
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .titleAscending: "textformat.abc"
+        case .titleDescending: "textformat.abc"
+        case .author: "person"
+        case .filename: "doc"
+        case .publisher: "building.columns"
+        case .collection: "books.vertical"
+        case .dateAdded: "calendar.badge.plus"
+        case .coverFileModified: "photo.badge.clock"
+        case .recentlyUpdated: "clock.arrow.trianglehead.counterclockwise.rotate.90"
+        }
+    }
 }

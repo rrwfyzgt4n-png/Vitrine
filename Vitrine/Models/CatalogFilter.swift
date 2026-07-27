@@ -24,4 +24,17 @@ enum CatalogFilter: String, CaseIterable, Identifiable, Sendable {
         case .noDetails: L10n.text("No Book Details")
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .all: "books.vertical"
+        case .coversAvailable: "photo"
+        case .coverNotFound: "photo.badge.exclamationmark"
+        case .needsReview: "text.magnifyingglass"
+        case .missingISBN: "barcode.viewfinder"
+        case .hasISBN: "barcode"
+        case .detailsAdded: "checkmark.circle"
+        case .noDetails: "circle.dashed"
+        }
+    }
 }
