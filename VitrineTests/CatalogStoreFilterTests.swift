@@ -149,4 +149,73 @@ final class CatalogStoreFilterTests: XCTestCase {
         store.searchText = "new search token"
         XCTAssertEqual(store.visibleItems.map(\.id), [first.id])
     }
+
+    func testBibliographicFiltersSeparatePresentAndMissingValues() {
+        let complete = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Complete.jpg"),
+            bibliography: BibliographicMetadata(
+                publicationDate: "2000",
+                languageCode: "fr",
+                pageCount: 160,
+                physicalAttributes: [.illustrated]
+            )
+        )
+        let missing = CatalogItem(source: SourceFileMetadata(relativePath: "Missing.jpg"))
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Library", items: [complete, missing])
+
+        let expected: [(CatalogFilter, CatalogItem.ID)] = [
+            (.hasPublicationYear, complete.id),
+            (.missingPublicationYear, missing.id),
+            (.hasLanguage, complete.id),
+            (.missingLanguage, missing.id),
+            (.hasPageCount, complete.id),
+            (.missingPageCount, missing.id),
+            (.hasPhysicalAttributes, complete.id),
+            (.missingPhysicalAttributes, missing.id),
+        ]
+
+        for (filter, expectedID) in expected {
+            store.filter = filter
+            XCTAssertEqual(store.visibleItems.map(\.id), [expectedID], "Unexpected result for \(filter)")
+        }
+    }
+
+    func testBibliographicSortsPlaceMissingValuesLast() {
+        let older = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Older.jpg"),
+            bibliography: BibliographicMetadata(
+                publicationDate: "Édition 1950",
+                languageCode: "fr",
+                pageCount: 400,
+                physicalAttributes: [.maps]
+            )
+        )
+        let newer = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Newer.jpg"),
+            bibliography: BibliographicMetadata(
+                publicationDate: "2000",
+                languageCode: "en",
+                pageCount: 100,
+                physicalAttributes: [.illustrated]
+            )
+        )
+        let missing = CatalogItem(source: SourceFileMetadata(relativePath: "Missing.jpg"))
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Library", items: [missing, newer, older])
+        store.filter = .all
+
+        store.sortOption = .publicationYear
+        XCTAssertEqual(store.visibleItems.map(\.id), [older.id, newer.id, missing.id])
+
+        store.sortOption = .language
+        XCTAssertEqual(store.visibleItems.map(\.id), [newer.id, older.id, missing.id])
+
+        store.sortOption = .pageCount
+        XCTAssertEqual(store.visibleItems.map(\.id), [newer.id, older.id, missing.id])
+
+        store.sortOption = .physicalAttributes
+        XCTAssertEqual(store.visibleItems.last?.id, missing.id)
+        XCTAssertEqual(Set(store.visibleItems.dropLast().map(\.id)), [newer.id, older.id])
+    }
 }

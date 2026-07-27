@@ -9,6 +9,10 @@ struct CatalogDerivedIndex {
         var author: String?
         var publisher: String?
         var collection: String?
+        var publicationYear: Int?
+        var language: String?
+        var pageCount: Int?
+        var physicalAttributes: String?
     }
 
     private var entries: [CatalogItem.ID: Entry] = [:]
@@ -38,7 +42,11 @@ struct CatalogDerivedIndex {
                 title: nil,
                 author: nil,
                 publisher: nil,
-                collection: nil
+                collection: nil,
+                publicationYear: nil,
+                language: nil,
+                pageCount: nil,
+                physicalAttributes: nil
             )
             if includingSearchText, entry.searchableText == nil {
                 entry.searchableText = Self.searchableText(for: item)
@@ -55,6 +63,24 @@ struct CatalogDerivedIndex {
             case .collection:
                 entry.collection = entry.collection ??
                     SearchNormalizer.normalize(item.bibliography.collectionName ?? item.displayTitle)
+            case .publicationYear:
+                entry.publicationYear = entry.publicationYear ??
+                    Self.publicationYear(for: item.bibliography) ?? Int.max
+            case .language:
+                entry.language = entry.language ??
+                    SearchNormalizer.normalize(
+                        item.bibliography.languageCode ??
+                            item.bibliography.originalLanguageCode ??
+                            "\u{10FFFF}"
+                    )
+            case .pageCount:
+                entry.pageCount = entry.pageCount ?? item.bibliography.pageCount ?? Int.max
+            case .physicalAttributes:
+                let attributes = item.bibliography.physicalAttributes.map(\.label)
+                entry.physicalAttributes = entry.physicalAttributes ??
+                    SearchNormalizer.normalize(
+                        attributes.isEmpty ? "\u{10FFFF}" : attributes.joined(separator: " ")
+                    )
             case .filename, .dateAdded, .coverFileModified, .recentlyUpdated:
                 break
             }
@@ -76,8 +102,25 @@ struct CatalogDerivedIndex {
         case .author: entry.author == nil
         case .publisher: entry.publisher == nil
         case .collection: entry.collection == nil
+        case .publicationYear: entry.publicationYear == nil
+        case .language: entry.language == nil
+        case .pageCount: entry.pageCount == nil
+        case .physicalAttributes: entry.physicalAttributes == nil
         case .filename, .dateAdded, .coverFileModified, .recentlyUpdated: false
         }
+    }
+
+    private static func publicationYear(for bibliography: BibliographicMetadata) -> Int? {
+        let candidates = [bibliography.publicationDate, bibliography.originalPublicationDate]
+        for candidate in candidates.compactMap({ $0 }) {
+            if let year = candidate
+                .split(whereSeparator: { !$0.isNumber })
+                .compactMap({ Int($0) })
+                .first(where: { (1000...9999).contains($0) }) {
+                return year
+            }
+        }
+        return nil
     }
 
     private static func searchableText(for item: CatalogItem) -> String {

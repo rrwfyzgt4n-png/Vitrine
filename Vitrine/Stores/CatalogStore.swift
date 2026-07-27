@@ -1636,6 +1636,22 @@ final class CatalogStore {
         case .hasISBN: item.bibliography.isbn10 != nil || item.bibliography.isbn13 != nil
         case .detailsAdded: item.bibliography.title != nil
         case .noDetails: item.bibliography.title == nil
+        case .hasPublicationYear:
+            item.bibliography.publicationDate != nil || item.bibliography.originalPublicationDate != nil
+        case .missingPublicationYear:
+            item.bibliography.publicationDate == nil && item.bibliography.originalPublicationDate == nil
+        case .hasLanguage:
+            item.bibliography.languageCode != nil ||
+                item.bibliography.originalLanguageCode != nil ||
+                !item.bibliography.additionalLanguageCodes.isEmpty
+        case .missingLanguage:
+            item.bibliography.languageCode == nil &&
+                item.bibliography.originalLanguageCode == nil &&
+                item.bibliography.additionalLanguageCodes.isEmpty
+        case .hasPageCount: item.bibliography.pageCount != nil
+        case .missingPageCount: item.bibliography.pageCount == nil
+        case .hasPhysicalAttributes: !item.bibliography.physicalAttributes.isEmpty
+        case .missingPhysicalAttributes: item.bibliography.physicalAttributes.isEmpty
         }
     }
 
@@ -1669,6 +1685,19 @@ final class CatalogStore {
         case .collection:
             guard let leftCollection = left.collection, let rightCollection = right.collection else { return false }
             return leftCollection < rightCollection
+        case .publicationYear:
+            guard let leftYear = left.publicationYear, let rightYear = right.publicationYear else { return false }
+            return leftYear < rightYear
+        case .language:
+            guard let leftLanguage = left.language, let rightLanguage = right.language else { return false }
+            return leftLanguage < rightLanguage
+        case .pageCount:
+            guard let leftPageCount = left.pageCount, let rightPageCount = right.pageCount else { return false }
+            return leftPageCount < rightPageCount
+        case .physicalAttributes:
+            guard let leftAttributes = left.physicalAttributes,
+                  let rightAttributes = right.physicalAttributes else { return false }
+            return leftAttributes < rightAttributes
         case .dateAdded:
             return lhs.dateAdded < rhs.dateAdded
         case .coverFileModified:

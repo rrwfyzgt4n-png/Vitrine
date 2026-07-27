@@ -160,6 +160,7 @@ struct ContentView: View {
             }
         }
         .toolbar { toolbarContent }
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .task { await store.start() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await store.applicationBecameActive() }
@@ -224,59 +225,76 @@ struct ContentView: View {
 
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
-                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
-                        Picker("Sort", selection: $store.sortOption) {
-                            Section("Title") {
-                                sortChoice(.titleAscending)
-                                sortChoice(.titleDescending)
-                            }
-                            Section("Book Details") {
-                                sortChoice(.author)
-                                sortChoice(.publisher)
-                                sortChoice(.collection)
-                            }
-                            Section("File Information") {
-                                sortChoice(.filename)
-                                sortChoice(.dateAdded)
-                                sortChoice(.coverFileModified)
-                                sortChoice(.recentlyUpdated)
-                            }
+                    Picker("Sort", selection: $store.sortOption) {
+                        Section("Title") {
+                            sortChoice(.titleAscending)
+                            sortChoice(.titleDescending)
                         }
-                    }
-
-                    Menu("Filter", systemImage: "line.3.horizontal.decrease") {
-                        Picker("Filter", selection: $store.filter) {
-                            filterChoice(.all)
-                            Section("Cover") {
-                                filterChoice(.coversAvailable)
-                                filterChoice(.coverNotFound)
-                            }
-                            Section("Book Details") {
-                                filterChoice(.needsReview)
-                                filterChoice(.detailsAdded)
-                                filterChoice(.noDetails)
-                            }
-                            Section("ISBN") {
-                                filterChoice(.hasISBN)
-                                filterChoice(.missingISBN)
-                            }
+                        Section("Book Details") {
+                            sortChoice(.author)
+                            sortChoice(.publisher)
+                            sortChoice(.collection)
                         }
-                    }
-
-                    if store.filter != .all {
-                        Divider()
-                        Button(CatalogFilter.all.label, systemImage: "xmark.circle") {
-                            store.filter = .all
+                        Section("Publication") {
+                            sortChoice(.publicationYear)
+                            sortChoice(.language)
+                            sortChoice(.pageCount)
+                            sortChoice(.physicalAttributes)
+                        }
+                        Section("File Information") {
+                            sortChoice(.filename)
+                            sortChoice(.dateAdded)
+                            sortChoice(.coverFileModified)
+                            sortChoice(.recentlyUpdated)
                         }
                     }
                 } label: {
-                    Label(store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label,
-                          systemImage: store.filter == .all
-                              ? "line.3.horizontal.decrease"
-                              : "line.3.horizontal.decrease.circle.fill")
+                    Label(
+                        L10n.text("Sort"),
+                        systemImage: "arrow.up.arrow.down"
+                    )
                 }
                 .labelStyle(.iconOnly)
-                .help(store.filter == .all ? L10n.text("Sort and Filter") : store.filter.label)
+                .help(L10n.text("Sort"))
+                .buttonStyle(.glass)
+
+                Menu {
+                    Picker("Filter", selection: $store.filter) {
+                        filterChoice(.all)
+                        Section("Cover") {
+                            filterChoice(.coversAvailable)
+                            filterChoice(.coverNotFound)
+                        }
+                        Section("Book Details") {
+                            filterChoice(.needsReview)
+                            filterChoice(.detailsAdded)
+                            filterChoice(.noDetails)
+                        }
+                        Section("Publication") {
+                            filterChoice(.hasPublicationYear)
+                            filterChoice(.missingPublicationYear)
+                            filterChoice(.hasLanguage)
+                            filterChoice(.missingLanguage)
+                            filterChoice(.hasPageCount)
+                            filterChoice(.missingPageCount)
+                            filterChoice(.hasPhysicalAttributes)
+                            filterChoice(.missingPhysicalAttributes)
+                        }
+                        Section("ISBN") {
+                            filterChoice(.hasISBN)
+                            filterChoice(.missingISBN)
+                        }
+                    }
+                } label: {
+                    Label(
+                        store.filter == .all ? L10n.text("Filter") : store.filter.label,
+                        systemImage: store.filter == .all
+                            ? "line.3.horizontal.decrease"
+                            : "line.3.horizontal.decrease.circle.fill"
+                    )
+                }
+                .labelStyle(.iconOnly)
+                .help(store.filter == .all ? L10n.text("Filter") : store.filter.label)
                 .buttonStyle(.glass)
 
                 ControlGroup {

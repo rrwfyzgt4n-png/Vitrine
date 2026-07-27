@@ -2422,6 +2422,70 @@
         }
       }
     },
+    "Has Language" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue indiquée"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue indiquée"
+          }
+        }
+      }
+    },
+    "Has Page Count" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de pages indiqué"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de pages indiqué"
+          }
+        }
+      }
+    },
+    "Has Physical Attributes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques physiques indiquées"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques physiques indiquées"
+          }
+        }
+      }
+    },
+    "Has Publication Year" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication indiquée"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication indiquée"
+          }
+        }
+      }
+    },
     "Hide Inspector" : {
       "localizations" : {
         "fr" : {
@@ -3060,6 +3124,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ISBN manquant"
+          }
+        }
+      }
+    },
+    "Missing Language" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue manquante"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langue manquante"
+          }
+        }
+      }
+    },
+    "Missing Page Count" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de pages manquant"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de pages manquant"
+          }
+        }
+      }
+    },
+    "Missing Physical Attributes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques physiques manquantes"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caractéristiques physiques manquantes"
+          }
+        }
+      }
+    },
+    "Missing Publication Year" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication manquante"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication manquante"
           }
         }
       }
@@ -4011,6 +4139,22 @@
         }
       }
     },
+    "Publication" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publication"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publication"
+          }
+        }
+      }
+    },
     "Publication date" : {
       "localizations" : {
         "fr" : {
@@ -4055,6 +4199,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lieu de publication"
+          }
+        }
+      }
+    },
+    "Publication Year" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Année de publication"
           }
         }
       }

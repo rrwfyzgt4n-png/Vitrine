@@ -82,6 +82,7 @@ struct LibraryGridView: View {
                 }
                 .padding(28)
             }
+            .scrollEdgeEffectStyle(.soft, for: .top)
             .focusable()
             .focused($gridHasKeyboardFocus)
             .focusEffectDisabled()
