@@ -135,6 +135,9 @@ interruption is acceptable:
 Each run writes logs and a summary to
 `.build/ReleaseCandidate/<UTC timestamp>/`. The maintained acceptance record is
 [V1-RELEASE-CHECKLIST.md](V1-RELEASE-CHECKLIST.md).
+The supplied V1.1 structured-vector-to-test mapping is maintained in
+[docs/v1.1/TEST-VECTORS.md](docs/v1.1/TEST-VECTORS.md); optional tests that
+depend on a developer's mounted corpus are not portable release evidence.
 
 ## Localization process
 

@@ -429,14 +429,26 @@ final class SaveCoordinatorTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: created), malformedData)
     }
 
-    func testRestoreRefreshesBaselineForTheNextSave() async throws {
+    func testRestoreAfterRenameRefreshesBaselineForTheNextEdit() async throws {
         let id = UUID()
+        let itemID = UUID()
         let url = FileManager.default.temporaryDirectory.appending(path: "\(id.uuidString).md")
         defer { try? FileManager.default.removeItem(at: url) }
         let coordinator = CatalogSaveCoordinator(editDebounce: .zero)
-        let original = CatalogSnapshot(catalogID: id, name: "Original")
+        let original = CatalogSnapshot(
+            catalogID: id,
+            name: "Original",
+            items: [CatalogItem(
+                id: itemID,
+                source: SourceFileMetadata(
+                    relativePath: "Old Location.jpg",
+                    portableFingerprint: "stable-fingerprint"
+                )
+            )]
+        )
         var changed = original
         changed.name = "Changed"
+        changed.items[0].source.relativePath = "Moved/New Location.jpg"
         try await coordinator.save(original, to: url)
         try await coordinator.save(changed, to: url)
         let backups = try await coordinator.backups(catalogID: id)
@@ -446,10 +458,14 @@ final class SaveCoordinatorTests: XCTestCase {
         let restored = try await coordinator.restore(backup, to: url, catalogID: id)
         var editedAfterRestore = restored
         editedAfterRestore.name = "Edited After Restore"
+        editedAfterRestore.items[0].bibliography.title = "Edited After Restore"
         try await coordinator.save(editedAfterRestore, to: url)
 
         let parsed = try await CatalogMarkdownStore().read(from: url)
         XCTAssertEqual(parsed.snapshot.name, "Edited After Restore")
+        XCTAssertEqual(parsed.snapshot.items.first?.id, itemID)
+        XCTAssertEqual(parsed.snapshot.items.first?.source.relativePath, "Old Location.jpg")
+        XCTAssertEqual(parsed.snapshot.items.first?.bibliography.title, "Edited After Restore")
     }
 
     private func waitUntilSaveIsPending(_ coordinator: CatalogSaveCoordinator) async throws {

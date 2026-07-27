@@ -37,7 +37,7 @@ mandatory safety gate is open or lacks focused regression coverage.
 | 4 — Conflict, schema, localization | V11-007, V11-008, V11-018, V11-020, V11-024 | Verified 2026-07-22 | Every metadata surface round-trips and is localized |
 | 5 — Measured scale | V11-009, V11-014, V11-023, V11-025 | Verified 2026-07-25 | Exact behavior with measured improvement at 5,000 records |
 | 6 — Product truth and maintainability | V11-010, V11-012, V11-013, V11-016, V11-019 | Verified 2026-07-26 | Stable behavior without a high-risk speculative rewrite |
-| 7 — Release verification | V11-021, V11-022 and all 24 remediation vectors | Planned | Complete automated and manual acceptance evidence |
+| 7 — Release verification | V11-021, V11-022 and all 24 remediation vectors | Automated verified 2026-07-26; manual pending | Complete automated and manual acceptance evidence |
 
 ## Phase 1 invariants
 
@@ -225,3 +225,39 @@ The repeat 1,000/2,500/5,000-cover matrix measured refresh times of
 grid-model construction took 58 ms, cancellation took 44 ms, and peak resident
 memory was 647 MB. Source SHA-256 manifests remained identical before and after
 every run.
+
+## Phase 7 automated verification
+
+The supplied 24 structured remediation vectors now have an explicit portable
+test map in `docs/v1.1/TEST-VECTORS.md`. Machine-local removable-volume corpus
+tests remain optional diagnostics and are not counted as CI or release
+coverage, closing V11-021.
+
+The vector review exposed one missing integration boundary: after an external
+disk change rejected a reviewed filename-suggestion save, conflict handling
+merged the displayed catalog rather than the unsaved reviewed candidate.
+`CatalogStore` now passes that candidate directly into the three-way merge
+without publishing optimistic state. A conflict-free merge durably saves both
+the reviewed suggestion and unrelated external fields; a real field conflict
+remains pending for explicit review. The regression passed ten consecutive
+iterations and two sequential reviewed suggestions survived reopen.
+
+The release checklist now contains explicit evidence for every V11-022 safety
+assertion and no longer counts historical or machine-local evidence as a
+current portable pass. Mandatory V11-001 through V11-005 gates and all 24
+portable vectors pass.
+
+The 2026-07-26 headless release-candidate run passed localization, unit,
+concurrency, integrity, and 1,000/2,500/5,000-cover suites. At 5,000 covers the
+current run measured 9.95 seconds for refresh, 6.51 seconds for catalog parsing,
+60 ms for grid-model construction, 44 ms cancellation, and 698 MB peak resident
+memory. Every source-cover SHA-256 manifest was unchanged.
+
+A separate clean product-only universal Debug bundle passed strict deep
+signature verification. It uses hardened runtime and the intended App Sandbox,
+app-scoped bookmark, user-selected read/write, and network-client entitlements.
+It is signed with Apple Development for local verification, not Developer ID,
+so Gatekeeper rejection as a distribution artifact is expected. Current UI
+automation and signed-launch verification remain pending until an explicitly
+announced screen-control window. Hardware/iCloud/two-device, browser,
+appearance, and VoiceOver rows also remain manual release gates.

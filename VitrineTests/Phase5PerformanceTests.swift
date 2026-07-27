@@ -2,6 +2,38 @@ import XCTest
 @testable import Vitrine
 
 final class Phase5PerformanceTests: XCTestCase {
+    @MainActor
+    func testRepeatedSearchQueriesOverFiveThousandItemsPreserveResultsAfterNonTitleEdit() {
+        let items = (0..<5_000).map { number in
+            CatalogItem(
+                id: deterministicUUID(number),
+                source: SourceFileMetadata(relativePath: "Cover-\(number).jpg"),
+                bibliography: BibliographicMetadata(
+                    title: String(format: "Book %04d", number),
+                    authors: number.isMultiple(of: 100) ? ["Needle Author"] : ["Other Author"],
+                    metadataConfirmedByUser: true
+                )
+            )
+        }
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Search Scale", items: items)
+        store.sortOption = .titleAscending
+        store.searchText = "needle author"
+        let expected = store.visibleItems.map(\.id)
+
+        for _ in 0..<20 {
+            XCTAssertEqual(store.visibleItems.map(\.id), expected)
+        }
+
+        var changed = store.catalog!
+        changed.items[1].bibliography.publisher = "A non-title edit"
+        store.catalog = changed
+
+        XCTAssertEqual(store.visibleItems.map(\.id), expected)
+        store.searchText = ""
+        XCTAssertEqual(store.visibleItems.map(\.id), items.map(\.id))
+    }
+
     func testFilenameParserFiveThousandRecordMetric() {
         let filenames = [
             "Japon, Le, Dictionnaire et civilisation, par Louis Frédéric, Éditions Robert Laffont, 1996 1419p",

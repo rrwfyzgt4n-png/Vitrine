@@ -662,8 +662,18 @@ final class CatalogStore {
             if pendingEditedCatalog == snapshot {
                 pendingEditedCatalog = nil
             }
-            await handleSaveFailure(error)
-            return false
+            let recovered = await handleSaveFailure(error, localCandidate: snapshot)
+            if recovered {
+                if deferUndoRegistration {
+                    deferredFilenameSuggestionUndo = DeferredItemUndo(
+                        previous: previous,
+                        actionName: actionName
+                    )
+                } else {
+                    registerUndo(previous: previous, actionName: actionName)
+                }
+            }
+            return recovered
         }
     }
 
@@ -1135,14 +1145,24 @@ final class CatalogStore {
         }
     }
 
-    private func processCatalogFileEvent(_ event: CatalogFileEvent) async {
+    @discardableResult
+    private func processCatalogFileEvent(
+        _ event: CatalogFileEvent,
+        localCandidate: CatalogSnapshot? = nil
+    ) async -> Bool {
         switch event {
         case .changed:
-            guard let catalogURL, let local = catalog else { return }
+            guard let catalogURL, let displayedCatalog = catalog else { return false }
+            let local = localCandidate ?? displayedCatalog
             do {
                 let externalResult = try await markdownStore.read(from: catalogURL)
                 let external = externalResult.snapshot
-                guard external != local else { return }
+                guard external != local else {
+                    if localCandidate != nil {
+                        catalog = external
+                    }
+                    return true
+                }
                 let baseline = await saveCoordinator.baseline(for: catalogURL)?.parsedCatalog ?? local
                 if local == baseline {
                     try await saveCoordinator.establishBaseline(
@@ -1152,9 +1172,19 @@ final class CatalogStore {
                     )
                     catalog = external
                     statusMessage = L10n.text("Catalog updated from disk")
-                    return
+                    return true
                 }
-                guard external != baseline else { return }
+                if external == baseline {
+                    guard localCandidate != nil else { return true }
+                    try await saveCoordinator.establishBaseline(
+                        external,
+                        at: catalogURL,
+                        expectedContentDigest: externalResult.contentDigest
+                    )
+                    try await saveCoordinator.save(local, to: catalogURL)
+                    catalog = local
+                    return true
+                }
                 let pending = await mergeService.merge(base: baseline, local: local, external: external)
                 try await saveCoordinator.establishBaseline(
                     external,
@@ -1165,16 +1195,19 @@ final class CatalogStore {
                     try await saveCoordinator.save(pending.merged, to: catalogURL)
                     catalog = pending.merged
                     statusMessage = L10n.text("External catalog changes merged")
+                    return true
                 } else {
                     pendingCatalogMerge = pending
                     isConflictChoicePresented = true
                     presentedError = nil
+                    return false
                 }
             } catch {
                 // File presenters can observe a replacement before every filesystem view has
                 // settled. Keep the valid in-memory catalog usable and wait for the next event.
                 presentedError = nil
                 statusMessage = L10n.text("Catalog changes could not be read yet. Your current library remains open.")
+                return false
             }
         case .moved(let newURL):
             catalogURL = newURL
@@ -1190,12 +1223,12 @@ final class CatalogStore {
             }
             startPresentingCatalog(at: newURL)
             statusMessage = L10n.text("Catalog location updated")
+            return true
         case .deleted:
             try? await Task.sleep(for: .milliseconds(300))
             if let catalogURL,
                (try? catalogURL.checkResourceIsReachable()) == true {
-                await processCatalogFileEvent(.changed)
-                return
+                return await processCatalogFileEvent(.changed)
             }
             if var snapshot = catalog {
                 snapshot.isReadOnly = true
@@ -1203,10 +1236,11 @@ final class CatalogStore {
             }
             saveState = .readOnly
             statusMessage = L10n.text("The catalog file was removed. Restore it in Finder or open a backup.")
+            return true
         case .conflictResolved:
-            await processCatalogFileEvent(.changed)
+            return await processCatalogFileEvent(.changed)
         case .relinquished, .reacquired:
-            break
+            return true
         }
     }
 
@@ -1461,14 +1495,24 @@ final class CatalogStore {
         }
     }
 
-    private func handleSaveFailure(_ error: Error) async {
+    @discardableResult
+    private func handleSaveFailure(
+        _ error: Error,
+        localCandidate: CatalogSnapshot? = nil
+    ) async -> Bool {
         if let catalogError = error as? CatalogError {
             switch catalogError {
             case .externalConflict:
                 presentedError = nil
                 saveState = .failed(error.localizedDescription)
-                await handleCatalogFileEvent(.changed)
-                return
+                let recovered = await processCatalogFileEvent(
+                    .changed,
+                    localCandidate: localCandidate
+                )
+                if recovered {
+                    saveState = .saved(.now)
+                }
+                return recovered
             default:
                 presentedError = .coordinatedWriteFailed
             }
@@ -1476,6 +1520,7 @@ final class CatalogStore {
             presentedError = .coordinatedWriteFailed
         }
         saveState = .failed(error.localizedDescription)
+        return false
     }
 
     private func performCatalogOperation(

@@ -52,6 +52,72 @@ final class MetadataIntegrationTests: XCTestCase {
     }
 
     @MainActor
+    func testReviewedSuggestionsMergeAnExternalCatalogChangeWithoutRollback() async throws {
+        let catalogID = UUID()
+        let date = Date(timeIntervalSince1970: 1_750_000_000)
+        let first = CatalogItem(
+            source: SourceFileMetadata(relativePath: "First.jpg"),
+            dateAdded: date,
+            dateModified: date
+        )
+        let second = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Second.jpg"),
+            dateAdded: date,
+            dateModified: date
+        )
+        let original = CatalogSnapshot(
+            catalogID: catalogID,
+            name: "Library",
+            createdAt: date,
+            updatedAt: date,
+            items: [first, second]
+        )
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(catalogID.uuidString).md")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let localCoordinator = CatalogSaveCoordinator(editDebounce: .zero)
+        try await localCoordinator.save(original, to: url)
+        let store = CatalogStore(
+            saveCoordinator: localCoordinator,
+            catalogURL: url,
+            undoManagerProvider: { nil }
+        )
+        store.catalog = original
+
+        var external = original
+        external.items[1].bibliography.publisher = "External Publisher"
+        external.items[1].bibliography.metadataSource = .manual
+        external.updatedAt = original.updatedAt.addingTimeInterval(1)
+        try await CatalogSaveCoordinator(editDebounce: .zero).save(external, to: url)
+
+        let firstSaved = await store.applyFilenameSuggestion(
+            filenameSuggestion(title: "First Parsed Title"),
+            to: first.id
+        )
+        let secondSaved = await store.applyFilenameSuggestion(
+            filenameSuggestion(title: "Second Parsed Title"),
+            to: second.id
+        )
+
+        let reopened = try await CatalogMarkdownStore().read(from: url).snapshot
+        let reopenedByID = Dictionary(uniqueKeysWithValues: reopened.items.map { ($0.id, $0) })
+        XCTAssertTrue(firstSaved)
+        XCTAssertTrue(secondSaved)
+        XCTAssertEqual(reopenedByID[first.id]?.bibliography.title, "First Parsed Title")
+        XCTAssertEqual(reopenedByID[second.id]?.bibliography.title, "Second Parsed Title")
+        XCTAssertEqual(reopenedByID[second.id]?.bibliography.publisher, "External Publisher")
+        XCTAssertEqual(store.catalog?.catalogID, reopened.catalogID)
+        let displayedByID = Dictionary(
+            uniqueKeysWithValues: (store.catalog?.items ?? []).map { ($0.id, $0) }
+        )
+        XCTAssertEqual(displayedByID[first.id]?.bibliography, reopenedByID[first.id]?.bibliography)
+        XCTAssertEqual(displayedByID[second.id]?.bibliography, reopenedByID[second.id]?.bibliography)
+
+        if let folder = try await localCoordinator.backups(catalogID: catalogID).first?.url.deletingLastPathComponent() {
+            try? FileManager.default.removeItem(at: folder)
+        }
+    }
+
+    @MainActor
     func testReviewedFilenameSuggestionRegistersUndoOnlyAfterReviewSheetDismisses() async throws {
         let catalogID = UUID()
         let item = CatalogItem(source: SourceFileMetadata(relativePath: "Book.jpg"))

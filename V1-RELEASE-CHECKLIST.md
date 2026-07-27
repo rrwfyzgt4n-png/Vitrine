@@ -4,13 +4,35 @@ Last updated: 2026-07-26
 
 ## Release status
 
-**Candidate status: not yet releasable.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. Mandatory safety, conflict/schema/localization, measured-scale, and product-maintainability gates are fixed and verified. Final release verification remains open; hardware/iCloud/two-Mac and hands-on visual/VoiceOver portions of the manual matrix also require a scheduled acceptance session.
+**Candidate status: automated verification complete; manual acceptance remains.** The V1.1 remediation audit supersedes the earlier release-candidate safety assessment. Mandatory safety, conflict/schema/localization, measured-scale, product-maintainability, and all 24 portable remediation vectors are fixed and verified. The release remains gated on hardware/iCloud/two-Mac and hands-on browser, visual, and VoiceOver acceptance.
 
-Verified V1.1 critical fixes: **2** (`V11-001`, `V11-002`). The broader V1.1 safety gate remains open.
+Verified mandatory V1.1 safety fixes: **5** (`V11-001` through `V11-005`). No open critical automated safety failure is known. This statement does not close the manual release gate.
 
 The live remediation register is maintained in
 [`docs/v1.1/REMEDIATION.md`](docs/v1.1/REMEDIATION.md). Existing V1 automated
 results remain useful baseline evidence, but do not close a V1.1 gate.
+
+The portable mapping for every supplied structured remediation vector is
+maintained in
+[`docs/v1.1/TEST-VECTORS.md`](docs/v1.1/TEST-VECTORS.md). Machine-local corpus
+tests are expressly excluded from these coverage claims.
+
+## V1.1 safety acceptance
+
+| Acceptance assertion | Result | Evidence |
+| --- | --- | --- |
+| Quit during metadata-save debounce | Pass | Termination waits for the coalesced flush and has bounded failure handling. |
+| Save failure after an edit | Pass | Displayed catalog and undo remain unchanged. |
+| N-to-N ambiguous fingerprint reconciliation | Pass | Every unresolved sibling is ambiguous; none is removed. |
+| Keep Without Cover across later refreshes | Pass | Explicit metadata-only state survives and can still be manually deleted. |
+| Unsafe relative cover paths | Pass | Traversal, absolute, malformed, root-equal, and symlink escapes are rejected. |
+| Cross-catalog overwrite and recovery identity | Pass | Previous bytes are confirmed and preserved under their own catalog identity. |
+| Reviewed suggestions plus an external catalog change | Pass | The reviewed candidate participates in the external merge; unrelated fields and subsequent suggestions persist. |
+| Metadata-edit plus explicit-save queue ordering | Pass | The explicit snapshot wakes debounce and remains the final state. |
+| Rename/restore followed by another edit | Pass | Stable item identity and the refreshed disk baseline remain coherent. |
+| Local edit, external edit, deletion, and additions | Pass | Conflicts are explicit and unrelated changes survive resolution. |
+| Duplicate record IDs | Pass | The first record remains authoritative and the duplicate remains diagnostic. |
+| Unknown front matter, prose, and record lines | Pass | Complete parse/write/parse preserves all unmanaged content. |
 
 ## Shared-schema freeze
 
@@ -54,14 +76,14 @@ Reviewed parser fields are integrated through `FilenameMetadataSuggestionAdapter
 | Localization | Pass | Every catalogued string has `fr` and `fr-CA`; extracted SwiftUI keys are audited. |
 | Unit, concurrency and integrity suite | Pass | `script/test.sh` completed successfully. |
 | UI test compilation | Pass | The complete UI target, including the 5,000-item case, builds for testing. |
-| UI test execution | Pass | `script/test_ui.sh --confirm-screen-control` completed the entire suite on 2026-07-21. |
+| UI test execution | Historical pass; current rerun pending | The full suite passed on 2026-07-21; the current Phase 7 build awaits an announced screen-control window. |
 | Source-cover integrity | Pass | SHA-256 manifests matched before and after all three scale scans. |
 | Volume identity matching | Pass | UUID/resource identity is required; an unrelated same-name volume is rejected. |
 | Thumbnail cache | Pass | One miss followed by one hit; 500-item and 256 MiB limits verified. |
-| Clean signed build | Pass | Universal debug app signed by Apple Development; strict deep verification passed. |
+| Clean signed build | Pass | A product-only universal Debug app was freshly built on 2026-07-26, signed by Apple Development with hardened runtime, and passed strict deep verification. |
 | Sandbox entitlements | Pass | App Sandbox, app-scoped bookmarks, user-selected read/write and network client present. |
-| Signed launch | Pass | `script/build_and_run.sh --verify` launched the clean artifact and found the process. |
-| Distribution Gatekeeper | Not assessed | The current artifact is a development-signed build, not a notarized Developer ID distribution artifact. |
+| Signed launch | Historical pass; current rerun pending | The run script passed previously; the current build awaits the same announced screen-control window as UI automation. |
+| Distribution Gatekeeper | Expected rejection | The inspected artifact is Apple Development–signed, not a Developer ID/notarized distribution artifact. |
 
 ## Scale measurements
 
@@ -69,11 +91,11 @@ The test used 1,200 × 1,800 JPEG source covers. Peak memory is the conservative
 
 | Covers | Catalog size | Render | Parse/model ready | Refresh | Grid model | Peak resident |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1,000 | 534,637 bytes | 529 ms | 1,239 ms | 1,737 ms | 13 ms | 179 MB |
-| 2,500 | 1,339,477 bytes | 1,025 ms | 3,063 ms | 4,170 ms | 31 ms | 375 MB |
-| 5,000 | 2,680,877 bytes | 2,055 ms | 6,133 ms | 8,343 ms | 62 ms | 666 MB |
+| 1,000 | 534,637 bytes | 435 ms | 1,334 ms | 2,180 ms | 12 ms | 183 MB |
+| 2,500 | 1,339,477 bytes | 1,072 ms | 3,302 ms | 5,049 ms | 28 ms | 414 MB |
+| 5,000 | 2,680,877 bytes | 2,115 ms | 6,507 ms | 9,954 ms | 60 ms | 698 MB |
 
-At 5,000 covers, cancellation completed in 35 ms. A cold thumbnail request took approximately 4 ms and the repeated request was served from cache below the timer’s 1 ms reporting resolution.
+At 5,000 covers, cancellation completed in 44 ms. A cold thumbnail request took approximately 4 ms and the repeated request took less than 1 ms.
 
 ## Manual acceptance matrix
 
