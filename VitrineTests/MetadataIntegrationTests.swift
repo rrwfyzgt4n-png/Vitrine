@@ -304,6 +304,17 @@ final class MetadataIntegrationTests: XCTestCase {
 
     @MainActor
     func testParserIntegratedFieldsParticipateInSearch() {
+        let defaults = UserDefaults.standard
+        let originalFilter = defaults.object(forKey: "catalogFilter")
+        defer {
+            if let originalFilter {
+                defaults.set(originalFilter, forKey: "catalogFilter")
+            } else {
+                defaults.removeObject(forKey: "catalogFilter")
+            }
+        }
+
+        defaults.removeObject(forKey: "catalogFilter")
         let item = CatalogItem(
             source: SourceFileMetadata(relativePath: "Book.jpg"),
             bibliography: completeMetadata(suffix: "SearchToken", retrievedAt: .now)

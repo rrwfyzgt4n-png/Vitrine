@@ -15,7 +15,10 @@
   },
   {
     "sourceTitle": "Paul Leduc 1876/1943, Patrick et Viviane Berko, par Stéphane Rey, Collection Berko 1990 167p. ill. avec jaquette",
-    "approvedValueDifferences": {}
+    "approvedValueDifferences": {
+      "publisher": "An explicit Collection segment outranks unmarked publisher fallback.",
+      "collectionName": "The explicit Collection marker provides the sortable collection value."
+    }
   },
   {
     "sourceTitle": "Farnese, The House of, \"A Portrait of a Great Family of the Renaissance, par Giovanna R. Solari, translated by Simona Morini and Frederic Tuten, Doubleday & Company, Inc., Garden City, New York 1968 (1964) 310p. ill. avec jaquette",

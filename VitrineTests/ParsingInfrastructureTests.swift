@@ -102,6 +102,28 @@ final class ParsingInfrastructureTests: XCTestCase {
         XCTAssertTrue(parsed.appliedCorrections.map(\.ruleID).contains("correction.spacing.libre-echange.v1"))
     }
 
+    func testCorpusCorrectionsMapEvidenceBackToExactOriginalDefects() {
+        let source = "Éditons Edelsa; Gracieu seté de Donateur; 1re par tie"
+        let parsed = CorrectionEngine(rules: ParsingConfiguration.bundled.corrections).correct(source)
+
+        let expectations = [
+            ("Éditions", "Éditons", "correction.spelling.editons.v1"),
+            ("Gracieuseté", "Gracieu seté", "correction.spacing.gracieusete.v1"),
+            ("partie", "par tie", "correction.spacing.partie.v1"),
+        ]
+        for (correctedText, originalText, ruleID) in expectations {
+            let correctedRange = parsed.corrected.range(of: correctedText).map {
+                parsed.corrected.characterOffsetRange(for: $0)
+            }
+            XCTAssertNotNil(correctedRange)
+            XCTAssertEqual(
+                correctedRange.flatMap(parsed.originalRange).map(parsed.originalText),
+                originalText
+            )
+            XCTAssertTrue(parsed.appliedCorrections.contains { $0.ruleID == ruleID })
+        }
+    }
+
     func testSegmenterProtectsQuotedAndParenthesizedCommasAndRecoversOpenQuoteAtRoleMarker() {
         let correct = CorrectionEngine(rules: []).correct(#"Title, "subtitle, retained", Author (Jr., PhD), Publisher"#)
         XCTAssertEqual(TopLevelSegmenter().segments(in: correct).map(\.text), [

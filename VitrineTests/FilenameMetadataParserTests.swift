@@ -111,15 +111,15 @@ final class FilenameMetadataParserTests: XCTestCase {
         XCTAssertEqual(suggestion.publicationPlace?.value, "Ottawa")
     }
 
-    func testPrivateCollectionOwnersAreNotAuthorsAndCollectionBerkoIsPublisher() {
+    func testPrivateCollectionOwnersAreNotAuthorsAndCollectionBerkoIsCollection() {
         let suggestion = parser.suggestions(
             from: "Paul Leduc 1876/1943, Patrick et Viviane Berko, par Stéphane Rey, Collection Berko 1990 167p. ill. avec jaquette"
         )
 
         XCTAssertEqual(suggestion.title?.value, "Paul Leduc 1876/1943")
         XCTAssertEqual(suggestion.authors?.value, ["Stéphane Rey"])
-        XCTAssertEqual(suggestion.publisher?.value, "Collection Berko")
-        XCTAssertNil(suggestion.collectionName)
+        XCTAssertNil(suggestion.publisher)
+        XCTAssertEqual(suggestion.collectionName?.value, "Berko")
         XCTAssertEqual(suggestion.publicationDate?.value, "1990")
         XCTAssertEqual(suggestion.physicalAttributes?.value, [.illustrated, .dustJacket])
         XCTAssertTrue(suggestion.descriptiveNotes?.value.contains("Patrick et Viviane Berko") == true)

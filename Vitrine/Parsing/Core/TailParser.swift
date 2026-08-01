@@ -146,6 +146,7 @@ struct TailParser: Sendable {
         for provenance in configuration.rules(category: "provenance")
             .flatMap({ $0.matches(in: value) }) {
             notes.append((provenance.fullText.parserTrimmed, provenance.correctedRange, provenance.rule.id))
+            result.consumedRanges.append(provenance.correctedRange)
         }
         if let page = pageMatches.last {
             let characters = Array(value)

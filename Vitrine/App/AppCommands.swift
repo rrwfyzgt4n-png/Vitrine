@@ -3,11 +3,12 @@ import SwiftUI
 struct AppCommands: Commands {
     let store: CatalogStore
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("aboutComparisonBookIndex") private var aboutComparisonBookIndex = -1
     @AppStorage("coverWidth") private var coverWidth = 168.0
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About Vitrine") { openWindow(id: "about") }
+            Button("About Vitrine", action: openAboutWindow)
         }
         CommandGroup(replacing: .newItem) {
             Button("Create New Catalog…") { Task { _ = await store.createCatalog() } }
@@ -105,4 +106,16 @@ struct AppCommands: Commands {
         }
     }
 
+    private func openAboutWindow() {
+        if let catalog = store.catalog {
+            let eligibleBookCount = catalog.items.count { item in
+                guard let pageCount = item.bibliography.pageCount else { return false }
+                return pageCount > 0
+            }
+            if eligibleBookCount > 0 {
+                aboutComparisonBookIndex = (max(-1, aboutComparisonBookIndex) + 1) % eligibleBookCount
+            }
+        }
+        openWindow(id: "about")
+    }
 }

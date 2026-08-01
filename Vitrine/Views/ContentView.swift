@@ -160,7 +160,6 @@ struct ContentView: View {
             }
         }
         .toolbar { toolbarContent }
-        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .task { await store.start() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await store.applicationBecameActive() }

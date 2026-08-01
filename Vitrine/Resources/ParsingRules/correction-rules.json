@@ -110,5 +110,29 @@
     "matchMode": "case-diacritic-insensitive-literal",
     "languageScope": "fr",
     "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spelling.editons.v1",
+    "match": "Éditons",
+    "replacement": "Éditions",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.gracieusete.v1",
+    "match": "Gracieu seté",
+    "replacement": "Gracieuseté",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
+  },
+  {
+    "id": "correction.spacing.partie.v1",
+    "match": "par tie",
+    "replacement": "partie",
+    "matchMode": "case-diacritic-insensitive-literal",
+    "languageScope": "fr",
+    "introducedVersion": "2.1.0"
   }
 ]

@@ -28,12 +28,15 @@ struct SegmentClassifier: Sendable {
 
         let roleMatches = configuration.contributorMarkers
             .flatMap { rule in rule.matches(in: value) }
+            .map(trimmingResponsibilityMatch)
             .sorted(by: orderedMatches)
         let translatorMatches = roleMatches.filter {
             ["translator", "translator-notes"].contains($0.rule.category)
         }
         let contributorMatches = roleMatches.filter { $0.rule.category == "contributor" }
         let authorMatches = roleMatches.filter { $0.rule.category == "author" }
+        let provenanceMatches = configuration.rules(category: "provenance")
+            .flatMap { $0.matches(in: value) }
 
         let translators = translatorMatches.flatMap { match -> [String] in
             let raw = match.groups.last(where: { !$0.isEmpty }) ?? ""
@@ -105,8 +108,7 @@ struct SegmentClassifier: Sendable {
 
         let collectionResult = collection(
             source: source,
-            segments: relevantSegments,
-            publisherBoundary: publisherResult.boundary
+            segments: relevantSegments
         )
         draft.collectionName = collectionResult.name
         draft.collectionNumber = collectionResult.number
@@ -124,6 +126,7 @@ struct SegmentClassifier: Sendable {
             languages.boundary,
             tail.terminalBoundary,
         ].compactMap { $0 })
+        titleBoundaryCandidates.append(contentsOf: provenanceMatches.map(\.correctedRange.lowerBound))
 
         let privateOwners = configuration.rules(category: "provenance-private-owners")
             .flatMap { $0.matches(in: value) }.first
@@ -304,6 +307,9 @@ struct SegmentClassifier: Sendable {
         consumedRanges: [Range<Int>]
     ) {
         let publisherRules = configuration.rules(category: "publisher")
+        let trailingPlaces = Array(
+            segments.reversed().prefix { isPlaceValue($0.text) }.reversed()
+        )
         var publisherIndex: Int?
         var markerMatch: ParsingMatch?
         for (index, segment) in segments.enumerated() {
@@ -311,7 +317,17 @@ struct SegmentClassifier: Sendable {
                 .flatMap({ $0.matches(in: segment.text) }).isEmpty {
                 continue
             }
-            if let found = publisherRules.flatMap({ $0.matches(in: segment.text) }).first {
+            if let found = publisherRules.flatMap({ $0.matches(in: segment.text) }).first(where: { found in
+                let globalRange = (
+                    segment.correctedRange.lowerBound + found.correctedRange.lowerBound
+                )..<(
+                    segment.correctedRange.lowerBound + found.correctedRange.upperBound
+                )
+                return !roleMatches.contains {
+                    $0.correctedRange.lowerBound <= globalRange.lowerBound &&
+                        $0.correctedRange.upperBound >= globalRange.upperBound
+                }
+            }) {
                 publisherIndex = index
                 markerMatch = ParsingMatch(
                     rule: found.rule,
@@ -329,18 +345,27 @@ struct SegmentClassifier: Sendable {
             while candidateIndex >= 0, isPlaceValue(segments[candidateIndex].text) {
                 candidateIndex -= 1
             }
+            while candidateIndex >= 0, matchesCollection(segments[candidateIndex].text) {
+                candidateIndex -= 1
+            }
             if candidateIndex >= 0,
+               !isBlockedPublisherFallback(segments[candidateIndex], roleMatches: roleMatches),
                !looksLikeTitleContinuation(segments[candidateIndex].text) {
                 publisherIndex = candidateIndex
             }
         }
-        guard let index = publisherIndex else { return (nil, nil, nil, nil, []) }
+        guard let index = publisherIndex else {
+            return (
+                nil,
+                placeCandidate(from: trailingPlaces, source: source),
+                nil,
+                nil,
+                trailingPlaces.map(\.correctedRange)
+            )
+        }
         let fallbackSegment = segments[index]
         if markerMatch == nil,
-           roleMatches.contains(where: { $0.correctedRange.overlaps(fallbackSegment.correctedRange) }) ||
-            !configuration.rules(category: "volume").flatMap({ $0.matches(in: fallbackSegment.text) }).isEmpty ||
-            !configuration.rules(category: "edition").flatMap({ $0.matches(in: fallbackSegment.text) }).isEmpty ||
-            SearchNormalizer.normalize(fallbackSegment.text).hasPrefix("gracieusete de") {
+           isBlockedPublisherFallback(fallbackSegment, roleMatches: roleMatches) {
             let trailingPlaces = Array(segments[(index + 1)...]).filter { isPlaceValue($0.text) }
             return (
                 nil,
@@ -385,9 +410,10 @@ struct SegmentClassifier: Sendable {
                     options: [.caseInsensitive, .diacriticInsensitive, .backwards]
                 ), String(publisherText[range.upperBound...]).parserTrimmed.isEmpty {
                     let placeText = String(publisherText[range]).parserTrimmed
-                    publisherText = String(publisherText[..<range.lowerBound]).parserTrimmed
-                    if !publisherText.isEmpty,
+                    let publisherPrefix = String(publisherText[..<range.lowerBound]).parserTrimmed
+                    if canDetachInlinePlace(from: publisherPrefix),
                        let correctedPlace = originalCorrectedRange(for: placeText, in: source.corrected) {
+                        publisherText = publisherPrefix
                         let evidence = source.evidence(
                             ruleIDs: ["publication-place.trailing-position.v1"],
                             correctedRanges: [correctedPlace],
@@ -441,8 +467,7 @@ struct SegmentClassifier: Sendable {
 
     private func collection(
         source: ParsingSource,
-        segments: [ParsedSegment],
-        publisherBoundary: Int?
+        segments: [ParsedSegment]
     ) -> (
         name: FieldCandidate<String>?,
         number: FieldCandidate<String>?,
@@ -450,19 +475,9 @@ struct SegmentClassifier: Sendable {
         consumedRanges: [Range<Int>]
     ) {
         for (index, segment) in segments.enumerated() {
-            if let publisherBoundary, segment.correctedRange.lowerBound > publisherBoundary {
-                break
-            }
-            let normalized = SearchNormalizer.normalize(segment.text)
-            let isPublisherImprint = segment.correctedRange.lowerBound == publisherBoundary &&
-                normalized.hasPrefix("collection ") &&
-                !segment.text.contains(":")
             for rule in configuration.collectionMarkers.sorted(by: {
                 $0.definition.precedence > $1.definition.precedence
             }) {
-                if isPublisherImprint, rule.definition.id == "collection.explicit-marker.v1" {
-                    continue
-                }
                 if rule.definition.id == "collection.quoted.v1" {
                     guard index + 1 < segments.count,
                           configuration.rules(category: "publisher").contains(where: {
@@ -490,31 +505,6 @@ struct SegmentClassifier: Sendable {
                         [segment.correctedRange]
                     )
                 }
-            }
-            if index + 1 < segments.count,
-               configuration.rules(category: "publisher").contains(where: {
-                   !$0.matches(in: segments[index + 1].text).isEmpty
-               }),
-               let quoted = patterns.leadingQuoted.firstMatch(
-                in: segment.text,
-                range: NSRange(segment.text.startIndex..., in: segment.text)
-            ), quoted.numberOfRanges > 1,
-               let range = Range(quoted.range(at: 1), in: segment.text) {
-                let raw = String(segment.text[range])
-                return (
-                    FieldCandidate(
-                        value: configuration.alias(category: "collection", value: raw),
-                        confidence: .heuristic,
-                        evidence: source.evidence(
-                            ruleIDs: ["collection.quoted-prefix.v1"],
-                            correctedRanges: [segment.correctedRange],
-                            explanationKey: "parser.collection"
-                        )
-                    ),
-                    nil,
-                    segment.correctedRange.lowerBound,
-                    [segment.correctedRange]
-                )
             }
         }
         return (nil, nil, nil, [])
@@ -655,6 +645,37 @@ struct SegmentClassifier: Sendable {
         return String(value[..<(range?.lowerBound ?? value.endIndex)]).parserTrimmed
     }
 
+    private func trimmingResponsibilityMatch(_ match: ParsingMatch) -> ParsingMatch {
+        guard let groupIndex = match.groups.indices.last(where: { !match.groups[$0].isEmpty }),
+              let groupRange = match.groupRanges[groupIndex],
+              let boundary = patterns.responsibilityBoundary.firstMatch(
+                  in: match.groups[groupIndex],
+                  range: NSRange(
+                      match.groups[groupIndex].startIndex...,
+                      in: match.groups[groupIndex]
+                  )
+              ).flatMap({ Range($0.range, in: match.groups[groupIndex]) }) else {
+            return match
+        }
+
+        let value = match.groups[groupIndex]
+        let cutOffset = value.distance(from: value.startIndex, to: boundary.lowerBound)
+        guard cutOffset > 0 else { return match }
+        let correctedUpperBound = groupRange.lowerBound + cutOffset
+        var groups = match.groups
+        groups[groupIndex] = String(value[..<boundary.lowerBound]).parserTrimmed
+        var groupRanges = match.groupRanges
+        groupRanges[groupIndex] = groupRange.lowerBound..<correctedUpperBound
+        let fullLength = correctedUpperBound - match.correctedRange.lowerBound
+        return ParsingMatch(
+            rule: match.rule,
+            fullText: String(match.fullText.prefix(fullLength)),
+            correctedRange: match.correctedRange.lowerBound..<correctedUpperBound,
+            groups: groups,
+            groupRanges: groupRanges
+        )
+    }
+
     private func splitPeople(_ value: String) -> [String] {
         let range = NSRange(value.startIndex..., in: value)
         var result: [String] = []
@@ -704,6 +725,62 @@ struct SegmentClassifier: Sendable {
             $0.category == "place" &&
                 SearchNormalizer.normalize($0.match) == SearchNormalizer.normalize(value.parserTrimmed)
         }
+    }
+
+    private func matchesCollection(_ value: String) -> Bool {
+        configuration.collectionMarkers.contains {
+            !$0.matches(in: value).isEmpty
+        }
+    }
+
+    private func isBlockedPublisherFallback(
+        _ segment: ParsedSegment,
+        roleMatches: [ParsingMatch]
+    ) -> Bool {
+        if roleMatches.contains(where: { $0.correctedRange.overlaps(segment.correctedRange) }) {
+            return true
+        }
+        let blockedCategories = [
+            "collection",
+            "provenance",
+            "provenance-private-owners",
+            "volume",
+            "edition",
+            "pagination",
+            "undated",
+            "page-count",
+            "physical-illustrated",
+            "physical-maps",
+            "physical-foldout-maps",
+            "physical-battle-plans",
+            "physical-genealogical-trees",
+            "physical-black-white",
+            "physical-dust-jacket",
+            "physical-slipcase",
+            "physical-double-pages",
+        ]
+        if blockedCategories.contains(where: { category in
+            configuration.rules(category: category).contains {
+                !$0.matches(in: segment.text).isEmpty
+            }
+        }) {
+            return true
+        }
+        return patterns.frenchItalian.firstMatch(
+            in: segment.text,
+            range: NSRange(segment.text.startIndex..., in: segment.text)
+        ) != nil || patterns.explicitFrench.firstMatch(
+            in: segment.text,
+            range: NSRange(segment.text.startIndex..., in: segment.text)
+        ) != nil
+    }
+
+    private func canDetachInlinePlace(from publisherPrefix: String) -> Bool {
+        guard !publisherPrefix.isEmpty else { return false }
+        let normalizedWords = SearchNormalizer.normalize(publisherPrefix).split(separator: " ")
+        guard let last = normalizedWords.last else { return false }
+        return !["de", "du", "des", "d", "of", "di", "del", "della", "dei", "degli"]
+            .contains(String(last))
     }
 
     private func placeCandidate(
@@ -756,7 +833,6 @@ struct SegmentClassifier: Sendable {
 private struct CitationPatterns: @unchecked Sendable {
     static let shared = CitationPatterns()
 
-    let leadingQuoted = try! NSRegularExpression(pattern: #"^[\"“]([^\"”]+)[\"”]"#)
     let frenchItalian = try! NSRegularExpression(pattern: #"(?i)en\s+fran[cç]ais\s+et\s+en\s+italien"#)
     let explicitFrench = try! NSRegularExpression(pattern: #"(?i)en\s+fran[cç]ais\b"#)
     let englishTranslation = try! NSRegularExpression(pattern: #"(?i)(?:english\s+translation|translated)\s+by"#)
@@ -767,7 +843,7 @@ private struct CitationPatterns: @unchecked Sendable {
         pattern: #"(?i)^(.+?)\s+de\s+l['’](?:acad[eé]mie|institut|soci[eé]t[eé])\b"#
     )
     let responsibilityBoundary = try! NSRegularExpression(
-        pattern: #"(?i)\s+(?:foreword\s+by|with\s+maps\s+by|assisted\s+by|introduction\s+de|pr[eé]face\s+de|[eé]ditions?|[eé]d\.|librairie|presses?|collection|tome\s+\d+|\d+\s+vols?|(?:1[4-9]\d{2}|20\d{2})\b|\d{1,4}\s*p)"#
+        pattern: #"(?i)\s+(?:foreword\s+by|with\s+maps\s+by|assisted\s+by|introduction\s+de|pr[eé]face\s+de|(?:[eé]ditions?|[eé]d\.|librairie|presses?|imprimerie|typ\.)\s+(?=\S)|collection\s+(?=\S)|tome\s+\d+|\d+\s+vols?|(?:1[4-9]\d{2}|20\d{2})\b|\d{1,4}\s*p)"#
     )
     let personSeparator = try! NSRegularExpression(pattern: #"\s+(?:et|and|&)\s+"#, options: .caseInsensitive)
     let personShape = try! NSRegularExpression(

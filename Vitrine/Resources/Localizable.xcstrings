@@ -2710,6 +2710,38 @@
         }
       }
     },
+    "Its %lld books total about the same number of pages as %lld copies of %@ by %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses %1$lld livres totalisent environ autant de pages que %2$lld exemplaires de « %3$@ », de %4$@."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses %1$lld livres totalisent environ autant de pages que %2$lld exemplaires de « %3$@ », de %4$@."
+          }
+        }
+      }
+    },
+    "Its %lld books total about the same number of pages as %lld copies of %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses %1$lld livres totalisent environ autant de pages que %2$lld exemplaires de « %3$@ »."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses %1$lld livres totalisent environ autant de pages que %2$lld exemplaires de « %3$@ »."
+          }
+        }
+      }
+    },
     "Keep All Mine" : {
       "localizations" : {
         "fr" : {
@@ -3627,18 +3659,18 @@
         }
       }
     },
-    "Open a catalog to see its page total and Project Gutenberg comparison." : {
+    "Open a catalog to see its page total and rotating book comparison." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrez un catalogue pour afficher son nombre de pages et sa comparaison avec le Projet Gutenberg."
+            "value" : "Ouvrez un catalogue pour afficher son nombre de pages et une comparaison avec un livre différent à chaque ouverture."
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrez un catalogue pour afficher son nombre de pages et sa comparaison avec le Projet Gutenberg."
+            "value" : "Ouvrez un catalogue pour afficher son nombre de pages et une comparaison avec un livre différent à chaque ouverture."
           }
         }
       }

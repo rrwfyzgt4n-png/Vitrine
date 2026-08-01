@@ -200,7 +200,9 @@ struct TitleInversionResolver: Sendable {
         ), match.numberOfRanges == 3,
               let subject = Range(match.range(at: 1), in: value),
               let quoted = Range(match.range(at: 2), in: value) else { return nil }
-        let subjectText = String(value[subject]).parserTrimmed
+        let rawSubject = String(value[subject]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !rawSubject.hasSuffix(",") else { return nil }
+        let subjectText = rawSubject.parserTrimmed
         let words = subjectText.split(separator: " ")
         guard words.count >= 2,
               words.allSatisfy({

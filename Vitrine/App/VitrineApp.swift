@@ -27,7 +27,8 @@ struct VitrineApp: App {
         Window("About Vitrine", id: "about") {
             AboutVitrineView(store: store)
         }
-        .defaultSize(width: 620, height: 690)
+        .defaultSize(width: 560, height: 520)
+        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(.suppressed)
         .restorationBehavior(.disabled)

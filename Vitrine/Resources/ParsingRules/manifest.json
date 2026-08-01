@@ -3,11 +3,11 @@
   "packageVersion": "2.1.0",
   "parserEngineVersion": "2.1.0",
   "resourceDigests": {
-    "correction-rules.json": "6780eb48d830717d679ee250e6dc579e7f7cc44fc4aa0ab480baba5b8d494543",
+    "correction-rules.json": "55d2c47faeb4cee3b44ff18ead52fdecf6bacbbf7004a2000fe8a95d5e75e342",
     "contributor-markers.json": "b72ebfe6ed14e8bd3235927506993b9e6d8cc9c3f0dc1b65e7d7bf2954f0575d",
     "inversion-markers.json": "a66035922f4cb4e044e48f34ddf59826f2e0c3711b327ec407da4996bbf53721",
     "collection-markers.json": "18873f8a31fd9ae4b7acc7bfc51e2e107808a22a5235e1581b3cef87069a25f1",
-    "lexical-markers.json": "f07e3cf8b60ed8d338623bb3e21d36cba405ec61cd62ea4385c061ded244b4e5",
+    "lexical-markers.json": "6c65359dc84769d550202e263b424b8494ab93d3f93afb795afb2ec5106362c7",
     "normalization-aliases.json": "a04158bdc9b5f407b6e2ceb0afacc52c687a99520eff36c58873282f38987870"
   }
 }

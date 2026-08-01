@@ -1,15 +1,24 @@
-import AppKit
 import SwiftUI
 
 struct AboutVitrineView: View {
     let store: CatalogStore
+
+    @AppStorage("aboutComparisonBookIndex") private var comparisonBookIndex = -1
 
     private var statistics: LibraryStatistics? {
         store.catalog.map { LibraryStatistics(items: $0.items) }
     }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
+            Text("About Vitrine")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .frame(height: 28)
+                .contentShape(.rect)
+                .gesture(WindowDragGesture())
+                .allowsWindowActivationEvents(true)
+
             BreathingAppIconView()
 
             VStack(spacing: 4) {
@@ -27,14 +36,16 @@ struct AboutVitrineView: View {
                 ContentUnavailableView(
                     "No Library Open",
                     systemImage: "books.vertical",
-                    description: Text("Open a catalog to see its page total and Project Gutenberg comparison.")
+                    description: Text("Open a catalog to see its page total and rotating book comparison.")
                 )
             }
 
-            Spacer(minLength: 0)
         }
-        .padding(28)
-        .frame(width: 620, height: 690)
+        .padding(.horizontal, 26)
+        .padding(.top, 8)
+        .padding(.bottom, 22)
+        .frame(width: 560, height: 520, alignment: .top)
+        .windowMinimizeBehavior(.disabled)
     }
 
     private func libraryStatistics(_ statistics: LibraryStatistics) -> some View {
@@ -50,24 +61,30 @@ struct AboutVitrineView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text(String(localized: "Its \(statistics.bookCount) books represent \(gutenbergShare(statistics)) of Project Gutenberg's \(LibraryStatistics.gutenbergBookCount) eBooks."))
-                .multilineTextAlignment(.center)
-
-            Text("Project Gutenberg reports an eBook count, not a universal page count. Reference: July 2026.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Link("View Project Gutenberg", destination: LibraryStatistics.gutenbergReference.sourceURL)
-                .font(.caption)
+            if let comparisonText = catalogComparisonText(statistics) {
+                Text(comparisonText)
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: 520)
     }
 
-    private func gutenbergShare(_ statistics: LibraryStatistics) -> String {
-        statistics.gutenbergBookShare.formatted(
-            .percent.precision(.fractionLength(3))
-        )
+    private func catalogComparisonText(_ statistics: LibraryStatistics) -> String? {
+        guard let catalog = store.catalog else { return nil }
+        let eligibleBooks = catalog.items.compactMap { item -> (title: String, author: String?, pageCount: Int)? in
+            guard let pageCount = item.bibliography.pageCount, pageCount > 0 else { return nil }
+            return (item.displayTitle, item.displayAuthor, pageCount)
+        }
+        guard !eligibleBooks.isEmpty else { return nil }
+
+        let bookIndex = max(0, comparisonBookIndex) % eligibleBooks.count
+        let selectedBook = eligibleBooks[bookIndex]
+        let representationFactor = Int(ceil(Double(statistics.cataloguedPageCount) / Double(selectedBook.pageCount)))
+
+        if let author = selectedBook.author {
+            return String(localized: "Its \(statistics.bookCount) books total about the same number of pages as \(representationFactor) copies of \(selectedBook.title) by \(author).")
+        }
+        return String(localized: "Its \(statistics.bookCount) books total about the same number of pages as \(representationFactor) copies of \(selectedBook.title).")
     }
 
     private var versionDescription: String {
