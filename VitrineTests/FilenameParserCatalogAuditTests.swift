@@ -4,8 +4,13 @@ import XCTest
 
 final class FilenameParserCatalogAuditTests: XCTestCase {
     func testReviewedFilenameMetadataAgainstCompleteCatalog() throws {
-        let defaultPath = "/Users/etienne/Library/Mobile Documents/com~apple~CloudDocs/Downloads/libcat Catalog.md"
-        let path = ProcessInfo.processInfo.environment["VITRINE_PARSER_CATALOG_PATH"] ?? defaultPath
+        guard let rawPath = ProcessInfo.processInfo.environment["VITRINE_PARSER_CATALOG_PATH"] else {
+            throw XCTSkip("Set VITRINE_PARSER_CATALOG_PATH to run this audit against a reviewed catalog")
+        }
+        let path = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else {
+            throw XCTSkip("Set VITRINE_PARSER_CATALOG_PATH to run this audit against a reviewed catalog")
+        }
         guard FileManager.default.fileExists(atPath: path) else {
             throw XCTSkip("The reviewed filename catalog is unavailable")
         }
