@@ -241,4 +241,25 @@ final class CatalogStoreFilterTests: XCTestCase {
         store.filter = .missingPublicationYear
         XCTAssertEqual(store.visibleItems.map(\.id), [unparseable.id])
     }
+
+    func testLanguageSortUsesAdditionalLanguageCodesForEligibility() {
+        let missing = CatalogItem(source: SourceFileMetadata(relativePath: "Missing.jpg"))
+        let additional = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Additional.jpg"),
+            bibliography: BibliographicMetadata(additionalLanguageCodes: ["fr"])
+        )
+        let primary = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Primary.jpg"),
+            bibliography: BibliographicMetadata(languageCode: "en")
+        )
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Library", items: [missing, additional, primary])
+        store.filter = .all
+        store.sortOption = .language
+
+        XCTAssertEqual(store.visibleItems.map(\.id), [primary.id, additional.id, missing.id])
+
+        store.filter = .hasLanguage
+        XCTAssertEqual(store.visibleItems.map(\.id), [primary.id, additional.id])
+    }
 }

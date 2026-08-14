@@ -71,6 +71,7 @@ struct CatalogDerivedIndex {
                     SearchNormalizer.normalize(
                         item.bibliography.languageCode ??
                             item.bibliography.originalLanguageCode ??
+                            item.bibliography.additionalLanguageCodes.first ??
                             "\u{10FFFF}"
                     )
             case .pageCount:
