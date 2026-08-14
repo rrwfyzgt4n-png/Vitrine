@@ -110,7 +110,7 @@ struct CatalogDerivedIndex {
         }
     }
 
-    private static func publicationYear(for bibliography: BibliographicMetadata) -> Int? {
+    static func publicationYear(for bibliography: BibliographicMetadata) -> Int? {
         let candidates = [bibliography.publicationDate, bibliography.originalPublicationDate]
         for candidate in candidates.compactMap({ $0 }) {
             if let year = candidate

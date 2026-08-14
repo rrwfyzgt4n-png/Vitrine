@@ -1637,9 +1637,9 @@ final class CatalogStore {
         case .detailsAdded: item.bibliography.title != nil
         case .noDetails: item.bibliography.title == nil
         case .hasPublicationYear:
-            item.bibliography.publicationDate != nil || item.bibliography.originalPublicationDate != nil
+            CatalogDerivedIndex.publicationYear(for: item.bibliography) != nil
         case .missingPublicationYear:
-            item.bibliography.publicationDate == nil && item.bibliography.originalPublicationDate == nil
+            CatalogDerivedIndex.publicationYear(for: item.bibliography) == nil
         case .hasLanguage:
             item.bibliography.languageCode != nil ||
                 item.bibliography.originalLanguageCode != nil ||

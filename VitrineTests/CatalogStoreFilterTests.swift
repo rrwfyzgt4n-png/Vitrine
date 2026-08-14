@@ -218,4 +218,27 @@ final class CatalogStoreFilterTests: XCTestCase {
         XCTAssertEqual(store.visibleItems.last?.id, missing.id)
         XCTAssertEqual(Set(store.visibleItems.dropLast().map(\.id)), [newer.id, older.id])
     }
+
+    func testPublicationYearFiltersRequireTheSameParseableYearUsedBySorting() {
+        let unparseable = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Undated.jpg"),
+            bibliography: BibliographicMetadata(publicationDate: "Undated reprint")
+        )
+        let dated = CatalogItem(
+            source: SourceFileMetadata(relativePath: "Dated.jpg"),
+            bibliography: BibliographicMetadata(publicationDate: "2000")
+        )
+        let store = CatalogStore()
+        store.catalog = CatalogSnapshot(name: "Library", items: [unparseable, dated])
+        store.filter = .all
+
+        store.sortOption = .publicationYear
+        XCTAssertEqual(store.visibleItems.map(\.id), [dated.id, unparseable.id])
+
+        store.filter = .hasPublicationYear
+        XCTAssertEqual(store.visibleItems.map(\.id), [dated.id])
+
+        store.filter = .missingPublicationYear
+        XCTAssertEqual(store.visibleItems.map(\.id), [unparseable.id])
+    }
 }
