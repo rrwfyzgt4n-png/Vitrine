@@ -1,63 +1,62 @@
 ---
 schema: stringmaster/v1
 project_id: vitrine
-revision: 16
+revision: 17
 source_repository: rrwfyzgt4n-png/Vitrine
 active_branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 verified_remote_head: c1843f98390034b16dae530280de50bdf46de392
 reported_local_head: null
 verification_status: verified
-stage: ACCEPTED
-active_transition: null
-active_work_order: null
-executor: null
-model_class: null
-spending_class: null
+stage: READY
+active_transition: vitrine-toolbar-density-glass-r1
+active_work_order: WO-2026-08-31-017
+executor: codex
+model_class: GPT-5.6 Luna Low
+spending_class: S1
 blocked_by: null
-updated_at: "2026-08-31T03:59:12-04:00"
+updated_at: "2026-08-31T08:49:00-04:00"
 ---
 
 # Current objective
 
-Complete Vitrine's remaining v1.0 product/design polish from the accepted engineering baseline, beginning with the toolbar Liquid Glass cleanup and a clearer cover-size control, before returning to the remaining manual release gates.
+Implement the bounded v1.0 macOS toolbar polish approved by product authority: rely on native system Liquid Glass for ordinary toolbar controls and replace the cover-size typography metaphor with a grid-density metaphor while preserving the existing stepped repeat behavior.
 
-# Accepted state
-
-Accepted Vitrine source:
+# Accepted base
 
 ```text
 branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 commit: c1843f98390034b16dae530280de50bdf46de392
 ```
 
-The accepted source branch was independently re-verified on 2026-08-31 and still points exactly to that commit. No new source candidate is active.
+The accepted branch was freshly re-verified before this transition and still points exactly to the accepted commit.
 
-# Canonical-root establishment
+# Active transition
 
-This revision establishes `sm-vitrine/` in the Vitrine repository as the canonical StringMaster control root required by the current framework.
+`WO-2026-08-31-017` is the sole active work order.
 
-The former `rrwfyzgt4n-png/StringMaster/projects/vitrine/` control tree remains frozen historical material. Its revision-15 accepted record was used only as migration input and does not remain an authoritative mutable control location.
+It is a single S1 Codex source lane restricted to:
 
-No historical run, turn, receipt, report, or archived work order is rewritten or copied as new evidence by this migration.
+```text
+Vitrine/Views/ContentView.swift
+```
 
-# Product decisions ready for implementation
+The intended candidate branch is:
 
-The next design transition should preserve the existing cover-size stepping and press-and-hold repeat behavior while replacing the font-size metaphor with a grid-density metaphor: denser grid for smaller covers, sparser grid for larger covers. Endpoint controls should become unavailable when the corresponding minimum or maximum is reached, while existing clear help and accessibility labels remain.
+```text
+stringmaster/vitrine-toolbar-density-glass-r1
+```
 
-For toolbar Liquid Glass, prefer the native macOS toolbar treatment and remove redundant explicit glass styling where the system already supplies the appropriate toolbar glass. Custom glass remains appropriate only where it is intentionally replacing or supplementing the system grouping.
+No candidate exists or is accepted yet.
 
-# Remaining release state
+# Product constraints
 
-The prior release ordering remains:
-
-1. pre-ship hardening — complete;
-2. ship-relevant remediation — complete;
-3. remaining product/design opinions — active next objective;
-4. remaining manual release gates and Vitrine v1.0 shipment;
-5. v1.1 work after real-world user evidence.
-
-The earlier Xcode Helper Accessibility prerequisite and other manual release gates remain separate and unresolved until product/design work closes.
+- ordinary toolbar controls should use native macOS toolbar glass;
+- the deliberate principal Vitrine glass identity and intentionally prominent review action are preserved;
+- cover sizing uses denser-grid = smaller covers and sparser-grid = larger covers;
+- discrete stepping and press-and-hold repeat behavior are preserved;
+- the corresponding endpoint control becomes unavailable at minimum/maximum size;
+- no broader UI redesign, architecture change, asset work, localization work, or release-gate work is authorized.
 
 # Next action
 
-Create a bounded product/design work order against exact accepted source `c1843f98390034b16dae530280de50bdf46de392` for the toolbar Liquid Glass cleanup and cover-size control metaphor. Do not begin release-gate work yet.
+Execute `WO-2026-08-31-017` exactly once through the accepted StringMaster turn path, then review the resulting REPORT/RECEIPT and candidate independently before any acceptance transition.
