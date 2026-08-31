@@ -1,0 +1,14 @@
+schema: stringmaster/v1
+project_id: vitrine
+display_name: Vitrine
+description: Native macOS catalog for physical book collections with read-only external cover storage and a portable Markdown catalog.
+source_repository: rrwfyzgt4n-png/Vitrine
+default_branch: main
+product_authority: Etienne Mailhot
+control_authority: chatgpt
+allowed_executors:
+  - codex
+  - claude-code
+  - other
+lifecycle: active
+created_at: "2026-08-06T12:29:00-04:00"
