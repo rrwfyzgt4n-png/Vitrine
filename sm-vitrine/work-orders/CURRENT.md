@@ -1,105 +1,152 @@
 ---
 schema: stringmaster/v1
-work_order_id: WO-2026-09-02-019
+work_order_id: WO-2026-09-02-020
 work_order_kind: single
-execution_mode: read-only
+execution_mode: source
 base_head: c1843f98390034b16dae530280de50bdf46de392
+branch_name: stringmaster/vitrine-toolbar-density-glass-r2
+write_roots:
+  - Vitrine/Views/ContentView.swift
 project_id: vitrine
-state_revision: 20
+state_revision: 21
 executor: codex
 recommended_model: gpt-5.6-luna
 reasoning_effort: low
 spending_class: S1
 status: READY
-maximum_full_test_runs: 0
+maximum_full_test_runs: 1
+final_test_argv:
+  - ./script/test.sh
 maximum_evidence_runs: 0
 progress_narration: prohibited
 architecture_changes: prohibited
-created_at: "2026-09-02T02:56:00-04:00"
+created_at: "2026-09-02T03:18:00-04:00"
 ---
 
 # Objective
 
-Inspect the retained local evidence from failed `TURN-2026-09-02-001` / `RUN-2026-09-02-001` and determine the narrowest safe remediation for the Vitrine toolbar transition without modifying source, Git history, retained runtime state, or host configuration.
+Implement the already-approved Vitrine macOS toolbar polish: rely on native system Liquid Glass for ordinary toolbar controls and replace the cover-size typography metaphor with a clear grid-density metaphor, without changing cover-size stepping, repeat behavior, or unrelated product behavior.
 
-This work order corrects only the prior diagnostic's Codex model identifier. Use the exact CLI-facing model id `gpt-5.6-luna`. Do not substitute the display label `GPT-5.6 Luna`.
+This is a replacement execution for the consumed original implementation work order. Product intent and implementation scope are unchanged. The replacement uses a fresh candidate branch and the exact Codex CLI model id `gpt-5.6-luna`.
 
-# Canonical gate
+# Repository gate
 
-Freshly require:
+- Source repository must be `rrwfyzgt4n-png/Vitrine`.
+- Begin from exact accepted source `c1843f98390034b16dae530280de50bdf46de392`.
+- The accepted source branch is `stringmaster-remediation/vitrine-language-sort-consistency-r1`.
+- Work only in the isolated source lane prepared for this work order.
+- Require assigned branch `stringmaster/vitrine-toolbar-density-glass-r2` at the exact base and clean at executor start.
+- The remote r2 branch must be absent before StringMaster transport.
+- Do not inspect, delete, repair, reset, checkout, or otherwise modify retained runtime evidence or the stale local r1 candidate branch from `TURN-2026-09-02-001`.
+- Stop if the exact base cannot be established or if unrelated pre-existing changes are present in the prepared lane.
 
-- repository `rrwfyzgt4n-png/Vitrine`;
-- state revision `20`;
-- stage `READY`;
-- active work order `WO-2026-09-02-019`;
-- accepted branch `stringmaster-remediation/vitrine-language-sort-consistency-r1`;
-- accepted source `c1843f98390034b16dae530280de50bdf46de392`;
-- consumed work orders `WO-2026-08-31-017` and `WO-2026-09-02-018` archived;
-- canonical prior REPORT/RECEIPT present for `RUN-2026-09-02-001` / `TURN-2026-09-02-001` and `RUN-2026-09-02-002` / `TURN-2026-09-02-002`;
-- remote branch `stringmaster/vitrine-toolbar-density-glass-r1` absent.
+# Success criteria
 
-Stop on canonical drift.
+1. Ordinary macOS toolbar controls in `ContentView` inherit the system toolbar's Liquid Glass treatment rather than forcing `.buttonStyle(.glass)`.
+2. The intentionally prominent `Review Next Filename` action remains visually prominent; do not flatten it merely for stylistic uniformity.
+3. The custom principal Vitrine identity may retain its deliberate custom glass surface and its corresponding shared-background opt-out.
+4. The catalog identity toolbar item uses the native toolbar background/grouping instead of opting out without replacement glass, unless direct SDK behavior proves that would regress its intended presentation; if so, stop and report the evidence rather than invent another custom surface.
+5. The cover-size control uses a native SF Symbols grid-density pair: denser grid means smaller covers, sparser grid means larger covers. Prefer `square.grid.3x3` and `square.grid.2x2` if both are valid for the current target SDK; otherwise use the closest native pair with the same literal density meaning and report the exact symbols chosen.
+6. Do not use typography-size, magnification/zoom, or custom image assets for this control.
+7. Preserve the existing discrete `coverSizeSteps` behavior and `.buttonRepeatBehavior(.enabled)` press-and-hold traversal.
+8. Disable the decrease control at the minimum step and the increase control at the maximum step. Derive endpoint state from `coverSizeSteps`; do not duplicate endpoint constants.
+9. Preserve the existing help and accessibility labels that state the actual actions, and preserve the cover-size accessibility value.
+10. Remove cover-size visual-emphasis code that becomes dead or meaningless after the metaphor change.
+11. `./script/test.sh` passes in the one authorized complete-suite run.
+12. No file outside the single authorized write root changes.
 
-# Retained roots
+# In scope
 
-The accepted StringMaster runtime resolves the retained implementation-attempt roots as:
+- `Vitrine/Views/ContentView.swift`
+- Ordinary toolbar Liquid Glass cleanup inside this file.
+- Catalog toolbar grouping/background participation.
+- Cover-size icon metaphor, endpoint disabled state, and directly obsolete local presentation code.
 
-```text
-~/.local/share/stringmaster/worktrees/vitrine/TURN-2026-09-02-001
-~/.local/share/stringmaster/turns/vitrine/TURN-2026-09-02-001
-```
+# Out of scope
 
-Require exact identity before inspection. Do not create, move, rename, clean, repair, or delete either root.
+- Any other source or test file.
+- Inspector, floating status, settings, welcome, about, library-card, or other glass redesign.
+- New assets, localization edits, dependencies, package/project configuration, persisted state, data model, sorting/filtering semantics, catalog behavior, release gates, signing, notarization, or accessibility-system configuration.
+- Broad visual redesign or changes to toolbar action ordering.
+- Any cleanup or mutation of retained `TURN-2026-09-02-001` runtime state or branch history.
 
-If either root is absent, report that fact and continue only with independently available read-only evidence; do not recreate it.
+# Required reconnaissance
 
-# Required inspection
+Before editing:
 
-Using read-only filesystem and Git commands only, establish:
+- inspect the complete current `ContentView.swift` at the exact accepted base;
+- confirm the macOS deployment target/current SDK context needed for the chosen SF Symbols;
+- inspect existing tests and `./script/test.sh` sufficiently to understand the final gate;
+- use relevant Git history only if needed to resolve intent that the current source does not answer.
 
-1. whether each retained root exists and what role it contains;
-2. retained worktree Git top-level, current branch, HEAD, index/worktree status, and origin identity;
-3. exact local branch `stringmaster/vitrine-toolbar-density-glass-r1` HEAD if it exists;
-4. merge-base and ancestry relationship between that branch/HEAD and accepted base `c1843f98390034b16dae530280de50bdf46de392`;
-5. commits reachable from the retained branch but not accepted base, including subjects and parent relationships;
-6. whether the retained branch HEAD tree is byte/tree-identical to accepted base or contains a source delta;
-7. exact changed paths and diff/stat against accepted base for both committed and uncommitted state;
-8. whether the branch history indicates an empty commit, source commit, source commit followed by revert, or another bounded explanation for `changed_paths: []` plus cleanup reporting `branch ... is not fully merged`;
-9. supervisor/turn-context evidence sufficient to identify the implementation executor's observable nonzero-exit cause, if present in the exact retained turn root. Report only observable error/final-output facts; do not reproduce private chain-of-thought or credentials;
-10. the narrowest safe remediation category:
-   - `CLEANUP_ONLY_THEN_REISSUE`,
-   - `PRESERVE_SOURCE_DELTA_FOR_REVIEW`,
-   - `EXECUTOR_FAILURE_REQUIRES_NEW_IMPLEMENTATION_WO`, or
-   - `BLOCKED_UNRESOLVED`.
+Classify material assumptions as `RESOLVED_BY_EVIDENCE`, `SAFE_REVERSIBLE_ASSUMPTION`, or `MATERIAL_UNRESOLVED`. Stop only for a material unresolved ambiguity.
+
+# Observation contract
+
+After editing, inspect the complete diff against the accepted base and verify every behavioral change maps directly to a success criterion. No UI automation or manual app launch is required by this work order; product visual acceptance remains with control/product review after candidate materialization.
+
+# Protected behavior and invariants
+
+- Accepted catalog/data safety behavior remains untouched.
+- Sort, filter, refresh, inspector, and review-next actions retain their existing semantics.
+- Cover-size steps and press-and-hold repeat semantics remain unchanged except for endpoint disabling.
+- Toolbar item ordering remains unchanged.
+- No new architecture, abstraction, dependency, or reusable framework is introduced for this localized UI polish.
 
 # Capability envelope
 
-Authorized: `READ`, `PROCESS` for read-only inspection commands.
+Authorized: `READ`, `REPO_WRITE`, `PROCESS`.
 
-Not authorized: `REPO_WRITE`, `NETWORK_READ`, `REMOTE_WRITE`, `HOST_MUTATION`, `DESTRUCTIVE`.
+Not authorized: `NETWORK_READ` by the executor, `REMOTE_WRITE` by the executor, `HOST_MUTATION`, `DESTRUCTIVE`.
 
-Do not run tests, builds, app launches, package operations, `sm sync`, `sm bind`, `sm turn`, dispatcher polling, or notification checks from inside the executor.
+StringMaster may perform its ordinary conductor-owned candidate materialization and bounded remote transport after executor completion.
 
-Do not stage, commit, branch, switch, reset, restore, checkout, rebase, merge, cherry-pick, stash, clean, fetch, pull, push, delete refs, prune worktrees, or change Git configuration.
+# Complexity budget
 
-# Evidence economy
+Zero complexity events are authorized. Do not add abstraction layers, dependencies, public APIs, schemas, persisted state, background processes, generalized extension points, or cross-component coupling. If a success criterion appears to require one, stop and report.
 
-This work order consumes no application evidence run and no complete-suite run. Stop when the branch/history and implementation-executor-failure questions above are answered.
+# Stop conditions
+
+Stop without broadening scope if:
+
+- exact accepted base cannot be established;
+- assigned r2 branch is not the exact C1-prepared local branch at the accepted base;
+- implementation requires a second source/test/project/resource file;
+- the required grid-density metaphor cannot be expressed with suitable native SF Symbols on the target SDK;
+- native toolbar treatment produces an ambiguity that requires a new custom glass surface;
+- the single complete test run fails and the failure cannot be attributed to the authorized diff with direct evidence;
+- any material unresolved product ambiguity remains after repository/SDK evidence.
+
+# Commit and materialization contract
+
+The executor does not stage, commit, switch branches, rebase, merge, tag, alter remotes, or touch the retained r1 branch/runtime state. StringMaster owns deterministic reconciliation and, if the final diff is valid and confined to the write root, materializes at most one candidate commit on:
+
+`stringmaster/vitrine-toolbar-density-glass-r2`
+
+Do not merge the candidate into an accepted or default branch.
+
+# Push and transport contract
+
+StringMaster may perform one ordinary non-force push of the valid r2 candidate branch. No force push, protected-ref mutation, release publication, retained-r1 mutation, or unrelated remote write is authorized.
 
 # Final report
 
 Report only:
 
-- canonical gate result;
-- retained-root existence and exact resolved paths;
-- retained worktree branch / HEAD / clean-or-dirty status;
-- local candidate branch HEAD and ancestry relative to accepted base;
-- commits unique to the retained branch;
-- base-vs-HEAD tree equality and exact changed paths;
-- uncommitted diff/index status;
-- observable implementation executor failure cause from retained context, if available;
-- cleanup-error explanation;
-- recommended remediation category from the four allowed values;
-- blocker, if any.
+- repository/base gate result;
+- exact changed file;
+- exact SF Symbol names used;
+- toolbar glass changes made;
+- confirmation that stepping/repeat semantics were preserved and endpoint disabling was added;
+- complete-suite result;
+- `git diff --check` result if run by the ordinary conductor;
+- assumption ledger;
+- complexity events (`none` expected);
+- candidate branch/SHA if materialized;
+- any blocker.
 
-Do not claim acceptance and do not mutate retained state.
+Do not claim acceptance.
+
+# Spending controls
+
+Use exact model `gpt-5.6-luna` at low reasoning, S1. Progress narration is prohibited. Maximum complete-suite runs: 1. Maximum evidence runs: 0.
