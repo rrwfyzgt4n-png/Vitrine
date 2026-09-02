@@ -1,25 +1,25 @@
 ---
 schema: stringmaster/v1
 project_id: vitrine
-revision: 18
+revision: 19
 source_repository: rrwfyzgt4n-png/Vitrine
 active_branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 verified_remote_head: c1843f98390034b16dae530280de50bdf46de392
 reported_local_head: null
 verification_status: verified
-stage: BLOCKED
-active_transition: vitrine-toolbar-density-glass-r1
-active_work_order: null
-executor: null
-model_class: null
-spending_class: null
-blocked_by: "TURN-2026-09-02-001 consumed WO-2026-08-31-017 and failed before final testing; retained local candidate-branch history requires read-only inspection before remediation."
-updated_at: "2026-09-02T02:43:17-04:00"
+stage: READY
+active_transition: vitrine-retained-turn-diagnostic-r19
+active_work_order: WO-2026-09-02-018
+executor: codex
+model_class: GPT-5.6 Luna Low
+spending_class: S1
+blocked_by: null
+updated_at: "2026-09-02T02:47:30-04:00"
 ---
 
 # Current objective
 
-Recover the bounded Vitrine toolbar Liquid Glass transition after the first real Remote execution attempt failed before final testing.
+Inspect the retained local evidence from failed `TURN-2026-09-02-001` / `RUN-2026-09-02-001` and determine the narrowest safe remediation for the existing Vitrine toolbar Liquid Glass transition.
 
 # Accepted base
 
@@ -28,47 +28,32 @@ branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 commit: c1843f98390034b16dae530280de50bdf46de392
 ```
 
-The accepted source remains unchanged and independently verified.
+The accepted source branch remains independently verified at the exact accepted commit.
 
-# Consumed execution
+# Consumed implementation attempt
 
-`WO-2026-08-31-017` was consumed by:
+`WO-2026-08-31-017` is archived and consumed by `TURN-2026-09-02-001` / `RUN-2026-09-02-001`.
 
-```text
-turn: TURN-2026-09-02-001
-run: RUN-2026-09-02-001
-```
+Canonical evidence records:
 
-Canonical REPORT/RECEIPT classify the run `FAILED`.
+- result `FAILED`;
+- executor return code `1`;
+- final test not run;
+- candidate materialization not authorized;
+- no remote `stringmaster/vitrine-toolbar-density-glass-r1` candidate published;
+- lifecycle closure proven;
+- retained turn state preserved;
+- cleanup error because the local candidate branch was not fully merged;
+- `changed_paths: []`.
 
-Verified public facts:
+Remote request `TR-vitrine-2026-09-02-001` is terminal/consumed and must not be replayed or resubmitted. Product-authority Pull Status corroborated terminal result `LANES_FAILED` for `TURN-2026-09-02-001`.
 
-- executor return code: `1`;
-- executor did not complete;
-- final test was not run;
-- candidate materialization was not authorized;
-- no remote candidate branch was published;
-- lifecycle closure was proven;
-- no positive escape was observed;
-- StringMaster retained the turn;
-- cleanup reported that local branch `stringmaster/vitrine-toolbar-density-glass-r1` was not fully merged;
-- canonical report records `changed_paths: []`.
+# Active diagnostic
 
-The Remote request used for this attempt is consumed and must not be replayed or resubmitted.
+`WO-2026-09-02-018` is one S1 read-only Codex diagnostic lane.
 
-# Control disposition
-
-The source transition is not rejected on product grounds. It is blocked on understanding the retained local branch/history and the executor's nonzero exit.
-
-Do not issue another implementation attempt, delete retained runtime state, force-delete the retained branch, or create another Remote request until a bounded read-only inspection establishes:
-
-- exact retained turn/worktree identity;
-- retained branch HEAD and ancestry relative to accepted base;
-- whether the branch contains commits despite a zero source diff;
-- exact tree/diff status against accepted base;
-- whether the executor changed source, committed, reverted, or only altered branch history;
-- the narrowest safe remediation path.
+It may inspect only the exact retained prior-turn roots and local Git metadata needed to explain the branch/history state and observable executor failure. It may not modify source, Git history, retained runtime state, bindings, dispatcher state, or canonical project state.
 
 # Next action
 
-Perform one bounded read-only retained-turn inspection under control authority. Preserve both retained runtime roots and all local Git evidence.
+Execute `WO-2026-09-02-018` once through ordinary accepted StringMaster Remote after a fresh single-use request is preauthorized and separately authorized by product authority. Review its canonical REPORT/RECEIPT before any cleanup or replacement implementation work order.
