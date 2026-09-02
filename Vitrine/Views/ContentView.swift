@@ -220,7 +220,6 @@ struct ContentView: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .accessibilityElement(children: .combine)
             }
-            .sharedBackgroundVisibility(.hidden)
 
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
@@ -255,7 +254,6 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(L10n.text("Sort"))
-                .buttonStyle(.glass)
 
                 Menu {
                     Picker("Filter", selection: $store.filter) {
@@ -294,35 +292,33 @@ struct ContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .help(store.filter == .all ? L10n.text("Filter") : store.filter.label)
-                .buttonStyle(.glass)
 
                 ControlGroup {
                     Button {
                         stepCoverSize(down: true)
                     } label: {
-                        Image(systemName: "textformat.size.smaller")
+                        Image(systemName: "square.grid.3x3")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.primary.opacity(decreaseCoverEmphasis))
                             .frame(width: 40, height: 30)
                             .contentShape(.rect)
                     }
                     .help("Decrease Cover Size")
                     .accessibilityLabel("Decrease Cover Size")
+                    .disabled(coverWidth <= coverSizeSteps.first!)
 
                     Button {
                         stepCoverSize(down: false)
                     } label: {
-                        Image(systemName: "textformat.size.larger")
+                        Image(systemName: "square.grid.2x2")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.primary.opacity(increaseCoverEmphasis))
                             .frame(width: 40, height: 30)
                             .contentShape(.rect)
                     }
                     .help("Increase Cover Size")
                     .accessibilityLabel("Increase Cover Size")
+                    .disabled(coverWidth >= coverSizeSteps.last!)
                 }
                 .controlSize(.regular)
-                .buttonStyle(.glass)
                 .buttonRepeatBehavior(.enabled)
                 .accessibilityLabel("Cover size")
                 .accessibilityValue(Int(coverWidth).formatted())
@@ -343,13 +339,11 @@ struct ContentView: View {
                 Button("Refresh Covers", systemImage: "arrow.clockwise") { Task { await store.refreshCovers() } }
                     .labelStyle(.iconOnly)
                     .help("Refresh Covers")
-                    .buttonStyle(.glass)
                     .disabled(!store.canRefreshCovers)
                     .accessibilityIdentifier("toolbar.refresh")
                 Button("Inspector", systemImage: "sidebar.trailing") { store.showInspector() }
                     .labelStyle(.iconOnly)
                     .help(store.isInspectorPresented ? "Hide Inspector" : "Show Inspector")
-                    .buttonStyle(.glass)
                     .accessibilityIdentifier("toolbar.inspector")
             }
         }
@@ -363,18 +357,6 @@ struct ContentView: View {
     private func filterChoice(_ filter: CatalogFilter) -> some View {
         Label(filter.label, systemImage: filter.systemImage)
             .tag(filter)
-    }
-
-    private var coverSizeProgress: Double {
-        min(1, max(0, (coverWidth - 120) / (260 - 120)))
-    }
-
-    private var decreaseCoverEmphasis: Double {
-        0.38 + ((1 - coverSizeProgress) * 0.62)
-    }
-
-    private var increaseCoverEmphasis: Double {
-        0.38 + (coverSizeProgress * 0.62)
     }
 
     private func stepCoverSize(down: Bool) {
