@@ -1,25 +1,25 @@
 ---
 schema: stringmaster/v1
 project_id: vitrine
-revision: 17
+revision: 18
 source_repository: rrwfyzgt4n-png/Vitrine
 active_branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 verified_remote_head: c1843f98390034b16dae530280de50bdf46de392
 reported_local_head: null
 verification_status: verified
-stage: READY
+stage: BLOCKED
 active_transition: vitrine-toolbar-density-glass-r1
-active_work_order: WO-2026-08-31-017
-executor: codex
-model_class: GPT-5.6 Luna Low
-spending_class: S1
-blocked_by: null
-updated_at: "2026-08-31T08:49:00-04:00"
+active_work_order: null
+executor: null
+model_class: null
+spending_class: null
+blocked_by: "TURN-2026-09-02-001 consumed WO-2026-08-31-017 and failed before final testing; retained local candidate-branch history requires read-only inspection before remediation."
+updated_at: "2026-09-02T02:43:17-04:00"
 ---
 
 # Current objective
 
-Implement the bounded v1.0 macOS toolbar polish approved by product authority: rely on native system Liquid Glass for ordinary toolbar controls and replace the cover-size typography metaphor with a grid-density metaphor while preserving the existing stepped repeat behavior.
+Recover the bounded Vitrine toolbar Liquid Glass transition after the first real Remote execution attempt failed before final testing.
 
 # Accepted base
 
@@ -28,35 +28,47 @@ branch: stringmaster-remediation/vitrine-language-sort-consistency-r1
 commit: c1843f98390034b16dae530280de50bdf46de392
 ```
 
-The accepted branch was freshly re-verified before this transition and still points exactly to the accepted commit.
+The accepted source remains unchanged and independently verified.
 
-# Active transition
+# Consumed execution
 
-`WO-2026-08-31-017` is the sole active work order.
-
-It is a single S1 Codex source lane restricted to:
+`WO-2026-08-31-017` was consumed by:
 
 ```text
-Vitrine/Views/ContentView.swift
+turn: TURN-2026-09-02-001
+run: RUN-2026-09-02-001
 ```
 
-The intended candidate branch is:
+Canonical REPORT/RECEIPT classify the run `FAILED`.
 
-```text
-stringmaster/vitrine-toolbar-density-glass-r1
-```
+Verified public facts:
 
-No candidate exists or is accepted yet.
+- executor return code: `1`;
+- executor did not complete;
+- final test was not run;
+- candidate materialization was not authorized;
+- no remote candidate branch was published;
+- lifecycle closure was proven;
+- no positive escape was observed;
+- StringMaster retained the turn;
+- cleanup reported that local branch `stringmaster/vitrine-toolbar-density-glass-r1` was not fully merged;
+- canonical report records `changed_paths: []`.
 
-# Product constraints
+The Remote request used for this attempt is consumed and must not be replayed or resubmitted.
 
-- ordinary toolbar controls should use native macOS toolbar glass;
-- the deliberate principal Vitrine glass identity and intentionally prominent review action are preserved;
-- cover sizing uses denser-grid = smaller covers and sparser-grid = larger covers;
-- discrete stepping and press-and-hold repeat behavior are preserved;
-- the corresponding endpoint control becomes unavailable at minimum/maximum size;
-- no broader UI redesign, architecture change, asset work, localization work, or release-gate work is authorized.
+# Control disposition
+
+The source transition is not rejected on product grounds. It is blocked on understanding the retained local branch/history and the executor's nonzero exit.
+
+Do not issue another implementation attempt, delete retained runtime state, force-delete the retained branch, or create another Remote request until a bounded read-only inspection establishes:
+
+- exact retained turn/worktree identity;
+- retained branch HEAD and ancestry relative to accepted base;
+- whether the branch contains commits despite a zero source diff;
+- exact tree/diff status against accepted base;
+- whether the executor changed source, committed, reverted, or only altered branch history;
+- the narrowest safe remediation path.
 
 # Next action
 
-Execute `WO-2026-08-31-017` exactly once through the accepted StringMaster turn path, then review the resulting REPORT/RECEIPT and candidate independently before any acceptance transition.
+Perform one bounded read-only retained-turn inspection under control authority. Preserve both retained runtime roots and all local Git evidence.
