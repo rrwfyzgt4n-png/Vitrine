@@ -5,12 +5,13 @@
 **Source:** User-provided `VITRINE_SORT_REDESIGN.md` (2026-10-19).  
 **Baseline:** `main` at `2be7a4b183c6411509c6f62ee33c35546053d579`.
 
-## 1. Integration prerequisite
+## 1. Implementation entry point — NO prerequisite merge
 
-- The accepted-but-not-merged Liquid Glass toolbar candidate is `07c6a9311a1248d1f31b55f1fad094aabfe05661`, on `stringmaster/vitrine-toolbar-density-glass-r2`.
-- Its branch diverged from `main` (at this review: five commits ahead, fourteen behind; merge base `39eb0f675106f7e773f68a054da435ac16f9e594`). **Do not merge the entire candidate branch, or base the feature on that candidate, without reconciling newer mainline changes.**
-- First port/land the approved toolbar-specific changes onto current `main` in a minimal isolated change, after the stipulated visual check. Preserve `.navigation` catalog identity, `.principal` Vitrine identity, primary-action filter/cover controls and trailing toolbar actions.
-- Develop the sort change from the reconciled mainline, preferably as a separate functional PR. This design-only branch carries no application modification.
+- **Start implementation now from current `main`**, not from the historical toolbar branch. Create a separate `feat/vitrine-sort-sections` implementation branch; re-read `main` first to avoid stale SHAs. The source redesign says the toolbar candidate should land first, but that is a *design assumption*, not a technical prerequisite.
+- Liquid Glass toolbar reference: `07c6a9311a1248d1f31b55f1fad094aabfe05661` on `stringmaster/vitrine-toolbar-density-glass-r2`. The candidate is five commits ahead and fourteen behind `main` at this review, with unrelated differences. **Do not merge/cherry-pick the entire branch** into this feature. Inspect and manually adopt only the still-desired toolbar-specific decisions within the new sort control.
+- Keep all current-mainline behavior outside sorting: `.navigation` catalog identity, `.principal` Vitrine identity, filtering, conditional filename-review action, cover-size buttons, Refresh, Inspector, toolbar spacer and file/catalog flows. Do not remove unrelated newer mainline code to mimic the older candidate.
+- The historical toolbar's *visual acceptance* is NOT a blocker to coding this feature. Compile and test first; evaluate the new combined toolbar visually before merging the implementation PR. This reviewed-contract PR is separate from implementation and should remain design-only.
+- Decide the actual liquid-glass container treatment based on the platform rendering: avoid stacking a custom glass background on native glass controls; keep the switch visible and usable at small window sizes.
 
 ## 2. User-facing contract
 
@@ -81,4 +82,19 @@
 6. VoiceOver, Reduce Motion, light/dark, window minimum width, macOS visual review against accepted Liquid Glass candidate.
 7. Unit, UI, performance and scale coverage including `CatalogStoreFilterTests`, `Phase5PerformanceTests`, `ReleaseCandidateScaleTests`, `LocalizationTests` and 1,000/2,500/5,000-item libraries. Measure sort+section elapsed time and scrolling responsiveness. Verify the source-cover read-only and Markdown-only persistence guarantees remain untouched.
 
-**Merge gate:** Actual Swift/macOS build and visual acceptance on the supported macOS/Xcode environment. A design-only PR does not constitute test evidence or feature completion.
+## 10. Executable coding work order — implement end to end
+
+**Goal:** Deliver a *working* three-mode sorted and sectioned library on a new branch from current `main`; publish a draft implementation PR; never auto-merge. Do not stop at another design review.
+
+1. **Branch and read-only preflight.** Fetch current `main`, create `feat/vitrine-sort-sections`, review the five production files, localization file and test references in section 8. Inspect the old toolbar candidate as a reference only. Do not modify the old candidate branch or PR #4.
+2. **State and migration.** Implement `CatalogSort` and `SortDirection`, migrate legacy raw strings exactly as section 3, persist the canonical pair, and add focused preference tests. Keep `UserDefaults` test isolation. Preserve previous saved descending Title behavior.
+3. **Deterministic sort core.** Remove unused sort keys **without deleting searchable metadata**. Implement canonical keys and a strict total comparator, explicit missing-value-last semantics and stable tie-breaks in section 4. Test every direction, collection nil/blank, year nil/invalid, equal keys and reverse order.
+4. **Section model.** Implement a pure grouping function in a separately testable module or helper (not in a view's `body`). Accept one already-sorted visible-item snapshot; output stable group ids, display labels, counts and flat indices. Implement bucket widening, sparse distributions and no/single-section behavior. Reuse the exact sort keys.
+5. **Grid.** Render `Section` within `LazyVGrid(pinnedViews: [.sectionHeaders])`. Keep card id, actions and global index for accessibility. Verify existing up/down keyboard selection and `ScrollViewReader` across section boundaries. If positional navigation is incorrect, fix the actual geometry/navigation logic instead of preserving a known-bad heuristic.
+6. **Toolbar and localization.** Replace the thirteen-case menu with visible Title/Year/Collection and a direction button. Selecting a *different* mode uses its documented default ascending; selecting the *current* mode toggles. Supply localized control state and headings in `fr` and `fr-CA`, including plural book counts. Preserve other toolbar actions and integrate only relevant visual choices from the Liquid Glass candidate.
+7. **Quality verification.** Build with the available macOS/Xcode environment. Run unit tests and targeted UI tests; cover 1k/2.5k/5k items; check light/dark, Reduce Motion, VoiceOver and a narrow window. Animation is an optional enhancement if stable and performant; do **not** make it a blocking prerequisite for correct ordering and headers. If no macOS runner is available, report **untested** rather than claim tests passed.
+8. **Deliver.** Commit coherent increments on the feature branch, push, create a draft PR with changed files, actual test commands/results, screenshots *only if actually captured*, known limitations and precise head/base SHAs. Keep `main` untouched and do not merge without review.
+
+**Implementation acceptance order:** determinism and migration -> grouping and keyboard integrity -> visible switch and sticky headers -> localization/accessibility -> macOS build/tests/visual review. Earlier stages can be coded together without waiting for intermediate approvals. No blocker should be invented from the unmerged historical toolbar branch.
+
+**Merge gate:** A working Swift/macOS build, meaningful regression results and review of the combined toolbar on a supported machine. This design-only PR does not constitute implementation/test evidence.
